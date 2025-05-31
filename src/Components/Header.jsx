@@ -183,7 +183,7 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav ref={navRef} className="hidden md:block">
-            <ul className="flex items-center space-x-6 lg:space-x-10">
+            <ul className="flex items-center space-x-6 lg:space-x-11">
               <li className="group">
                 <a 
                   href="/" 
