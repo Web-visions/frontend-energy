@@ -186,7 +186,7 @@ const Header = () => {
             <ul className="flex items-center space-x-6 lg:space-x-10">
               <li className="group">
                 <a 
-                  href="#" 
+                  href="/" 
                   className="py-6 inline-block font-semibold text-white text-lg group-hover:text-[#E4C73F] transition-colors duration-300 relative"
                 >
                   Home
@@ -195,7 +195,7 @@ const Header = () => {
               </li>
               <li className="group">
                 <a 
-                  href="#" 
+                  href={'/services'}
                   className="py-6 inline-block font-semibold text-white text-lg group-hover:text-[#E4C73F] transition-colors duration-300 relative"
                 >
                   Services
@@ -204,7 +204,7 @@ const Header = () => {
               </li>
               <li className="group">
                 <a 
-                  href="#" 
+                  href="/contact" 
                   className="py-6 inline-block font-semibold text-white text-lg group-hover:text-[#E4C73F] transition-colors duration-300 relative"
                 >
                   Contact
@@ -222,10 +222,10 @@ const Header = () => {
               </li>
               <li className="group">
                 <a 
-                  href="#" 
+                  href="/help" 
                   className="py-6 inline-block font-semibold text-white text-lg group-hover:text-[#E4C73F] transition-colors duration-300 relative"
                 >
-                  Helpppppppp
+                  Help
                   <span className="absolute bottom-4 left-0 w-0 h-0.5 bg-[#E4C73F] transition-all duration-300 group-hover:w-full"></span>
                 </a>
               </li>
