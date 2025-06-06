@@ -1,17 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogIn, User, ShoppingCart, Menu, X, Search, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from 'react-router-dom';
+import { gsap } from 'gsap';
+import { Search, Menu, X, Phone, Mail, MapPin, LogIn, User, ShoppingCart, ChevronDown } from 'lucide-react';
+import { FaTachometerAlt, FaUserCircle, FaUsers, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 import MenuDropdown from './MenuDropdown';
-import gsap from 'gsap';
 import logo from '../assets/logo.jpg'
+
 const Header = () => {
+  const { currentUser, isAuthenticated, isEmailVerified, hasRole, logout } = useAuth();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchActive, setSearchActive] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const headerRef = useRef(null);
   const logoRef = useRef(null);
   const navRef = useRef(null);
   const topBarRef = useRef(null);
   const searchInputRef = useRef(null);
+  const userMenuRef = useRef(null);
+  
   const categoryMenuItems = [
     {
       title: "Inverter",
@@ -57,15 +66,24 @@ const Header = () => {
       "-=0.4"
     );
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      const scrollPosition = window.scrollY;
+      setIsScrolled(scrollPosition > 0);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  useEffect(() => {
+    // Close user menu when clicking outside
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -87,9 +105,25 @@ const Header = () => {
     setSearchActive(!searchActive);
     if (!searchActive) {
       setTimeout(() => {
-        searchInputRef.current?.focus();
+        searchInputRef.current.focus();
       }, 100);
     }
+  };
+  
+  const toggleUserMenu = () => {
+    setUserMenuOpen(!userMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    setUserMenuOpen(false);
+  };
+
+  const getDashboardLink = () => {
+    if (hasRole('admin')) return '/admin/dashboard';
+    if (hasRole('staff')) return '/staff/dashboard';
+    return '/user/dashboard';
   };
 
   const toggleMenu = () => {
@@ -133,17 +167,87 @@ const Header = () => {
               <span className="hidden md:inline">Search</span>
             </button>
             
-            <a href="#" className="flex items-center hover:text-[#008246] transition-colors">
-              <LogIn size={18} className="mr-1" />
-              <span>Login</span>
-            </a>
+            {isAuthenticated ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={toggleUserMenu}
+                  className="flex items-center hover:text-[#008246] transition-colors"
+                >
+                  <User size={18} className="mr-1" />
+                  <span>{currentUser?.firstName || 'Account'}</span>
+                  <ChevronDown size={14} className={`ml-1 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-10">
+                    <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                      <p className="text-sm font-medium text-gray-700">{currentUser?.firstName} {currentUser?.lastName}</p>
+                      <p className="text-xs text-gray-500">{currentUser?.email}</p>
+                      {isEmailVerified ? (
+                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800 mt-1 inline-block">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 mt-1 inline-block">
+                          Unverified
+                        </span>
+                      )}
+                    </div>
+                    
+                    <a
+                      href={getDashboardLink()}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#008246] hover:text-white transition-colors"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <FaTachometerAlt className="inline mr-2" />
+                      Dashboard
+                    </a>
+                    
+                    <a
+                      href="/user/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#008246] hover:text-white transition-colors"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <FaUserCircle className="inline mr-2" />
+                      Profile
+                    </a>
+                    
+                    {hasRole('admin') && (
+                      <a
+                        href="/admin/users"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#008246] hover:text-white transition-colors"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <FaUsers className="inline mr-2" />
+                        User Management
+                      </a>
+                    )}
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-500 hover:text-white transition-colors"
+                    >
+                      <FaSignOutAlt className="inline mr-2" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <a href="/login" className="flex items-center hover:text-[#008246] transition-colors">
+                <LogIn size={18} className="mr-1" />
+                <span>Login</span>
+              </a>
+            )}
             
-            <a href="#" className="hidden md:flex items-center hover:text-[#008246] transition-colors">
-              <User size={18} className="mr-1" />
-              <span>Account</span>
-            </a>
+            {!isAuthenticated && (
+              <a href="/register" className="hidden md:flex items-center hover:text-[#008246] transition-colors">
+                <User size={18} className="mr-1" />
+                <span>Register</span>
+              </a>
+            )}
             
-            <a href="#" className="flex items-center hover:text-[#008246] transition-colors">
+            <a href="/cart" className="flex items-center hover:text-[#008246] transition-colors">
               <ShoppingCart size={18} className="mr-1" />
               <span className="hidden md:inline">Cart</span>
               <span className="inline-flex items-center justify-center w-5 h-5 ml-1 text-xs bg-[#E4C73F] text-black rounded-full">0</span>
