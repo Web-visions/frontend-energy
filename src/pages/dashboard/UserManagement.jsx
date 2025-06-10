@@ -1,6 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { getData, postData, putData } from '../../utils/http';
+import { FiSearch, FiEdit, FiTrash2, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+
+// Simple debounce function implementation
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
 
 const UserManagement = () => {
   const { currentUser } = useAuth();
@@ -10,30 +22,61 @@ const UserManagement = () => {
   const [message, setMessage] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0
+  });
+  
+  // Search state
+  const [search, setSearch] = useState('');
+  
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
-    phone: '',
-    role: 'user'
+    role: 'user',
+    isEmailVerified: false
   });
 
-  // Fetch users on component mount
+  // Create debounced search function
+  const debouncedSearch = useCallback(
+    debounce((searchTerm) => {
+      setSearch(searchTerm);
+      setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
+    }, 500),
+    []
+  );
+
+  // Fetch users when pagination or search changes
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [pagination.page, pagination.limit, search]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/users', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const params = {
+        page: pagination.page,
+        limit: pagination.limit
+      };
       
-      if (response.data.success) {
-        setUsers(response.data.data);
+      if (search) {
+        params.search = search;
+      }
+      
+      const response = await getData('users', params);
+      
+      if (response.success) {
+        setUsers(response.data);
+        setPagination({
+          page: response.pagination.page,
+          limit: response.pagination.limit,
+          total: response.pagination.total,
+          pages: response.pagination.pages
+        });
       } else {
         setError('Failed to fetch users');
       }
@@ -44,6 +87,11 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
+  
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    debouncedSearch(e.target.value);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -52,25 +100,31 @@ const UserManagement = () => {
       [name]: value
     });
   };
+  
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: checked
+    });
+  };
 
   const openModal = (user = null) => {
     if (user) {
       setSelectedUser(user);
       setFormData({
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         email: user.email,
-        phone: user.phone || '',
-        role: user.role
+        role: user.role,
+        isEmailVerified: user.isEmailVerified || false
       });
     } else {
       setSelectedUser(null);
       setFormData({
-        firstName: '',
-        lastName: '',
+        name: '',
         email: '',
-        phone: '',
-        role: 'user'
+        role: 'user',
+        isEmailVerified: false
       });
     }
     setModalOpen(true);
@@ -80,11 +134,10 @@ const UserManagement = () => {
     setModalOpen(false);
     setSelectedUser(null);
     setFormData({
-      firstName: '',
-      lastName: '',
+      name: '',
       email: '',
-      phone: '',
-      role: 'user'
+      role: 'user',
+      isEmailVerified: false
     });
   };
 
@@ -98,28 +151,18 @@ const UserManagement = () => {
       
       if (selectedUser) {
         // Update existing user
-        response = await axios.put(`http://localhost:5000/api/users/${selectedUser._id}`, formData, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        response = await putData(`users/${selectedUser._id}`, formData);
       } else {
         // Create new user
-        response = await axios.post('http://localhost:5000/api/users', formData, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        response = await postData('users', formData);
       }
 
-      if (response.data.success) {
+      if (response.success) {
         setMessage(selectedUser ? 'User updated successfully!' : 'User created successfully!');
         fetchUsers();
         closeModal();
       } else {
-        setError(response.data.message || 'Operation failed');
+        setError(response.message || 'Operation failed');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred');
@@ -127,54 +170,36 @@ const UserManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-    
-    setError('');
-    setMessage('');
-    
-    try {
-      const response = await axios.delete(`http://localhost:5000/api/users/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (response.data.success) {
-        setMessage('User deleted successfully!');
-        fetchUsers();
-      } else {
-        setError(response.data.message || 'Failed to delete user');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred while deleting user');
-      console.error(err);
-    }
-  };
-
+  // We're not implementing delete functionality as per requirements
+  
   const handleToggleStatus = async (userId, isActive) => {
     setError('');
     setMessage('');
     
     try {
-      const response = await axios.put(`http://localhost:5000/api/users/${userId}/status`, {
+      const response = await putData(`users/${userId}/status`, {
         isActive: !isActive
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
       });
       
-      if (response.data.success) {
+      if (response.success) {
         setMessage(`User ${isActive ? 'deactivated' : 'activated'} successfully!`);
         fetchUsers();
       } else {
-        setError(response.data.message || 'Failed to update user status');
+        setError(response.message || 'Failed to update user status');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred while updating user status');
       console.error(err);
+    }
+  };
+  
+  // Handle pagination
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= pagination.pages) {
+      setPagination(prev => ({
+        ...prev,
+        page: newPage
+      }));
     }
   };
 
@@ -201,6 +226,21 @@ const UserManagement = () => {
           {error}
         </div>
       )}
+      
+      {/* Search and filter section */}
+      <div className="mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <FiSearch className="w-5 h-5 text-gray-500" />
+          </div>
+          <input
+            type="text"
+            className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search users by name or email..."
+            onChange={handleSearchChange}
+          />
+        </div>
+      </div>
 
       {loading ? (
         <div className="text-center py-10">
@@ -234,24 +274,24 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.length > 0 ? (
-                users.map((user) => (
+              {users?.length > 0 ? (
+                users?.map((user) => (
                   <tr key={user._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                             <span className="text-gray-600 font-medium">
-                              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                              {user.name.charAt(0)}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {user.firstName} {user.lastName}
+                            {user.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {user.phone || 'No phone'}
+                            {new Date(user.createdAt).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
@@ -278,21 +318,16 @@ const UserManagement = () => {
                       <button
                         onClick={() => openModal(user)}
                         className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        title="Edit User"
                       >
-                        Edit
+                        <FiEdit className="inline" />
                       </button>
                       <button
                         onClick={() => handleToggleStatus(user._id, user.isActive)}
                         className={`${user.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'} mr-3`}
+                        title={user.isActive ? 'Deactivate User' : 'Activate User'}
                       >
-                        {user.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user._id)}
-                        className="text-red-600 hover:text-red-900"
-                        disabled={user._id === currentUser?._id}
-                      >
-                        Delete
+                        {user.isActive ? <FiToggleRight className="inline" /> : <FiToggleLeft className="inline" />}
                       </button>
                     </td>
                   </tr>
@@ -306,6 +341,108 @@ const UserManagement = () => {
               )}
             </tbody>
           </table>
+          
+          {/* Pagination Controls */}
+          {pagination.pages > 1 && (
+            <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${pagination.page === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages}
+                  className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${pagination.page === pagination.pages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{((pagination.page - 1) * pagination.limit) + 1}</span> to <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
+                    <span className="font-medium">{pagination.total}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={pagination.page === 1}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${pagination.page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      <span className="sr-only">First</span>
+                      <span>First</span>
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${pagination.page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      <span className="sr-only">Previous</span>
+                      <span>Prev</span>
+                    </button>
+                    
+                    {/* Page numbers */}
+                    {[...Array(pagination.pages).keys()].map(x => {
+                      const pageNumber = x + 1;
+                      // Only show a few page numbers around the current page
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === pagination.pages ||
+                        (pageNumber >= pagination.page - 1 && pageNumber <= pagination.page + 1)
+                      ) {
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`relative inline-flex items-center px-4 py-2 border ${pagination.page === pageNumber ? 'bg-blue-50 border-blue-500 text-blue-600 z-10' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'} text-sm font-medium`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      } else if (
+                        pageNumber === pagination.page - 2 ||
+                        pageNumber === pagination.page + 2
+                      ) {
+                        // Show ellipsis for page gaps
+                        return (
+                          <span
+                            key={pageNumber}
+                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    
+                    <button
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page === pagination.pages}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${pagination.page === pagination.pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      <span className="sr-only">Next</span>
+                      <span>Next</span>
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(pagination.pages)}
+                      disabled={pagination.page === pagination.pages}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${pagination.page === pagination.pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      <span className="sr-only">Last</span>
+                      <span>Last</span>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

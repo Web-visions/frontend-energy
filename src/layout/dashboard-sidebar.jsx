@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { X, LayoutDashboard, Users, ShoppingBag, Settings, FileText, BarChart3, MessageSquare, Bell, Shield, Database, Boxes, Smartphone, Headphones, Cpu, ChevronRight, Home, Building, Recycle, Phone, Wrench, Package, Hammer, LogOut, Image, Pin, MapPin, ListOrdered } from 'lucide-react';
-// import Logo from '../assets/logo';
+import {logo} from '../assets/';
 import { useAuth } from '../context/AuthContext';
 import LogoutModal from '../Components/LogoutModal';
 import { toast } from 'react-hot-toast';
@@ -41,15 +41,12 @@ const getSidebarSections = (userRole) => {
             { title: 'Users', path: '/dashboard/admin/users', icon: <Users className="w-5 h-5" /> },
             { title: 'Brands', path: '/dashboard/admin/brands', icon: <Building className="w-5 h-5" /> },
             { title: 'City', path: '/dashboard/admin/cities', icon: <MapPin className='w-5 h-5' /> },
-          ]
-        },
-        {
-          title: 'Orders',
-          links: [
-            { title: 'Repair Orders', path: '/dashboard/admin/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
+            { title: 'Categories', path: '/dashboard/admin/categories', icon: <Database className='w-5 h-5' /> },
             { title: 'Orders', path: '/dashboard/admin/orders', icon: <ListOrdered className='w-5 h-5' /> },
+
           ]
         },
+        
         {
           title: 'Customization',
           links: [
@@ -72,7 +69,7 @@ const getSidebarSections = (userRole) => {
         {
           title: 'Orders',
           links: [
-            { title: 'Repair Orders', path: '/dashboard/staff/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
+            // { title: 'Repair Orders', path: '/dashboard/staff/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
             { title: 'Orders', path: '/dashboard/staff/orders', icon: <ListOrdered className='w-5 h-5' /> },
           ]
         },
@@ -86,7 +83,7 @@ const getSidebarSections = (userRole) => {
         {
           title: 'My Orders',
           links: [
-            { title: 'Repair Orders', path: '/dashboard/user/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
+            // { title: 'Repair Orders', path: '/dashboard/user/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
             { title: 'Orders', path: '/dashboard/user/orders', icon: <ListOrdered className='w-5 h-5' /> },
           ]
         },
@@ -106,7 +103,6 @@ function DashboardSidebar({ isOpen, onClose }) {
   const { logout, setUser, currentUser : user } = useAuth();
   const navigate = useNavigate();
   
-  // Get sidebar sections based on user role
   const sidebarSections = getSidebarSections(user?.role || 'user');
 
   const handleLogout = async () => {
@@ -151,7 +147,8 @@ function DashboardSidebar({ isOpen, onClose }) {
         <div className="relative h-16 flex items-center justify-between ml-10 px-4 bg-white">
           <NavLink to='/'>
           {/* <Logo  /> */}
-          <p>energy solar</p>
+          <img src={logo} alt="logo" />
+       
           </NavLink>
           <button
             type="button"

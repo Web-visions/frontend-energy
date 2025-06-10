@@ -1,26 +1,22 @@
+// src/routers/ProtectedRoute.js
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// allowedRoles = ['admin', 'user', 'staff']
-const ProtectedRoute = ({ children, allowedRoles = [], adminOnly = false }) => {
+// Usage: <ProtectedRoute allowedRoles={['admin','user']} />
+const ProtectedRoute = ({ allowedRoles, children }) => {
   const { currentUser: user, loading } = useAuth();
+  const location = useLocation();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // Go to login, but remember current page
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Admin only route
-  if (adminOnly && user.role !== 'admin') {
-    return <Navigate to={getRoleBasedDashboard(user.role)} replace />;
-  }
-
-  // Role-specific route protection
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Redirect to correct dashboard if wrong role
     return <Navigate to={getRoleBasedDashboard(user.role)} replace />;
   }
 
@@ -31,12 +27,12 @@ const ProtectedRoute = ({ children, allowedRoles = [], adminOnly = false }) => {
 const getRoleBasedDashboard = (role) => {
   switch (role) {
     case 'admin':
-      return '/admin/dashboard';
+      return '/dashboard/admin';
     case 'staff':
-      return '/staff/dashboard';
+      return '/dashboard/staff';
     case 'user':
     default:
-      return '/user/dashboard';
+      return '/dashboard/user';
   }
 };
 

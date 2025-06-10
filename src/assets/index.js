@@ -24,4 +24,6 @@ import slide3 from '../assets/slide3.jpg'
 import coin1 from  '../assets/coin.jpg'
 import coin2 from  '../assets/coin2.jpeg'
 import coin3 from  '../assets/coin3.webp'
-export {about,slide1,slide2,slide3,waree,vikram,adani,sf,coin1,coin2,coin3,suvastik,livfast,dynax,amaron,excide,luminous,cb1,cb2,cb3,cb4,apc,ib1,ib2,ib3}
+import logo from './logo.jpg'
+
+export {logo, about,slide1,slide2,slide3,waree,vikram,adani,sf,coin1,coin2,coin3,suvastik,livfast,dynax,amaron,excide,luminous,cb1,cb2,cb3,cb4,apc,ib1,ib2,ib3}
