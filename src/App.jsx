@@ -32,6 +32,9 @@ import CategoryManagement from './pages/dashboard/CategoryManagement';
 import Settings from './pages/dashboard/Settings';
 
 import ProtectedRoute from './routers/protectedRoutes';
+import InverterManagement from './pages/dashboard/InverterManagement';
+import BatteryManagement from './pages/dashboard/BatteryManagement';
+import UPSManagement from './pages/dashboard/UpsManagement';
 
 export default function App() {
   return (
@@ -74,6 +77,9 @@ export default function App() {
             {/* Admin-only nested routes */}
             <Route path="users" element={<UserManagement />} />
             <Route path="brands" element={<BrandManagement />} />
+            <Route path="battery" element={<BatteryManagement />} />
+            <Route path="inverter" element={<InverterManagement />} />
+            <Route path="ups" element={<UPSManagement />} />
             <Route path="cities" element={<CityManagement />} />
             <Route path="categories" element={<CategoryManagement />} />
             <Route path="repair-orders" element={<div>Repair Orders Page</div>} />
