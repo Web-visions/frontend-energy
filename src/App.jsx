@@ -35,6 +35,9 @@ import ProtectedRoute from './routers/protectedRoutes';
 import InverterManagement from './pages/dashboard/InverterManagement';
 import BatteryManagement from './pages/dashboard/BatteryManagement';
 import UPSManagement from './pages/dashboard/UpsManagement';
+import SolarStreetLightManagement from './pages/dashboard/SolarStreetLightManagement';
+import SolarPCUManagement from './pages/dashboard/SolarPCUManagement';
+import SolarPVModuleManagement from './pages/dashboard/SolarPVModuleManagement';
 
 export default function App() {
   return (
@@ -80,6 +83,9 @@ export default function App() {
             <Route path="battery" element={<BatteryManagement />} />
             <Route path="inverter" element={<InverterManagement />} />
             <Route path="ups" element={<UPSManagement />} />
+            <Route path="solar/street-light" element={<SolarStreetLightManagement />} />
+            <Route path="solar/pcu" element={<SolarPCUManagement />} />
+            <Route path="solar/pv-module" element={<SolarPVModuleManagement />} />
             <Route path="cities" element={<CityManagement />} />
             <Route path="categories" element={<CategoryManagement />} />
             <Route path="repair-orders" element={<div>Repair Orders Page</div>} />

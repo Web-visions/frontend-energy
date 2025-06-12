@@ -5,6 +5,7 @@ import {logo} from '../assets/';
 import { useAuth } from '../context/AuthContext';
 import LogoutModal from '../Components/LogoutModal';
 import { toast } from 'react-hot-toast';
+import { SolarPower } from '@mui/icons-material';
 
 const getSidebarSections = (userRole) => {
     const commonSections = [
@@ -44,6 +45,9 @@ const getSidebarSections = (userRole) => {
             {title: "Inverter" ,  path: "/dashboard/admin/inverter", icon: <Cpu className='w-5 h-5' />},
             {title: "Battery",  path: "/dashboard/admin/battery", icon: <Building className='w-5 h-5' />},
             {title: "UPS",  path: "/dashboard/admin/ups", icon: <Hammer className='w-5 h-5' />},
+            {title : "Solar Street Light",  path: "/dashboard/admin/solar/street-light", icon: <Phone className='w-5 h-5' />},
+            {title : "Solar PCU",  path: "/dashboard/admin/solar/pcu", icon: <SolarPower className='w-5 h-5' />},
+            {title : "Solar PV Module", path: "/dashboard/admin/solar/pv-module", icon: <SolarPower className="w-5 h-5"/> },
             { title: 'City', path: '/dashboard/admin/cities', icon: <MapPin className='w-5 h-5' /> },
             { title: 'Categories', path: '/dashboard/admin/categories', icon: <Database className='w-5 h-5' /> },
             { title: 'Orders', path: '/dashboard/admin/orders', icon: <ListOrdered className='w-5 h-5' /> },
