@@ -1,6 +1,7 @@
 import Home from "./Home";
 import Payment from "./Payment";
 import ProductPage from "./ProductPage";
+import ProductListing from "./ProductPage";
 import AddtoCartPage from "./AddtoCartPage";
 import Contact from "./Contact";
 import Help from "./Help";
@@ -10,7 +11,7 @@ import Signup from "./Signup";
 
 export {
   Home,
-  ProductPage,
+  ProductListing,
   Contact,
   Payment,
   Help,

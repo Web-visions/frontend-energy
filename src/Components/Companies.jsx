@@ -67,29 +67,40 @@ const Companies = () => {
   };
 
   return (
-    <div ref={sectionRef} className='flex justify-center py-16 bg-white'>
-      <div className='w-full max-w-7xl px-6'>
-        <h2 ref={titleRef} className='text-3xl font-bold text-center mb-12 text-[#008246]'>Our Partner Companies</h2>
-        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6'>
-          {companies.map((company, index) => (
-            <div 
-              key={index}
-              ref={addToRefs}
-              className='bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-300 flex items-center justify-center group'
-            >
-              <img 
-                src={company.logo} 
-                alt={`${company.name} logo`} 
-                className='max-h-16 md:max-h-20 object-contain group-hover:scale-110 transition-transform duration-300'
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-[#008246] text-white text-center py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm rounded-b-lg">
-                {company.name}
-              </div>
+    <div ref={sectionRef} className="flex justify-center py-20 bg-gradient-to-b from-white via-[#f7fafd] to-[#eafaf2]">
+    <div className="w-full max-w-7xl px-6">
+      <h2 ref={titleRef} className="text-3xl md:text-4xl font-black text-center mb-12 text-[#008246] tracking-tight">
+        Our Partner Companies
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
+        {companies.map((company, index) => (
+          <div
+            key={company.name}
+            ref={el => {
+              companiesRef.current[index] = el;
+            }}
+            className="relative bg-white rounded-2xl shadow-md hover:shadow-xl p-6 flex items-center justify-center group transition-all duration-300 min-h-[110px]"
+          >
+            <img
+              src={company.logo}
+              alt={`${company.name} logo`}
+              className="max-h-16 md:max-h-20 object-contain mx-auto transition-transform duration-300 group-hover:scale-110
+                group-hover:drop-shadow-lg
+                /* grayscale hover effect (uncomment if you want) */
+                /* grayscale group-hover:grayscale-0 */
+              "
+              draggable="false"
+            />
+            {/* Hover Overlay with company name */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[#008246]/95 text-white text-center py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs rounded-b-2xl font-semibold tracking-wide">
+              {company.name}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
+  </div>
+  
   );
 };
 

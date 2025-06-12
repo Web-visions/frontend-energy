@@ -5,8 +5,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import {
   Home,
   Payment,
-  ProductPage,
   AddtoCartPage,
+  ProductListing,
   Contact,
   Help,
   Login,
@@ -38,6 +38,7 @@ import UPSManagement from './pages/dashboard/UpsManagement';
 import SolarStreetLightManagement from './pages/dashboard/SolarStreetLightManagement';
 import SolarPCUManagement from './pages/dashboard/SolarPCUManagement';
 import SolarPVModuleManagement from './pages/dashboard/SolarPVModuleManagement';
+import ProductDetails from './pages/ProductDetail';
 
 export default function App() {
   return (
@@ -46,7 +47,8 @@ export default function App() {
         <Routes>
           {/* --- Public Routes --- */}
           <Route path="/" element={<><Header /><Home /><Footer /></>} />
-          <Route path="/products" element={<><Header /><ProductPage /><Footer /></>} />
+          <Route path="/products" element={<><Header /><ProductListing /><Footer /></>} />
+          <Route path="/product-detail" element={<><Header /><ProductDetails /><Footer /></>} />
           <Route path="/cart" element={<><Header /><AddtoCartPage /><Footer /></>} />
           <Route path="/payment" element={<><Header /><Payment /><Footer /></>} />
           <Route path="/login" element={<><Header /><Login /><Footer /></>} />

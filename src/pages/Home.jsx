@@ -2,7 +2,7 @@ import { Batteries, Header, SliderComponent, Companies, InverterSect, AboutUs, L
 
 const Home = () => {
   return (
-    <div>
+    <div className='mt-24'>
 
         <SliderComponent/>
         <Batteries/>

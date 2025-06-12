@@ -67,84 +67,91 @@ export default function Testimonial() {
   };
 
   return (
-    <div ref={testimonialRef} className="w-full py-16 bg-gray-50">
-      <div className="container mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center mb-12 text-[#008246]">What Our Customers Say</h2>
-        
-        <div className="max-w-4xl mx-auto relative">
-          {/* Testimonial Card */}
-          <div 
-            ref={slideRef}
-            className="bg-white rounded-xl shadow-lg p-8 md:p-10 relative overflow-hidden"
+    <div ref={testimonialRef} className="w-full py-20 bg-gradient-to-b from-white via-[#f7fafd] to-[#eafaf2]">
+    <div className="container mx-auto px-6">
+      <div className="max-w-2xl mx-auto text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-black text-[#008246] mb-3">What Our Customers Say</h2>
+        <p className="text-base md:text-lg text-gray-700">
+          Real stories. Real impact. Discover how Energy Storage System empowers lives across India.
+        </p>
+      </div>
+      <div className="max-w-4xl mx-auto relative">
+        {/* Testimonial Card */}
+        <div
+          ref={slideRef}
+          className="bg-white rounded-2xl shadow-2xl px-4 py-10 md:px-12 md:py-14 relative overflow-visible transition-all duration-300 border-4 border-[#e4c73f33] hover:border-[#E4C73F]/60 group"
+        >
+          {/* Animated Gradient Border Glow (optional) */}
+          <span className="absolute inset-0 rounded-2xl pointer-events-none group-hover:shadow-[0_0_32px_8px_#E4C73F44] transition-all duration-300"></span>
+          {/* Big Quote Mark */}
+          <div className="absolute -top-6 left-6 md:left-12 text-8xl text-[#E4C73F] opacity-20 font-serif select-none pointer-events-none transition-transform duration-300 group-hover:scale-110">
+            &ldquo;
+          </div>
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10">
+            {/* Avatar */}
+            <div className="w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden flex-shrink-0 border-4 border-[#E4C73F] shadow-lg transition-transform duration-300 group-hover:scale-105">
+              <img
+                src={testimonials[index].avatar}
+                alt={testimonials[index].name}
+                className="w-full h-full object-cover"
+                draggable="false"
+              />
+            </div>
+            {/* Content */}
+            <div className="flex-1">
+              <p className="text-lg md:text-xl text-gray-800 font-medium italic mb-6 transition-colors duration-300">
+                "{testimonials[index].message}"
+              </p>
+              <div>
+                <h4 className="text-xl font-bold text-[#008246]">{testimonials[index].name}</h4>
+                <span className="text-sm text-gray-500">{testimonials[index].role}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        {/* Navigation */}
+        <div className="flex justify-center mt-8 space-x-4">
+          <button
+            onClick={prevTestimonial}
+            className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#E4C73F] transition-all group"
+            aria-label="Previous testimonial"
           >
-            {/* Quote Icon */}
-            <div className="absolute top-6 right-6 text-6xl text-[#E4C73F] opacity-20 font-serif">
-              "
-            </div>
-            
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              {/* Avatar */}
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex-shrink-0 border-4 border-[#E4C73F]">
-                <img 
-                  src={testimonials[index].avatar} 
-                  alt={testimonials[index].name} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              {/* Content */}
-              <div className="flex-1">
-                <p className="text-lg md:text-xl text-gray-700 italic mb-6">"{testimonials[index].message}"</p>
-                <div>
-                  <h4 className="text-xl font-semibold text-[#008246]">{testimonials[index].name}</h4>
-                  <span className="text-sm text-gray-500">{testimonials[index].role}</span>
-                </div>
-              </div>
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:text-[#008246]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          {/* Dots */}
+          <div className="flex items-center space-x-2">
+            {testimonials.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIndex(i)}
+                className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                  index === i ? 'bg-[#008246]' : 'bg-gray-300'
+                }`}
+                aria-label={`Go to testimonial ${i + 1}`}
+              />
+            ))}
           </div>
-          
-          {/* Navigation */}
-          <div className="flex justify-center mt-8 space-x-4">
-            <button 
-              onClick={prevTestimonial}
-              className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#E4C73F] transition-colors"
-              aria-label="Previous testimonial"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            {/* Dots */}
-            <div className="flex items-center space-x-2">
-              {testimonials.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setIndex(i)}
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    index === i ? 'bg-[#008246]' : 'bg-gray-300'
-                  }`}
-                  aria-label={`Go to testimonial ${i + 1}`}
-                />
-              ))}
-            </div>
-            
-            <button 
-              onClick={nextTestimonial}
-              className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#E4C73F] transition-colors"
-              aria-label="Next testimonial"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-          
-          <div className="absolute top-2 right-4 text-gray-400 text-sm hidden md:block">
-            Use ← / → keys to navigate
-          </div>
+          <button
+            onClick={nextTestimonial}
+            className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#E4C73F] transition-all group"
+            aria-label="Next testimonial"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:text-[#008246]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+  
+        {/* Keyboard shortcut hint */}
+        <div className="absolute top-3 right-5 text-gray-400 text-xs md:block">
+          <span className="hidden md:inline">Use &larr; / &rarr; keys to navigate</span>
         </div>
       </div>
     </div>
+  </div>
+  
   );
 }

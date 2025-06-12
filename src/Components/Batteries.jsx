@@ -48,34 +48,79 @@ const Batteries = () => {
   }, []);
 
   return (
-    <div ref={sectionRef} className='flex justify-center py-16 bg-gray-50'>
-      <div className='w-full max-w-7xl flex flex-col md:flex-row items-center gap-10 px-6 md:px-14'>
-        <div 
-          ref={imageRef}
-          className='w-full md:w-1/3 h-[250px] md:h-[300px] rounded-lg shadow-lg overflow-hidden' 
-          style={{
-            backgroundImage: `url(${about})`,
-            backgroundPosition: "center",
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover'
-          }}
-        >
+    <div ref={sectionRef} className="flex justify-center py-20 bg-gradient-to-b from-white via-[#f7fafd] to-[#eafaf2]">
+    <div className="w-full max-w-7xl flex flex-col md:flex-row items-center gap-14 px-6 md:px-14">
+      {/* Image Section */}
+      <div
+        ref={imageRef}
+        className="w-full md:w-1/3 h-[260px] md:h-[340px] rounded-xl shadow-2xl overflow-hidden border-4 border-[#e4c73f33] relative"
+        style={{
+          backgroundImage: `url(${about})`,
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover"
+        }}
+      >
+        <span className="absolute top-3 right-3 bg-[#008246]/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wide">
+          New Arrival
+        </span>
+      </div>
+  
+      {/* Text Content Section */}
+      <div ref={textRef} className="w-full md:w-2/3">
+        {/* Premium Tagline */}
+        <div className="text-[#E4C73F] font-semibold tracking-widest mb-2 uppercase text-xs md:text-sm">
+          India’s Trusted Battery Store
         </div>
-        <div ref={textRef} className='w-full md:w-2/3'>
-          <h1 className='text-2xl md:text-3xl font-bold text-[#008246] mb-4'>Stay Powered – Premium Inverter Batteries Online</h1>
-          <p className='text-gray-700 leading-relaxed'>
-            Energy Store System is one of India's leading online battery platforms, built to offer a fast, simple, and reliable way to purchase high-performance batteries at competitive prices—whether online or over the phone. All prices listed include GST, ensuring complete pricing transparency. By sourcing directly from certified manufacturers, we cut out middlemen and pass the savings and quality directly to you.
-            <br /><br />
-            As one of the country's fastest-growing stored energy providers, we're committed to delivering expert advice, a wide selection of battery solutions, and dependable customer service—all while keeping our prices highly competitive.
-            <br /><br />
-            At Energy Store System, buying a battery is effortless. We serve a wide spectrum of clients—from individuals to wholesalers and industrial businesses—offering top-tier products for various applications. Our mission is to power your needs efficiently, affordably, and reliably.
-          </p>
-          <button className="mt-6 px-6 py-2 bg-[#E4C73F] text-black font-semibold rounded-md hover:bg-[#d4b82f] transition-colors">
-            Learn More
-          </button>
+  
+        {/* Main Heading */}
+        <h1 className="text-3xl md:text-4xl font-black text-[#008246] mb-3 leading-tight">
+          Powering Progress.  
+          <span className="block text-gray-900">Reliable Inverter Batteries, Delivered.</span>
+        </h1>
+        
+        {/* Subheading */}
+        <div className="text-base md:text-lg text-gray-700 mb-6 max-w-2xl">
+          Future-ready energy, backed by expert guidance and transparent pricing—discover the batteries trusted by thousands across India.
         </div>
+  
+        {/* Feature Icons Row */}
+        <div className="flex flex-wrap gap-4 mb-7">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#e4c73f22] rounded-lg shadow-sm text-sm font-medium">
+            <span role="img" aria-label="warranty">🔋</span>
+            100% Genuine Brands
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#e4c73f22] rounded-lg shadow-sm text-sm font-medium">
+            <span role="img" aria-label="delivery">🚚</span>
+            Fast Nationwide Delivery
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#e4c73f22] rounded-lg shadow-sm text-sm font-medium">
+            <span role="img" aria-label="support">🤝</span>
+            Honest Advice, Always
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#e4c73f22] rounded-lg shadow-sm text-sm font-medium">
+            <span role="img" aria-label="transparent">🧾</span>
+            No Hidden Charges
+          </div>
+        </div>
+  
+        {/* Story/Description */}
+        <p className="text-gray-600 leading-relaxed mb-7">
+          At Energy Store System, we’re not just about selling batteries—we’re about energizing your journey.  
+          <br />
+          <span className="inline-block mt-2">
+            Enjoy hassle-free buying, verified quality direct from authorized partners, and support for every kind of need—from home backup to industrial scale. Our promise: what you see is exactly what you get, every time.
+          </span>
+        </p>
+  
+        {/* CTA Button */}
+        <button className="mt-2 px-8 py-3 bg-gradient-to-r from-[#E4C73F] to-[#ffe477] text-black font-bold rounded-lg shadow-lg hover:bg-[#d4b82f] hover:scale-105 transition-all text-base">
+          Explore Our Batteries
+        </button>
       </div>
     </div>
+  </div>
+  
   );
 };
 

@@ -108,71 +108,108 @@ const InverterSect = () => {
   };
 
   return (
-    <div ref={sectionRef} className='container mx-auto px-4 py-16 bg-gray-50'>
-      {/* Car Inverters Section */}
-      <section className='mb-16'>
-        <h1 ref={carTitleRef} className='text-2xl md:text-3xl font-bold mb-8 text-center md:text-left text-[#008246] relative'>
-          Best Selling Car Inverters
-          <span className="absolute -bottom-2 left-0 w-20 h-1 bg-[#E4C73F] hidden md:block"></span>
-        </h1>
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'>
-          {carInverters.map((inverter, index) => (
-            <div 
-              key={index} 
-              ref={addToCarRefs}
-              className='bg-white rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02] group'
-            >
-              <div className='aspect-w-16 aspect-h-9 overflow-hidden'>
-                <img 
-                  src={inverter.img} 
-                  alt={inverter.name}
-                  className='w-full h-64 object-cover object-center group-hover:scale-105 transition-transform duration-500'
-                />
-              </div>
-              <div className='p-4'>
-                <h3 className='text-lg font-semibold text-gray-800 text-center'>{inverter.name}</h3>
-                <p className='text-center text-[#008246] font-bold mt-2'>{inverter.price}</p>
-                <button className='w-full mt-4 py-2 bg-[#E4C73F] text-black font-semibold rounded hover:bg-[#d4b82f] transition-colors'>
-                  View Details
-                </button>
-              </div>
+    <div ref={sectionRef} className="container mx-auto px-4 py-20 bg-gradient-to-b from-white via-[#f7fafd] to-[#eafaf2]">
+  {/* Car Inverters Section */}
+  <section className="mb-20">
+    <h1
+      ref={carTitleRef}
+      className="text-3xl md:text-4xl font-black mb-10 text-center md:text-left text-[#008246] relative"
+    >
+      Best Selling Car Inverters
+      <span className="absolute left-1/2 md:left-0 -bottom-2 w-28 h-1 bg-[#E4C73F] rounded-full -translate-x-1/2 md:translate-x-0 transition-all duration-300"></span>
+    </h1>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+      {carInverters.map((inverter, index) => (
+        <div
+          key={index}
+          ref={el => (carInvertersRef.current[index] = el)}
+          className="relative bg-white rounded-2xl shadow-md group hover:shadow-2xl overflow-hidden transition-all duration-300"
+        >
+          {/* Ribbon */}
+          <span className="absolute top-3 left-3 bg-[#008246]/90 text-white text-xs font-bold px-3 py-1 rounded shadow-md z-10 uppercase tracking-wider">
+            Best Seller
+          </span>
+          {/* Image */}
+          <div className="relative h-56 md:h-64 w-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-[#e4c73f1a] to-[#00824611]">
+            <img
+              src={inverter.img}
+              alt={inverter.name}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              draggable="false"
+            />
+          </div>
+          {/* Info */}
+          <div className="p-5">
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-1">{inverter.name}</h3>
+            <p className="text-center text-[#008246] font-bold text-lg mb-4">{inverter.price}</p>
+            <div className="flex items-center gap-2 justify-center mb-3">
+              <button className="inline-block px-2 py-1 text-xs bg-[#e4c73f22] text-[#008246] rounded-md font-semibold hover:bg-[#E4C73F]/50 transition-colors duration-150">
+                Compare
+              </button>
+              <button className="inline-block px-2 py-1 text-xs bg-[#e4c73f22] text-[#008246] rounded-md font-semibold hover:bg-[#E4C73F]/50 transition-colors duration-150">
+                Wishlist
+              </button>
             </div>
-          ))}
+            <button className="w-full mt-1 py-2 bg-gradient-to-r from-[#E4C73F] to-[#ffe477] text-black font-bold rounded-lg shadow hover:bg-[#d4b82f] hover:scale-[1.02] transition-all">
+              View Details
+            </button>
+          </div>
         </div>
-      </section>
-
-      {/* Home Inverters Section */}
-      <section>
-        <h1 ref={homeTitleRef} className='text-2xl md:text-3xl font-bold mb-8 text-center md:text-left text-[#008246] relative'>
-          Best Selling Home Inverters
-          <span className="absolute -bottom-2 left-0 w-20 h-1 bg-[#E4C73F] hidden md:block"></span>
-        </h1>
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6'>
-          {homeInverters.map((inverter, index) => (
-            <div 
-              key={index} 
-              ref={addToHomeRefs}
-              className='bg-white rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02] group'
-            >
-              <div className='aspect-w-16 aspect-h-9 overflow-hidden'>
-                <img 
-                  src={inverter.img} 
-                  alt={inverter.name}
-                  className='w-full h-48 object-cover object-center group-hover:scale-105 transition-transform duration-500'
-                />
-              </div>
-              <div className='p-4'>
-                <h3 className='text-lg font-semibold text-gray-800 text-center'>{inverter.name}</h3>
-                <p className='text-center text-[#008246] font-bold mt-2'>{inverter.price}</p>
-                <button className='w-full mt-4 py-2 bg-[#E4C73F] text-black font-semibold rounded hover:bg-[#d4b82f] transition-colors'>
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      ))}
     </div>
+  </section>
+
+  {/* Home Inverters Section */}
+  <section>
+    <h1
+      ref={homeTitleRef}
+      className="text-3xl md:text-4xl font-black mb-10 text-center md:text-left text-[#008246] relative"
+    >
+      Best Selling Home Inverters
+      <span className="absolute left-1/2 md:left-0 -bottom-2 w-28 h-1 bg-[#E4C73F] rounded-full -translate-x-1/2 md:translate-x-0 transition-all duration-300"></span>
+    </h1>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      {homeInverters.map((inverter, index) => (
+        <div
+          key={index}
+          ref={el => (homeInvertersRef.current[index] = el)}
+          className="relative bg-white rounded-2xl shadow-md group hover:shadow-2xl overflow-hidden transition-all duration-300"
+        >
+          {/* Ribbon */}
+          <span className="absolute top-3 left-3 bg-[#E4C73F]/90 text-[#008246] text-xs font-bold px-3 py-1 rounded shadow-md z-10 uppercase tracking-wider">
+            Popular
+          </span>
+          {/* Image */}
+          <div className="relative h-44 md:h-56 w-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-[#e4c73f1a] to-[#00824611]">
+            <img
+              src={inverter.img}
+              alt={inverter.name}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              draggable="false"
+            />
+          </div>
+          {/* Info */}
+          <div className="p-5">
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-1">{inverter.name}</h3>
+            <p className="text-center text-[#008246] font-bold text-lg mb-4">{inverter.price}</p>
+            <div className="flex items-center gap-2 justify-center mb-3">
+              <button className="inline-block px-2 py-1 text-xs bg-[#e4c73f22] text-[#008246] rounded-md font-semibold hover:bg-[#E4C73F]/50 transition-colors duration-150">
+                Compare
+              </button>
+              <button className="inline-block px-2 py-1 text-xs bg-[#e4c73f22] text-[#008246] rounded-md font-semibold hover:bg-[#E4C73F]/50 transition-colors duration-150">
+                Wishlist
+              </button>
+            </div>
+            <button className="w-full mt-1 py-2 bg-gradient-to-r from-[#E4C73F] to-[#ffe477] text-black font-bold rounded-lg shadow hover:bg-[#d4b82f] hover:scale-[1.02] transition-all">
+              View Details
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+</div>
+
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { gsap } from 'gsap';
 import { slide1, slide2, slide3 } from '../assets';
 
@@ -9,22 +9,42 @@ const SliderComponent = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [selectedCompanies, setSelectedCompanies] = useState([]);
   const [budget, setBudget] = useState([0, 100000]);
+  const [isPlaying, setIsPlaying] = useState(true);
   const sliderRef = useRef(null);
   const formRef = useRef(null);
+  const intervalRef = useRef(null);
 
   const slides = [
-    { id: 1, image: slide1, title: "Premium Power Solutions", subtitle: "Reliable energy for your home and business" },
-    { id: 2, image: slide2, title: "Advanced Battery Technology", subtitle: "Long-lasting power you can depend on" },
-    { id: 3, image: slide3, title: "Solar Energy Systems", subtitle: "Sustainable power for a greener future" },
+    { 
+      id: 1, 
+      image: slide1, 
+      title: "Premium Power Solutions", 
+      subtitle: "Reliable energy for your home and business",
+      description: "Advanced inverters and UPS systems for uninterrupted power supply"
+    },
+    { 
+      id: 2, 
+      image: slide2, 
+      title: "Advanced Battery Technology", 
+      subtitle: "Long-lasting power you can depend on",
+      description: "High-performance lithium and lead-acid batteries with extended warranty"
+    },
+    { 
+      id: 3, 
+      image: slide3, 
+      title: "Solar Energy Systems", 
+      subtitle: "Sustainable power for a greener future",
+      description: "Complete solar solutions with panels, inverters, and monitoring systems"
+    },
   ];
 
   const products = [
-    'Inverter',
-    'UPS',
-    'Batteries',
-    'Battery water',
-    'Solar products',
-    'Stabilizers'
+    { name: 'Inverter', icon: '🔌' },
+    { name: 'UPS', icon: '⚡' },
+    { name: 'Batteries', icon: '🔋' },
+    { name: 'Battery water', icon: '💧' },
+    { name: 'Solar products', icon: '☀️' },
+    { name: 'Stabilizers', icon: '⚖️' }
   ];
 
   const companies = {
@@ -39,29 +59,61 @@ const SliderComponent = () => {
   useEffect(() => {
     gsap.fromTo(
       sliderRef.current,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
     );
 
     gsap.fromTo(
       formRef.current,
-      { opacity: 0, x: 20 },
-      { opacity: 1, x: 0, duration: 0.8, ease: "power3.out", delay: 0.3 }
+      { opacity: 0, x: 30 },
+      { opacity: 1, x: 0, duration: 1, ease: "power3.out", delay: 0.2 }
     );
 
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
+    startAutoplay();
+    return () => stopAutoplay();
   }, []);
+
+  const startAutoplay = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      if (isPlaying) {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+      }
+    }, 4000);
+  };
+
+  const stopAutoplay = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  const toggleAutoplay = () => {
+    setIsPlaying(!isPlaying);
+    if (!isPlaying) {
+      startAutoplay();
+    } else {
+      stopAutoplay();
+    }
+  };
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
+    stopAutoplay();
+    setTimeout(startAutoplay, 3000);
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    stopAutoplay();
+    setTimeout(startAutoplay, 3000);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+    stopAutoplay();
+    setTimeout(startAutoplay, 3000);
   };
 
   const handleProductSelect = (product) => {
@@ -82,194 +134,301 @@ const SliderComponent = () => {
   };
 
   return (
-    <div className="relative z-0 mt-[-1px] bg-gradient-to-b from-white to-gray-50">
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row gap-6 max-w-7xl mx-auto">
+    <div className="relative z-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 py-8">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
           {/* Slider Section */}
-          <div ref={sliderRef} className="w-full md:w-3/4 h-[400px] rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative">
-            <div 
-              className="flex h-full transition-transform duration-700 ease-out"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {slides.map((slide) => (
+          <div ref={sliderRef} className="w-full lg:w-2/3 relative">
+            <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl bg-white">
+              {/* Image Container */}
+              <div className="relative h-full overflow-hidden">
                 <div 
-                  key={slide.id} 
-                  className="min-w-full h-full relative"
-                  style={{
-                    backgroundImage: `url(${slide.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
+                  className="flex h-full transition-transform duration-1000 ease-in-out"
+                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end items-center text-white p-8 text-center">
-                    <h2 className="text-4xl font-bold mb-3 transform translate-y-0 transition-transform duration-500">{slide.title}</h2>
-                    <p className="text-xl mb-6 transform translate-y-0 transition-transform duration-500 delay-100">{slide.subtitle}</p>
-                  </div>
+                  {slides.map((slide, index) => (
+                    <div 
+                      key={slide.id} 
+                      className="min-w-full h-full relative"
+                    >
+                      <img 
+                        src={slide.image} 
+                        alt={slide.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      
+                      {/* Content Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+                        <div className="max-w-2xl">
+                          <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                            {slide.title}
+                          </h2>
+                          <p className="text-xl md:text-2xl mb-3 text-gray-200">
+                            {slide.subtitle}
+                          </p>
+                          <p className="text-base md:text-lg text-gray-300 leading-relaxed">
+                            {slide.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 mt-6">
+                            <button className="bg-gradient-to-r from-[#008246] to-[#009c55] text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
+                              Learn More
+                            </button>
+                            <button className="border-2 border-white/30 text-white px-8 py-3 rounded-xl font-semibold backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
+                              Get Quote
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* Navigation Arrows */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 rounded-full shadow-lg hover:bg-white transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#008246]"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="w-6 h-6 text-[#008246]" />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 rounded-full shadow-lg hover:bg-white transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#008246]"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="w-6 h-6 text-[#008246]" />
-            </button>
-
-            {/* Dots */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3">
-              {slides.map((_, index) => (
+              {/* Navigation Controls */}
+              <div className="absolute top-6 right-6 flex items-center gap-3">
                 <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    currentSlide === index 
-                      ? 'bg-white scale-125' 
-                      : 'bg-white/50 hover:bg-white/70'
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
+                  onClick={toggleAutoplay}
+                  className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300"
+                  aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
+                >
+                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                </button>
+              </div>
+
+              {/* Navigation Arrows */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300 group"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform duration-300" />
+              </button>
+              
+              <button
+                onClick={nextSlide}
+                className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300 group"
+                aria-label="Next slide"
+              >
+                <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+
+              {/* Slide Indicators */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`transition-all duration-300 ${
+                      currentSlide === index 
+                        ? 'w-8 h-3 bg-white rounded-full' 
+                        : 'w-3 h-3 bg-white/50 rounded-full hover:bg-white/70'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Progress Bar */}
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#008246] to-[#009c55] transition-all duration-1000 ease-linear"
+                  style={{ 
+                    width: `${((currentSlide + 1) / slides.length) * 100}%` 
+                  }}
                 />
-              ))}
+              </div>
             </div>
           </div>
 
           {/* Form Section */}
           <div 
             ref={formRef} 
-            className="w-full md:w-1/4 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden"
+            className="w-full lg:w-1/3"
           >
-            <div className="p-6 h-[400px] flex flex-col">
-              {step === 1 && (
-                <div className="space-y-5 flex-1">
-                  <h3 className="text-xl font-semibold text-[#008246] border-b border-gray-100 pb-3">
-                    What are you looking for?
-                  </h3>
-                  <div className="space-y-3 flex-1">
-                    {products.map(product => (
-                      <div 
-                        key={product} 
-                        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <input
-                          type="radio"
-                          id={product}
-                          name="product"
-                          value={product}
-                          checked={selectedProduct === product}
-                          onChange={() => handleProductSelect(product)}
-                          className="w-4 h-4 text-[#008246] border-gray-300 focus:ring-[#008246]"
-                        />
-                        <label 
-                          htmlFor={product} 
-                          className="flex-1 cursor-pointer font-medium text-gray-700 hover:text-[#008246] transition-colors"
-                        >
-                          {product}
-                        </label>
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden h-[500px] flex flex-col">
+              {/* Form Header */}
+              <div className="bg-gradient-to-r from-[#008246] to-[#009c55] p-6 text-white">
+                <h3 className="text-2xl font-bold mb-2">Find Your Perfect Solution</h3>
+                <p className="text-green-100">Get personalized recommendations in 3 easy steps</p>
+                
+                {/* Progress Indicator */}
+                <div className="flex items-center gap-2 mt-4">
+                  {[1, 2, 3].map((num) => (
+                    <div key={num} className="flex items-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                        step >= num 
+                          ? 'bg-[#E4C73F] text-black' 
+                          : 'bg-white/20 text-white'
+                      }`}>
+                        {num}
                       </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => selectedProduct && setStep(2)}
-                    className="w-full bg-gradient-to-r from-[#008246] to-[#009c55] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] transition-transform"
-                    disabled={!selectedProduct}
-                  >
-                    Next
-                  </button>
+                      {num < 3 && (
+                        <div className={`w-8 h-0.5 mx-1 transition-all duration-300 ${
+                          step > num ? 'bg-[#E4C73F]' : 'bg-white/20'
+                        }`} />
+                      )}
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
 
-              {step === 2 && (
-                <div className="space-y-4 flex-1 flex flex-col">
-                  <h3 className="text-xl font-semibold text-[#008246] border-b border-gray-100 pb-3">
-                    Select Companies
-                  </h3>
-                  <div className="flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                    {companies[selectedProduct].map(company => (
-                      <div 
-                        key={company} 
-                        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          id={company}
-                          checked={selectedCompanies.includes(company)}
-                          onChange={() => handleCompanyToggle(company)}
-                          className="w-4 h-4 text-[#008246] rounded border-gray-300 focus:ring-[#008246]"
-                        />
+              {/* Form Content */}
+              <div className="flex-1 p-6 overflow-hidden">
+                {step === 1 && (
+                  <div className="h-full flex flex-col">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      What are you looking for?
+                    </h4>
+                    <div className="flex-1 space-y-3 overflow-y-auto">
+                      {products.map(product => (
                         <label 
-                          htmlFor={company} 
-                          className="flex-1 cursor-pointer font-medium text-gray-700 hover:text-[#008246] transition-colors"
+                          key={product.name} 
+                          className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+                            selectedProduct === product.name
+                              ? 'border-[#008246] bg-[#008246]/5 shadow-md'
+                              : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
+                          }`}
                         >
-                          {company}
+                          <input
+                            type="radio"
+                            name="product"
+                            value={product.name}
+                            checked={selectedProduct === product.name}
+                            onChange={() => handleProductSelect(product.name)}
+                            className="sr-only"
+                          />
+                          <span className="text-2xl mr-3">{product.icon}</span>
+                          <span className="font-medium text-gray-700">{product.name}</span>
+                          <div className={`ml-auto w-5 h-5 rounded-full border-2 transition-all duration-300 ${
+                            selectedProduct === product.name
+                              ? 'border-[#008246] bg-[#008246]'
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedProduct === product.name && (
+                              <div className="w-full h-full rounded-full bg-white scale-50" />
+                            )}
+                          </div>
                         </label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
+                      ))}
+                    </div>
                     <button
-                      onClick={() => selectedCompanies.length > 0 && setStep(3)}
-                      className="w-full bg-gradient-to-r from-[#008246] to-[#009c55] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] transition-transform"
-                      disabled={selectedCompanies.length === 0}
+                      onClick={() => selectedProduct && setStep(2)}
+                      className="w-full bg-gradient-to-r from-[#008246] to-[#009c55] text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                      disabled={!selectedProduct}
                     >
-                      Next
-                    </button>
-                    <button
-                      onClick={() => setStep(1)}
-                      className="w-full border-2 border-[#008246] text-[#008246] py-2.5 rounded-lg font-semibold hover:bg-[#e8f5ee] transition-colors transform hover:scale-[1.02] transition-transform"
-                    >
-                      Back
+                      Continue
                     </button>
                   </div>
-                </div>
-              )}
+                )}
 
-              {step === 3 && (
-                <div className="space-y-6 flex-1 flex flex-col">
-                  <h3 className="text-xl font-semibold text-[#008246] border-b border-gray-100 pb-3">
-                    Select Your Budget
-                  </h3>
-                  <div className="flex-1">
-                    <div className="space-y-4 px-2">
-                      <input
-                        type="range"
-                        min="0"
-                        max="100000"
-                        step="1000"
-                        value={budget[1]}
-                        onChange={(e) => setBudget([budget[0], parseInt(e.target.value)])}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#008246]"
-                      />
-                      <div className="flex justify-between text-sm font-medium text-gray-600">
-                        <span>₹{budget[0].toLocaleString()}</span>
-                        <span>₹{budget[1].toLocaleString()}</span>
-                      </div>
+                {step === 2 && (
+                  <div className="h-full flex flex-col">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Select Preferred Brands
+                    </h4>
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                      {companies[selectedProduct]?.map(company => (
+                        <label 
+                          key={company} 
+                          className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-300 ${
+                            selectedCompanies.includes(company)
+                              ? 'border-[#008246] bg-[#008246]/5'
+                              : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedCompanies.includes(company)}
+                            onChange={() => handleCompanyToggle(company)}
+                            className="sr-only"
+                          />
+                          <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-all duration-300 ${
+                            selectedCompanies.includes(company)
+                              ? 'border-[#008246] bg-[#008246]'
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedCompanies.includes(company) && (
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="font-medium text-gray-700">{company}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        onClick={() => setStep(1)}
+                        className="flex-1 border-2 border-[#008246] text-[#008246] py-3 rounded-xl font-semibold hover:bg-[#008246]/5 transition-all duration-300"
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={() => selectedCompanies.length > 0 && setStep(3)}
+                        className="flex-1 bg-gradient-to-r from-[#008246] to-[#009c55] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={selectedCompanies.length === 0}
+                      >
+                        Continue
+                      </button>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleSubmit}
-                      className="w-full bg-gradient-to-r from-[#E4C73F] to-[#d4b82f] text-gray-900 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity transform hover:scale-[1.02] transition-transform"
-                    >
-                      Find Products
-                    </button>
-                    <button
-                      onClick={() => setStep(2)}
-                      className="w-full border-2 border-[#008246] text-[#008246] py-2.5 rounded-lg font-semibold hover:bg-[#e8f5ee] transition-colors transform hover:scale-[1.02] transition-transform"
-                    >
-                      Back
-                    </button>
+                )}
+
+                {step === 3 && (
+                  <div className="h-full flex flex-col">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      What's your budget range?
+                    </h4>
+                    <div className="flex-1 flex flex-col justify-center">
+                      <div className="space-y-6">
+                        <div className="px-4">
+                          <input
+                            type="range"
+                            min="0"
+                            max="100000"
+                            step="1000"
+                            value={budget[1]}
+                            onChange={(e) => setBudget([budget[0], parseInt(e.target.value)])}
+                            className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                            style={{
+                              background: `linear-gradient(to right, #008246 0%, #008246 ${(budget[1]/100000)*100}%, #e5e7eb ${(budget[1]/100000)*100}%, #e5e7eb 100%)`
+                            }}
+                          />
+                        </div>
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <div className="flex justify-between items-center">
+                            <div className="text-center">
+                              <p className="text-sm text-gray-600">Minimum</p>
+                              <p className="text-xl font-bold text-[#008246]">₹{budget[0].toLocaleString()}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm text-gray-600">Maximum</p>
+                              <p className="text-xl font-bold text-[#008246]">₹{budget[1].toLocaleString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setStep(2)}
+                        className="flex-1 border-2 border-[#008246] text-[#008246] py-3 rounded-xl font-semibold hover:bg-[#008246]/5 transition-all duration-300"
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={handleSubmit}
+                        className="flex-1 bg-gradient-to-r from-[#E4C73F] to-[#d4b82f] text-gray-900 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                      >
+                        Find Products
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
