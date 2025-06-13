@@ -28,6 +28,7 @@ import {
   InputAdornment
 } from '@mui/material';
 import { img_url } from '../../config/api_route';
+import { no_image } from '../../assets';
 
 const InverterManagement = () => {
   const [inverters, setInverters] = useState([]);
@@ -340,12 +341,18 @@ const InverterManagement = () => {
                 <TableCell colSpan={8} align="center">No inverters found</TableCell>
               </TableRow>
             ) : (
-              inverters.map((inverter) => (
-                <TableRow key={inverter._id}>
+              inverters.map((inverter) => {
+                console.log(img_url+inverter.image,"INV")
+ return <TableRow key={inverter._id}>
                   <TableCell>
-                    {inverter.image ? (
-                      <img src={`${img_url}${inverter.image}`} alt={inverter.name} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }} />
-                    ) : 'No image'}
+                    {inverter ? (
+                      <img
+                      src={`${img_url}${inverter.image}`}
+                      alt={inverter.name}
+                      style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }}
+                      onError={e => { e.target.onerror = null; e.target.src = no_image; }}
+                    />
+                      ) : <img src={no_image} alt='no image found'/>}
                   </TableCell>
                   <TableCell>{inverter.name}</TableCell>
                   <TableCell>{inverter.category?.name || 'N/A'}</TableCell>
@@ -360,7 +367,7 @@ const InverterManagement = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))
+})
             )}
           </TableBody>
         </Table>

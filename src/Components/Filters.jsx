@@ -8,32 +8,100 @@ const FILTERS = [
   { icon: Settings, label: "Battery Type", options: ["Lead Acid", "Li-ion", "Tubular"] },
 ];
 
-export default function FilterSidebar({
+const FilterSidebar = ({
   priceRange,
   setPriceRange,
   selectedFilters,
   setSelectedFilters,
   onReset,
-}) {
+  filterOptions
+}) => {
+  const handleFilterChange = (key, value) => {
+    setSelectedFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
   return (
     <aside className="w-full md:w-1/4 bg-white p-6 rounded-xl shadow-lg border border-gray-100 sticky top-8 self-start z-20">
-      <h2 className="text-2xl font-bold mb-6 text-[#008246]">Filters</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+        <button
+          onClick={onReset}
+          className="text-sm text-blue-600 hover:text-blue-800"
+        >
+          Reset All
+        </button>
+      </div>
 
       {/* Price Range */}
       <div className="mb-8">
-        <label className="block mb-3 font-semibold text-gray-700">Price Range</label>
+        <h3 className="font-medium text-gray-900 mb-3">Price Range</h3>
         <input
           type="range"
-          min="1000"
+          min="0"
           max="20000"
           value={priceRange}
           onChange={(e) => setPriceRange(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#008246]"
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
-        <div className="flex justify-between text-sm mt-2 text-gray-600">
-          <span>₹1,000</span>
-          <span>₹{Number(priceRange).toLocaleString()}</span>
+        <div className="flex justify-between mt-2">
+          <span className="text-sm text-gray-600">₹0</span>
+          <span className="text-sm text-gray-600">₹{priceRange.toLocaleString()}</span>
         </div>
+      </div>
+
+      {/* Brand Filter */}
+      <div className="mb-6">
+        <h3 className="font-medium text-gray-900 mb-3">Brand</h3>
+        <select
+          value={selectedFilters.brand}
+          onChange={(e) => handleFilterChange('brand', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">All Brands</option>
+          {filterOptions.brands?.map((brand) => (
+            <option key={brand._id} value={brand._id}>
+              {brand.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Category Filter */}
+      <div className="mb-6">
+        <h3 className="font-medium text-gray-900 mb-3">Category</h3>
+        <select
+          value={selectedFilters.category}
+          onChange={(e) => handleFilterChange('category', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">All Categories</option>
+          {filterOptions.categories?.map((category) => (
+            <option key={category._id} value={category._id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Type Filter */}
+      <div className="mb-6">
+        <h3 className="font-medium text-gray-900 mb-3">Product Type</h3>
+        <select
+          value={selectedFilters.type}
+          onChange={(e) => handleFilterChange('type', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">All Types</option>
+          <option value="ups">UPS</option>
+          <option value="solar-pcu">Solar PCU</option>
+          <option value="solar-pv">Solar PV Module</option>
+          <option value="solar-street-light">Solar Street Light</option>
+          <option value="inverter">Inverter</option>
+          <option value="battery">Battery</option>
+        </select>
       </div>
 
       {FILTERS.map((filter) => (
@@ -46,10 +114,7 @@ export default function FilterSidebar({
             className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-white text-gray-700 focus:border-[#008246] focus:ring-1 focus:ring-[#008246] outline-none transition-all"
             value={selectedFilters[filter.label] || ""}
             onChange={(e) =>
-              setSelectedFilters((f) => ({
-                ...f,
-                [filter.label]: e.target.value,
-              }))
+              handleFilterChange(filter.label, e.target.value)
             }
           >
             <option value="">All</option>
@@ -61,14 +126,8 @@ export default function FilterSidebar({
           </select>
         </div>
       ))}
-
-      <button
-        className="w-full bg-[#E4C73F] text-[#008246] font-bold py-2 rounded-lg shadow hover:bg-[#ffe477] hover:text-black transition-all mt-4"
-        onClick={onReset}
-        type="button"
-      >
-        Reset Filters
-      </button>
     </aside>
   );
-}
+};
+
+export default FilterSidebar;

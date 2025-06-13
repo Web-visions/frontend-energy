@@ -467,34 +467,20 @@ const UserManagement = () => {
             
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label htmlFor="firstName" className="block text-gray-700 text-sm font-bold mb-2">
-                  First Name
+                <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
+                  Name
                 </label>
                 <input
                   type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
+                  id="name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   required
                 />
               </div>
               
-              <div className="mb-4">
-                <label htmlFor="lastName" className="block text-gray-700 text-sm font-bold mb-2">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
               
               <div className="mb-4">
                 <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
@@ -515,19 +501,6 @@ const UserManagement = () => {
                 )}
               </div>
               
-              <div className="mb-4">
-                <label htmlFor="phone" className="block text-gray-700 text-sm font-bold mb-2">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                />
-              </div>
               
               <div className="mb-6">
                 <label htmlFor="role" className="block text-gray-700 text-sm font-bold mb-2">

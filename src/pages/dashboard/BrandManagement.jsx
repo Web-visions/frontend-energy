@@ -347,7 +347,7 @@ const BrandManagement = () => {
               </TableRow>
             ) : (
               brands.map((brand) => {
-console.log(img_url +""+brand.logo,"BRAND")
+console.log(img_url+brand.logo,"BRAND")
                 return <TableRow key={brand._id}>
                   <TableCell>{brand.name}</TableCell>
                   <TableCell>
@@ -355,7 +355,7 @@ console.log(img_url +""+brand.logo,"BRAND")
                       <Avatar 
                         src={img_url+brand.logo} 
                         alt={brand.name}
-                        sx={{ width: 60, height: 60 }}
+                        sx={{ height :60 , width:50, objectFit: 'cover',width:"80%" }}
                         variant="rounded"
                       />
                     ) : (

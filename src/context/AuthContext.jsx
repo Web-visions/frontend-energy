@@ -157,17 +157,12 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // Call logout endpoint
-      await axios.post('http://localhost:5000/api/auth/logout');
       
-      // Clear local storage and state
+      
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
-      setCurrentUser(null);
-      
-      return { success: true };
+   
     } catch (error) {
-      console.error('Logout error:', error);
+     
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
