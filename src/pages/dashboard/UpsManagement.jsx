@@ -96,13 +96,13 @@ const UPSManagement = () => {
     try {
       const response = await getData('/categories');
       setCategories(response.data);
-    } catch {}
+    } catch { }
   };
   const fetchBrands = async () => {
     try {
       const response = await getData('/brands');
       setBrands(response.data);
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -427,7 +427,18 @@ const UPSManagement = () => {
                 <TextField required fullWidth label="Name" name="name" value={formData.name} onChange={handleInputChange} />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Type" name="type" value={formData.type} onChange={handleInputChange} />
+                <FormControl fullWidth>
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    name="type"
+                    value={formData.type}
+                    onChange={handleInputChange}
+                    label="Type"
+                  >
+                    <MenuItem value="Online UPS">Online UPS</MenuItem>
+                    <MenuItem value="Offline UPS / Line Interactive UPS">Offline UPS / Line Interactive UPS</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Output Power (Watt)" name="outputPowerWattage" type="number" value={formData.outputPowerWattage} onChange={handleInputChange} />

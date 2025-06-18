@@ -16,13 +16,19 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import logo from "../assets/logo.jpg";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // Adjust path as needed
+import { useCart } from '../context/CartContext';
+import { FiShoppingCart, FiUser, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
+import MenuDropdown from './MenuDropdown';
+import LogoutModal from './LogoutModal';
+import LeadFormModal from './LeadFormModal';
 
 const navigationItems = [
   { name: "Home", href: "/", icon: null },
   {
-    name: "Solar Panels",
+    name: "Solar",
     href: "/products?type=solar-pv",
     icon: Sun,
     dropdown: [
@@ -31,8 +37,18 @@ const navigationItems = [
       { name: "Solar Street Light", href: "/products?type=solar-street-light" }
     ]
   },
+  {
+    name: "Solar Projects",
+    href: "#",
+    icon: Sun,
+    dropdown: [
+      { name: "Off Grid Project", href: "#", type: "off-grid-lead" },
+      { name: "On Grid Project", href: "#", type: "on-grid-lead" },
+      { name: "Hybrid Project", href: "#", type: "hybrid-lead" }
+    ]
+  },
   { name: "Batteries", href: "/products?type=battery", icon: Battery },
-  { name: "UPS Systems", href: "/products?type=ups", icon: Zap },
+  { name: "UPS", href: "/products?type=ups", icon: Zap },
   { name: "Inverters", href: "/products?type=inverter", icon: null },
   { name: "Contact", href: "/contact", icon: null },
 ];
@@ -43,6 +59,9 @@ const Header = () => {
   const [searchActive, setSearchActive] = useState(false);
   const [cartCount] = useState(3); // Demo cart count
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [selectedProjectType, setSelectedProjectType] = useState(null);
+  const { cart } = useCart();
 
   // Dropdown for user profile
   const [userDropdown, setUserDropdown] = useState(false);
@@ -50,6 +69,8 @@ const Header = () => {
 
   const { currentUser, logout, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -72,6 +93,17 @@ const Header = () => {
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
   const toggleSearch = () => setSearchActive((prev) => !prev);
 
+  const handleLeadFormOpen = (projectType) => {
+    setSelectedProjectType(projectType);
+    setShowLeadModal(true);
+    setIsMenuOpen(false); // Close mobile menu if open
+  };
+
+  const handleLeadFormClose = () => {
+    setShowLeadModal(false);
+    setSelectedProjectType(null);
+  };
+
   // Role-based dashboard routes
   const getDashboardRoute = () => {
     if (!currentUser) return "/";
@@ -85,13 +117,28 @@ const Header = () => {
     }
   };
 
+  // Calculate cart item count
+  const cartItemCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowLogoutModal(false);
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch (error) {
+      toast.error('Failed to logout');
+    }
+  };
+
+  const isActive = (path) => location.pathname === path;
 
   return (
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-            ? "bg-white/95 backdrop-blur-md shadow-lg"
-            : "bg-gradient-to-r from-[#008246] to-[#009c55]"
+          ? "bg-white/95 backdrop-blur-md shadow-lg"
+          : "bg-gradient-to-r from-[#008246] to-[#009c55]"
           }`}
       >
         {/* Top Bar */}
@@ -157,13 +204,13 @@ const Header = () => {
                   {item.dropdown && (
                     <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top">
                       {item.dropdown.map((subItem, subIndex) => (
-                        <NavLink
+                        <button
                           key={subIndex}
-                          to={subItem.href}
-                          className="block px-4 py-3 text-gray-700 hover:bg-[#008246]/5 hover:text-[#008246] transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
+                          onClick={() => subItem.type ? handleLeadFormOpen(subItem.type) : navigate(subItem.href)}
+                          className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-[#008246]/5 hover:text-[#008246] transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
                         >
                           {subItem.name}
-                        </NavLink>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -177,35 +224,36 @@ const Header = () => {
               <button
                 onClick={toggleSearch}
                 className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${isScrolled
-                    ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
-                    : "text-white hover:bg-white/10"
+                  ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
+                  : "text-white hover:bg-white/10"
                   } ${searchActive ? "bg-[#E4C73F] text-black" : ""}`}
               >
                 <Search size={20} />
               </button>
 
               {/* Cart */}
-              <button
+              <NavLink
+                to="/cart"
                 className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-110 ${isScrolled
-                    ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
-                    : "text-white hover:bg-white/10"
+                  ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
+                  : "text-white hover:bg-white/10"
                   }`}
               >
-                <ShoppingCart size={20} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#E4C73F] text-black text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                    {cartCount}
+                <FiShoppingCart className="h-6 w-6" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#008246] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}
-              </button>
+              </NavLink>
 
               {/* Authenticated User */}
               {!loading && currentUser ? (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     className={`flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 ${isScrolled
-                        ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
-                        : "text-white hover:bg-white/10"
+                      ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
+                      : "text-white hover:bg-white/10"
                       }`}
                     onClick={() => setUserDropdown((prev) => !prev)}
                   >
@@ -232,14 +280,10 @@ const Header = () => {
                         <LayoutDashboard size={18} /> Dashboard
                       </button>
                       <button
-                        onClick={async () => {
-                          await logout();
-                          setUserDropdown(false);
-                          navigate("/");
-                        }}
+                        onClick={() => setShowLogoutModal(true)}
                         className="w-full flex items-center gap-2 px-4 py-3 hover:bg-red-50 text-red-600 transition"
                       >
-                        <LogOut size={18} /> Logout
+                        <FiLogOut className="h-5 w-5" /> Logout
                       </button>
                     </div>
                   )}
@@ -266,8 +310,8 @@ const Header = () => {
               <button
                 onClick={toggleMenu}
                 className={`lg:hidden p-2 rounded-lg transition-all duration-300 ${isScrolled
-                    ? "text-gray-700 hover:bg-[#008246]/10"
-                    : "text-white hover:bg-white/10"
+                  ? "text-gray-700 hover:bg-[#008246]/10"
+                  : "text-white hover:bg-white/10"
                   }`}
               >
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -327,15 +371,38 @@ const Header = () => {
             <div className="container mx-auto px-4 py-6">
               <nav className="space-y-4">
                 {navigationItems.map((item, index) => (
-                  <NavLink
-                    key={index}
-                    to={item.href}
-                    className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-[#008246]/5 hover:text-[#008246] transition-all duration-200 group"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.icon && React.createElement(item.icon, { size: 20, className: "text-[#008246]" })}
-                    <span className="font-medium">{item.name}</span>
-                  </NavLink>
+                  <div key={index}>
+                    <NavLink
+                      to={item.href}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-[#008246]/5 hover:text-[#008246] transition-all duration-200 group"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.icon && React.createElement(item.icon, { size: 20, className: "text-[#008246]" })}
+                      <span className="font-medium">{item.name}</span>
+                    </NavLink>
+
+                    {/* Mobile Dropdown Items */}
+                    {item.dropdown && (
+                      <div className="ml-8 space-y-2">
+                        {item.dropdown.map((subItem, subIndex) => (
+                          <button
+                            key={subIndex}
+                            onClick={() => {
+                              if (subItem.type) {
+                                handleLeadFormOpen(subItem.type);
+                              } else {
+                                navigate(subItem.href);
+                                setIsMenuOpen(false);
+                              }
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-[#008246] transition-colors"
+                          >
+                            {subItem.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
 
                 {/* Mobile Auth */}
@@ -355,14 +422,10 @@ const Header = () => {
                       <LayoutDashboard size={18} /> Dashboard
                     </button>
                     <button
-                      onClick={async () => {
-                        await logout();
-                        setIsMenuOpen(false);
-                        navigate("/");
-                      }}
+                      onClick={() => setShowLogoutModal(true)}
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 transition"
                     >
-                      <LogOut size={18} /> Logout
+                      <FiLogOut className="h-5 w-5" /> Logout
                     </button>
                   </div>
                 ) : (
@@ -407,6 +470,19 @@ const Header = () => {
         </div>
       </header>
 
+      {/* Logout Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
+
+      {/* Lead Form Modal */}
+      <LeadFormModal
+        isOpen={showLeadModal}
+        onClose={handleLeadFormClose}
+        projectType={selectedProjectType}
+      />
     </>
   );
 };

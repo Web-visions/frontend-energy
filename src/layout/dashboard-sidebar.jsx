@@ -1,128 +1,128 @@
 import React, { useState, useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { X, LayoutDashboard, Users, ShoppingBag, Settings, FileText, BarChart3, MessageSquare, Bell, Shield, Database, Boxes, Smartphone, Headphones, Cpu, ChevronRight, Home, Building, Recycle, Phone, Wrench, Package, Hammer, LogOut, Image, Pin, MapPin, ListOrdered } from 'lucide-react';
-import {logo} from '../assets/';
+import { logo } from '../assets/';
 import { useAuth } from '../context/AuthContext';
 import LogoutModal from '../Components/LogoutModal';
 import { toast } from 'react-hot-toast';
 import { SolarPower } from '@mui/icons-material';
 
 const getSidebarSections = (userRole) => {
-    const commonSections = [
+  const commonSections = [
+    {
+      title: 'Overview',
+      links: [
+        {
+          title: 'Dashboard',
+          path: `/dashboard/${userRole}`,
+          icon: <Home className="w-5 h-5" />
+        },
+        { title: 'Profile', path: `/dashboard/${userRole}/profile`, icon: <Users className="w-5 h-5" /> },
+      ]
+    },
+    {
+      title: 'Exit',
+      links: [
+        {
+          title: 'Logout',
+          path: '#',
+          icon: <LogOut className="w-5 h-5" />,
+          onClick: () => window.dispatchEvent(new CustomEvent('showLogoutModal'))
+        }
+      ]
+    }
+  ];
+
+  if (userRole === 'admin') {
+    return [
+      commonSections[0],
       {
-        title: 'Overview',
+        title: 'Management',
         links: [
-          {
-            title: 'Dashboard',
-            path: `/dashboard/${userRole}`,
-            icon: <Home className="w-5 h-5" />
-          },
-          { title: 'Profile', path: `/dashboard/${userRole}/profile`, icon: <Users className="w-5 h-5" /> },
+          { title: 'Users', path: '/dashboard/admin/users', icon: <Users className="w-5 h-5" /> },
+          { title: 'Brands', path: '/dashboard/admin/brands', icon: <Building className="w-5 h-5" /> },
+          { title: 'Leads', path: '/dashboard/admin/lead', icon: <MessageSquare className="w-5 h-5" /> },
+          { title: "Inverter", path: "/dashboard/admin/inverter", icon: <Cpu className='w-5 h-5' /> },
+          { title: "Battery", path: "/dashboard/admin/battery", icon: <Building className='w-5 h-5' /> },
+          { title: "UPS", path: "/dashboard/admin/ups", icon: <Hammer className='w-5 h-5' /> },
+          { title: "Solar Street Light", path: "/dashboard/admin/solar/street-light", icon: <Phone className='w-5 h-5' /> },
+          { title: "Solar PCU", path: "/dashboard/admin/solar/pcu", icon: <SolarPower className='w-5 h-5' /> },
+          { title: "Solar PV Module", path: "/dashboard/admin/solar/pv-module", icon: <SolarPower className="w-5 h-5" /> },
+          { title: 'City', path: '/dashboard/admin/cities', icon: <MapPin className='w-5 h-5' /> },
+          { title: 'Categories', path: '/dashboard/admin/categories', icon: <Database className='w-5 h-5' /> },
+          { title: 'Orders', path: '/dashboard/admin/orders', icon: <ListOrdered className='w-5 h-5' /> },
+
+        ]
+      },
+
+      {
+        title: 'Customization',
+        links: [
+          { title: 'Banner', path: '/dashboard/admin/banner', icon: <Image className='w-5 h-5' /> }
         ]
       },
       {
-        title: 'Exit',
+        title: 'Inventory',
         links: [
-          {
-            title: 'Logout',
-            path: '#',
-            icon: <LogOut className="w-5 h-5" />,
-            onClick: () => window.dispatchEvent(new CustomEvent('showLogoutModal'))
-          }
+          { title: 'Inventory', path: '/dashboard/admin/inventory', icon: <Boxes className='w-5 h-5' /> }
         ]
-      }
+      },
+      commonSections[1]
     ];
-  
-    if (userRole === 'admin') {
-      return [
-        commonSections[0],
-        {
-          title: 'Management',
-          links: [
-            { title: 'Users', path: '/dashboard/admin/users', icon: <Users className="w-5 h-5" /> },
-            { title: 'Brands', path: '/dashboard/admin/brands', icon: <Building className="w-5 h-5" /> },
-           
-            {title: "Inverter" ,  path: "/dashboard/admin/inverter", icon: <Cpu className='w-5 h-5' />},
-            {title: "Battery",  path: "/dashboard/admin/battery", icon: <Building className='w-5 h-5' />},
-            {title: "UPS",  path: "/dashboard/admin/ups", icon: <Hammer className='w-5 h-5' />},
-            {title : "Solar Street Light",  path: "/dashboard/admin/solar/street-light", icon: <Phone className='w-5 h-5' />},
-            {title : "Solar PCU",  path: "/dashboard/admin/solar/pcu", icon: <SolarPower className='w-5 h-5' />},
-            {title : "Solar PV Module", path: "/dashboard/admin/solar/pv-module", icon: <SolarPower className="w-5 h-5"/> },
-            { title: 'City', path: '/dashboard/admin/cities', icon: <MapPin className='w-5 h-5' /> },
-            { title: 'Categories', path: '/dashboard/admin/categories', icon: <Database className='w-5 h-5' /> },
-            { title: 'Orders', path: '/dashboard/admin/orders', icon: <ListOrdered className='w-5 h-5' /> },
+  }
 
-          ]
-        },
-        
-        {
-          title: 'Customization',
-          links: [
-            { title: 'Banner', path: '/dashboard/admin/banner', icon: <Image className='w-5 h-5' /> }
-          ]
-        },
-        {
-          title: 'Inventory',
-          links: [
-            { title: 'Inventory', path: '/dashboard/admin/inventory', icon: <Boxes className='w-5 h-5' /> }
-          ]
-        },
-        commonSections[1]
-      ];
-    }
-  
-    if (userRole === 'staff') {
-      return [
-        commonSections[0],
-        {
-          title: 'Orders',
-          links: [
-            // { title: 'Repair Orders', path: '/dashboard/staff/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
-            { title: 'Orders', path: '/dashboard/staff/orders', icon: <ListOrdered className='w-5 h-5' /> },
-          ]
-        },
-        commonSections[1]
-      ];
-    }
-  
-    if (userRole === 'user') {
-      return [
-        commonSections[0],
-        {
-          title: 'My Orders',
-          links: [
-            // { title: 'Repair Orders', path: '/dashboard/user/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
-            { title: 'Orders', path: '/dashboard/user/orders', icon: <ListOrdered className='w-5 h-5' /> },
-          ]
-        },
-        commonSections[1]
-      ];
-    }
-  
-    // fallback
-    return commonSections;
-  };
-  
+  if (userRole === 'staff') {
+    return [
+      commonSections[0],
+      {
+        title: 'Orders',
+        links: [
+          // { title: 'Repair Orders', path: '/dashboard/staff/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
+          { title: 'Orders', path: '/dashboard/staff/orders', icon: <ListOrdered className='w-5 h-5' /> },
+        ]
+      },
+      commonSections[1]
+    ];
+  }
+
+  if (userRole === 'user') {
+    return [
+      commonSections[0],
+      {
+        title: 'My Orders',
+        links: [
+          // { title: 'Repair Orders', path: '/dashboard/user/repair-orders', icon: <ListOrdered className='w-5 h-5' /> },
+          { title: 'Orders', path: '/dashboard/user/orders', icon: <ListOrdered className='w-5 h-5' /> },
+        ]
+      },
+      commonSections[1]
+    ];
+  }
+
+  // fallback
+  return commonSections;
+};
+
 
 
 function DashboardSidebar({ isOpen, onClose }) {
   const [hoveredLink, setHoveredLink] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { logout, setUser, currentUser : user } = useAuth();
+  const { logout, setUser, currentUser: user } = useAuth();
   const navigate = useNavigate();
-  
+
   const sidebarSections = getSidebarSections(user?.role || 'user');
 
   const handleLogout = async () => {
     try {
       await logout();
       localStorage.removeItem('refreshToken');
-      
+
       setUser(null);
-      
+
       setShowLogoutModal(false);
       toast.success('Logged out successfully');
-      
+
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
@@ -140,23 +140,21 @@ function DashboardSidebar({ isOpen, onClose }) {
     <>
       {/* Mobile backdrop with blur effect */}
       <div
-        className={`fixed mb-2 inset-0 z-40 backdrop-blur-sm bg-gray-800/40 transition-opacity duration-300 lg:hidden ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed mb-2 inset-0 z-40 backdrop-blur-sm bg-gray-800/40 transition-opacity duration-300 lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
       />
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white shadow-xl transition-all duration-300 ease-in-out lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white shadow-xl transition-all duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="relative h-16 flex items-center justify-between ml-10 px-4 bg-white">
           <NavLink to='/'>
-          {/* <Logo  /> */}
-          <img src={logo} alt="logo" />
-       
+            {/* <Logo  /> */}
+            <img src={logo} alt="logo" />
+
           </NavLink>
           <button
             type="button"
@@ -185,9 +183,8 @@ function DashboardSidebar({ isOpen, onClose }) {
                         className="w-full group relative flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`transition-transform duration-200 ${
-                            hoveredLink === link.path ? 'scale-110' : ''
-                          }`}>
+                          <div className={`transition-transform duration-200 ${hoveredLink === link.path ? 'scale-110' : ''
+                            }`}>
                             {link.icon}
                           </div>
                           <span>{link.title}</span>
@@ -198,10 +195,9 @@ function DashboardSidebar({ isOpen, onClose }) {
                         key={linkIndex}
                         to={link.path}
                         className={({ isActive }) =>
-                          `group relative flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                            isActive
-                              ? 'bg-gradient-to-r from-blue-600/10 to-blue-600/5 text-brand-purple'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          `group relative flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                            ? 'bg-gradient-to-r from-blue-600/10 to-blue-600/5 text-brand-purple'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                           }`
                         }
                         onMouseEnter={() => setHoveredLink(link.path)}
@@ -213,9 +209,8 @@ function DashboardSidebar({ isOpen, onClose }) {
                         }}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`transition-transform duration-200 ${
-                            hoveredLink === link.path ? 'scale-110' : ''
-                          }`}>
+                          <div className={`transition-transform duration-200 ${hoveredLink === link.path ? 'scale-110' : ''
+                            }`}>
                             {link.icon}
                           </div>
                           <span>{link.title}</span>
@@ -235,7 +230,7 @@ function DashboardSidebar({ isOpen, onClose }) {
         {/* Footer with gradient border and hover effect */}
         <div className="relative border-t border-gray-100 bg-gray-100">
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
-          
+
           {/* Dashboard Info */}
           <div className="p-2">
             <div className="group cursor-pointer rounded-xl bg-gradient-to-r from-blue-50 to-gray-100/50 p-3 transition-all duration-200 hover:shadow-md">
@@ -245,9 +240,9 @@ function DashboardSidebar({ isOpen, onClose }) {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-700">
-                    {user?.role === 'admin' ? 'Admin Console' : 
-                     user?.role === 'partner' ? 'partner Dashboard' : 
-                     user?.role === 'telecaller' ? 'Telecaller Portal' : 'Dashboard'}
+                    {user?.role === 'admin' ? 'Admin Console' :
+                      user?.role === 'partner' ? 'partner Dashboard' :
+                        user?.role === 'telecaller' ? 'Telecaller Portal' : 'Dashboard'}
                   </p>
                   <p className="text-xs text-gray-500">v1.0.0</p>
                 </div>

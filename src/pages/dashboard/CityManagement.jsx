@@ -13,14 +13,13 @@ const CityManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     state: '',
-    pincode: '',
     deliveryCharge: 0,
     estimatedDeliveryDays: '3-5 days',
     isActive: true
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
-  
+
   // Pagination state
   const [pagination, setPagination] = useState({
     page: 1,
@@ -28,14 +27,14 @@ const CityManagement = () => {
     total: 0,
     pages: 0
   });
-  
+
   // Search state
   const [search, setSearch] = useState('');
 
   // Custom debounce function
   function debounce(func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
       const context = this;
       clearTimeout(timeout);
       timeout = setTimeout(() => func.apply(context, args), wait);
@@ -93,7 +92,6 @@ const CityManagement = () => {
       setFormData({
         name: city.name,
         state: city.state,
-        pincode: city.pincode || '',
         deliveryCharge: city.deliveryCharge || 0,
         estimatedDeliveryDays: city.estimatedDeliveryDays || '3-5 days',
         isActive: city.isActive
@@ -104,7 +102,6 @@ const CityManagement = () => {
       setFormData({
         name: '',
         state: '',
-        pincode: '',
         deliveryCharge: 0,
         estimatedDeliveryDays: '3-5 days',
         isActive: true
@@ -120,7 +117,6 @@ const CityManagement = () => {
     setFormData({
       name: '',
       state: '',
-      pincode: '',
       deliveryCharge: 0,
       estimatedDeliveryDays: '3-5 days',
       isActive: true
@@ -209,9 +205,10 @@ const CityManagement = () => {
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Search cities by name, state or pincode..."
+            placeholder="Search cities by name or state..."
+            value={search}
             onChange={handleSearchChange}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
       </div>
@@ -224,7 +221,6 @@ const CityManagement = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pincode</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Charge</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -255,7 +251,6 @@ const CityManagement = () => {
                   <tr key={city._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{city.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{city.state}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{city.pincode || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{city.deliveryCharge}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{city.estimatedDeliveryDays}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -333,7 +328,7 @@ const CityManagement = () => {
                     <span className="sr-only">Previous</span>
                     <span>‹</span>
                   </button>
-                  
+
                   {/* Page numbers */}
                   {[...Array(pagination.pages).keys()].map(number => {
                     const pageNumber = number + 1;
@@ -368,7 +363,7 @@ const CityManagement = () => {
                     }
                     return null;
                   })}
-                  
+
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page === pagination.pages}
@@ -433,19 +428,6 @@ const CityManagement = () => {
                       value={formData.state}
                       onChange={handleChange}
                       required
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label htmlFor="pincode" className="block text-sm font-medium text-gray-700">
-                      Pincode
-                    </label>
-                    <input
-                      type="text"
-                      id="pincode"
-                      name="pincode"
-                      value={formData.pincode}
-                      onChange={handleChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                   </div>

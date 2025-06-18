@@ -35,9 +35,11 @@ export default function ProductListing() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const type = searchParams.get('type');
         const [productsData, filterOptions] = await Promise.all([
           productService.getAllProducts({
             ...selectedFilters,
+            type: type || selectedFilters.type,
             minPrice: 0,
             maxPrice: priceRange
           }),
@@ -53,7 +55,7 @@ export default function ProductListing() {
     };
 
     fetchData();
-  }, [selectedFilters, priceRange]);
+  }, [selectedFilters, priceRange, searchParams]);
 
   const handleReset = () => {
     setPriceRange(20000);
@@ -70,6 +72,27 @@ export default function ProductListing() {
       // Show success message
     } else {
       // Show error message
+    }
+  };
+
+  const handleProductClick = async (product) => {
+    try {
+      console.log('Product data:', product);
+
+      // Get the type from URL query parameter
+      const type = searchParams.get('type');
+      console.log('Type from URL:', type);
+
+      if (!type) {
+        console.error('No type found in URL');
+        return;
+      }
+
+      console.log('Navigating to:', `/product/${type}/${product._id}`);
+      navigate(`/product/${type}/${product._id}`);
+    } catch (error) {
+      console.error('Error navigating to product:', error);
+      setError('Error loading product details');
     }
   };
 
@@ -128,7 +151,7 @@ export default function ProductListing() {
                 {prod.images && prod.images.length > 0 && (
                   <div className="relative h-full">
                     <img
-                      src={img_url + prod.image[0] || no_image}
+                      src={img_url + prod?.image || prod?.images[0] || no_image}
                       alt={prod.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -147,10 +170,10 @@ export default function ProductListing() {
 
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <button
-                    onClick={() => handleAddToCart(prod)}
+                    onClick={() => handleProductClick(prod)}
                     className="bg-[#E4C73F] text-black px-6 py-2 rounded-full font-semibold transform -translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-lg"
                   >
-                    Add to Cart
+                    View Details
                   </button>
                 </div>
               </div>
@@ -178,9 +201,9 @@ export default function ProductListing() {
                 </div>
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-2xl font-bold text-[#008246]">
-                    ₹{(prod?.sellingPrice || prod?.mrp)?.toLocaleString()}
+                    ₹{(prod?.price || prod?.sellingPrice || prod?.mrp)?.toLocaleString() || 'Contact for Price'}
                   </p>
-                  {prod.mrp > (prod.sellingPrice || prod.mrp) && (
+                  {prod.mrp > (prod.price || prod.sellingPrice || prod.mrp) && (
                     <span className="text-sm text-gray-500 line-through">
                       ₹{prod.mrp.toLocaleString()}
                     </span>
@@ -188,7 +211,7 @@ export default function ProductListing() {
                 </div>
                 <button
                   className="w-full bg-[#008246] text-white font-semibold py-2 rounded-full hover:bg-[#005a2f] transition mb-2"
-                  onClick={() => navigate(`/product/${prod.category?.name?.toLowerCase()}/${prod._id}`)}
+                  onClick={() => handleProductClick(prod)}
                 >
                   View Details
                 </button>

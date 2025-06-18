@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, Truck, MapPin, Phone, User, Home, Navigation } from 'lucide-react';
+import API from '../utils/api';
 
 const Payment = () => {
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -9,14 +12,37 @@ const Payment = () => {
     altMobile: '',
     address: '',
     city: '',
-    pincode: '',
     landmark: '',
     paymentMethod: 'cod'
   });
 
+  useEffect(() => {
+    // Fetch active cities
+    fetchActiveCities();
+  }, []);
+
+  const fetchActiveCities = async () => {
+    try {
+      const response = await API.get('/cities/active');
+      setCities(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCityChange = (e) => {
+    const cityId = e.target.value;
+    const city = cities.find(c => c._id === cityId);
+    setSelectedCity(city);
+    setFormData(prev => ({
+      ...prev,
+      city: city?.name || ''
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -31,7 +57,7 @@ const Payment = () => {
         name: "Energy Storage System",
         description: "Battery Purchase",
         image: "https://images.pexels.com/photos/1591447/pexels-photo-1591447.jpeg",
-        handler: function(response) {
+        handler: function (response) {
           alert("Payment Successful! ID: " + response.razorpay_payment_id);
         },
         prefill: {
@@ -153,25 +179,18 @@ const Payment = () => {
                     <MapPin size={18} />
                     City
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="city"
                     className={inputClasses}
-                    placeholder="Enter your city"
-                    onChange={handleChange}
+                    value={formData.city}
+                    onChange={handleCityChange}
                     required
-                  />
-                </div>
-                <div>
-                  <label className={labelClasses}>Pincode</label>
-                  <input
-                    type="text"
-                    name="pincode"
-                    className={inputClasses}
-                    placeholder="Enter pincode"
-                    onChange={handleChange}
-                    required
-                  />
+                  >
+                    <option value="">Select a city</option>
+                    {cities.map((city) => (
+                      <option key={city._id} value={city._id}>{city.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div>
@@ -200,11 +219,10 @@ const Payment = () => {
               {['cod', 'online'].map((method) => (
                 <label
                   key={method}
-                  className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    formData.paymentMethod === method
-                      ? 'border-[#008246] bg-green-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${formData.paymentMethod === method
+                    ? 'border-[#008246] bg-green-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                 >
                   <input
                     type="radio"

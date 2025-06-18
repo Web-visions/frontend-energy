@@ -1,289 +1,302 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiEdit, FiSave, FiX } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
+import { putData } from '../../utils/http';
 
 const UserProfile = () => {
-  const { currentUser } = useAuth();
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
-    defaultValues: {
-      firstName: currentUser?.firstName || '',
-      lastName: currentUser?.lastName || '',
-      email: currentUser?.email || '',
-      phone: currentUser?.phone || ''
-    }
+  const { currentUser, setCurrentUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: currentUser?.name || '',
+    email: currentUser?.email || '',
+    phone: currentUser?.phone || '',
+    address: currentUser?.address || ''
   });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('profile');
-  
-  // For password change form
-  const { register: registerPassword, handleSubmit: handleSubmitPassword, formState: { errors: passwordErrors }, reset: resetPassword, watch: watchPassword } = useForm();
-  const newPassword = watchPassword('newPassword');
-  
-  const onSubmitProfile = async (data) => {
-    setIsSubmitting(true);
-    setError('');
-    setMessage('');
-    
-    try {
-      const response = await axios.put('http://localhost:5000/api/users/profile', data, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        address: currentUser.address || ''
       });
-      
-      if (response.data.success) {
-        setMessage('Profile updated successfully!');
-        // Update local user data if needed
-      } else {
-        setError(response.data.message || 'Failed to update profile');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred while updating profile');
-      console.error(err);
+    }
+  }, [currentUser]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await putData('/users/profile', formData);
+      setCurrentUser(prev => ({ ...prev, ...formData }));
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
-  
-  const onSubmitPassword = async (data) => {
-    setIsSubmitting(true);
-    setError('');
-    setMessage('');
-    
+
+  const handleCancel = () => {
+    setFormData({
+      name: currentUser?.name || '',
+      email: currentUser?.email || '',
+      phone: currentUser?.phone || '',
+      address: currentUser?.address || ''
+    });
+    setIsEditing(false);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const currentPassword = formData.get('currentPassword');
+    const newPassword = formData.get('newPassword');
+    const confirmPassword = formData.get('confirmPassword');
+
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await axios.put('http://localhost:5000/api/auth/change-password', {
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      await putData('/auth/change-password', {
+        currentPassword,
+        newPassword
       });
-      
-      if (response.data.success) {
-        setMessage('Password changed successfully!');
-        resetPassword();
-      } else {
-        setError(response.data.message || 'Failed to change password');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred while changing password');
-      console.error(err);
+      toast.success('Password changed successfully!');
+      e.target.reset();
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('Failed to change password');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
-  
+
   return (
-    <div>
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Your Profile</h1>
         <p className="text-gray-600">Manage your account information and settings</p>
       </div>
-      
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'profile' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-            >
-              Profile Information
-            </button>
-            <button
-              onClick={() => setActiveTab('security')}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'security' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-            >
-              Security
-            </button>
-          </nav>
-        </div>
-        
-        <div className="p-6">
-          {message && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-              {message}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Profile Information */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-800">Profile Information</h2>
+            {!isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <FiEdit className="mr-2" />
+                Edit
+              </button>
+            )}
+          </div>
+
+          {loading && (
+            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+              Loading...
             </div>
           )}
-          
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-          
-          {activeTab === 'profile' && (
-            <form onSubmit={handleSubmit(onSubmitProfile)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+          {isEditing ? (
+            <form onSubmit={handleSave}>
+              <div className="space-y-4">
                 <div>
-                  <label htmlFor="firstName" className="block text-gray-700 text-sm font-bold mb-2">
-                    First Name
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
                   </label>
                   <input
-                    id="firstName"
+                    id="name"
+                    name="name"
                     type="text"
-                    className={`w-full px-3 py-2 border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                    {...register('firstName', { 
-                      required: 'First name is required',
-                      minLength: {
-                        value: 2,
-                        message: 'First name must be at least 2 characters'
-                      }
-                    })}
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
                   />
-                  {errors.firstName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
-                  )}
                 </div>
-                
+
                 <div>
-                  <label htmlFor="lastName" className="block text-gray-700 text-sm font-bold mb-2">
-                    Last Name
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
                   </label>
                   <input
-                    id="lastName"
-                    type="text"
-                    className={`w-full px-3 py-2 border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                    {...register('lastName', { 
-                      required: 'Last name is required',
-                      minLength: {
-                        value: 2,
-                        message: 'Last name must be at least 2 characters'
-                      }
-                    })}
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"
                   />
-                  {errors.lastName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                 </div>
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none"
-                  disabled
-                  {...register('email')}
-                />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="phone" className="block text-gray-700 text-sm font-bold mb-2">
-                  Phone Number
-                </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  className={`w-full px-3 py-2 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  {...register('phone', { 
-                    required: 'Phone number is required',
-                    pattern: {
-                      value: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/,
-                      message: 'Invalid phone number format'
-                    }
-                  })}
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
-                )}
-              </div>
-              
-              <div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
+
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                    Address
+                  </label>
+                  <textarea
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    <FiSave className="mr-2" />
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    <FiX className="mr-2" />
+                    Cancel
+                  </button>
+                </div>
               </div>
             </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <FiUser className="text-gray-400 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="font-medium">{currentUser?.name || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <FiMail className="text-gray-400 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-500">Email Address</p>
+                  <p className="font-medium">{currentUser?.email || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <FiPhone className="text-gray-400 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-500">Phone Number</p>
+                  <p className="font-medium">{currentUser?.phone || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <FiMapPin className="text-gray-400 mr-3 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium">{currentUser?.address || 'Not provided'}</p>
+                </div>
+              </div>
+            </div>
           )}
-          
-          {activeTab === 'security' && (
-            <form onSubmit={handleSubmitPassword(onSubmitPassword)}>
-              <div className="mb-6">
-                <label htmlFor="currentPassword" className="block text-gray-700 text-sm font-bold mb-2">
+        </div>
+
+        {/* Change Password */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Change Password</h2>
+
+          <form onSubmit={handleChangePassword}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   Current Password
                 </label>
                 <input
                   id="currentPassword"
+                  name="currentPassword"
                   type="password"
-                  className={`w-full px-3 py-2 border ${passwordErrors.currentPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  {...registerPassword('currentPassword', { 
-                    required: 'Current password is required'
-                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
-                {passwordErrors.currentPassword && (
-                  <p className="text-red-500 text-xs mt-1">{passwordErrors.currentPassword.message}</p>
-                )}
               </div>
-              
-              <div className="mb-6">
-                <label htmlFor="newPassword" className="block text-gray-700 text-sm font-bold mb-2">
+
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   New Password
                 </label>
                 <input
                   id="newPassword"
+                  name="newPassword"
                   type="password"
-                  className={`w-full px-3 py-2 border ${passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  {...registerPassword('newPassword', { 
-                    required: 'New password is required',
-                    minLength: {
-                      value: 6,
-                      message: 'Password must be at least 6 characters'
-                    },
-                    pattern: {
-                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/,
-                      message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-                    }
-                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  minLength="6"
                 />
-                {passwordErrors.newPassword && (
-                  <p className="text-red-500 text-xs mt-1">{passwordErrors.newPassword.message}</p>
-                )}
+                <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>
               </div>
-              
-              <div className="mb-6">
-                <label htmlFor="confirmPassword" className="block text-gray-700 text-sm font-bold mb-2">
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm New Password
                 </label>
                 <input
                   id="confirmPassword"
+                  name="confirmPassword"
                   type="password"
-                  className={`w-full px-3 py-2 border ${passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  {...registerPassword('confirmPassword', { 
-                    required: 'Please confirm your new password',
-                    validate: value => value === newPassword || 'Passwords do not match'
-                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
-                {passwordErrors.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">{passwordErrors.confirmPassword.message}</p>
-                )}
               </div>
-              
-              <div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Changing Password...' : 'Change Password'}
-                </button>
-              </div>
-            </form>
-          )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Changing Password...' : 'Change Password'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

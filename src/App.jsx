@@ -6,7 +6,7 @@ import { CartProvider } from './context/CartContext';
 import {
   Home,
   Payment,
-  AddtoCartPage,
+  CartPage,
   ProductListing,
   Contact,
   Help,
@@ -19,6 +19,8 @@ import { Header, Footer } from './Components';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
 
 // Dashboard
 import DashboardLayout from './layout/dashboard-layout';
@@ -30,6 +32,8 @@ import UserManagement from './pages/dashboard/UserManagement';
 import BrandManagement from './pages/dashboard/BrandManagement';
 import CityManagement from './pages/dashboard/CityManagement';
 import CategoryManagement from './pages/dashboard/CategoryManagement';
+import LeadManagement from './pages/dashboard/LeadManagement';
+import OrderManagement from './pages/dashboard/OrderManagement';
 import Settings from './pages/dashboard/Settings';
 
 import ProtectedRoute from './routers/protectedRoutes';
@@ -51,7 +55,9 @@ export default function App() {
             <Route path="/" element={<><Header /><Home /><Footer /></>} />
             <Route path="/products" element={<><Header /><ProductListing /><Footer /></>} />
             <Route path="/product/:type/:id" element={<><Header /><ProductDetails /><Footer /></>} />
-            <Route path="/cart" element={<><Header /><AddtoCartPage /><Footer /></>} />
+            <Route path="/cart" element={<><Header /><CartPage /><Footer /></>} />
+            <Route path="/checkout" element={<><Header /><CheckoutPage /><Footer /></>} />
+            <Route path="/order-success" element={<><Header /><OrderSuccessPage /><Footer /></>} />
             <Route path="/payment" element={<><Header /><Payment /><Footer /></>} />
             <Route path="/login" element={<><Header /><Login /><Footer /></>} />
             <Route path="/signup" element={<><Header /><Signup /><Footer /></>} />
@@ -92,8 +98,9 @@ export default function App() {
               <Route path="solar/pv-module" element={<SolarPVModuleManagement />} />
               <Route path="cities" element={<CityManagement />} />
               <Route path="categories" element={<CategoryManagement />} />
+              <Route path="lead" element={<LeadManagement />} />
+              <Route path="orders" element={<OrderManagement />} />
               <Route path="repair-orders" element={<div>Repair Orders Page</div>} />
-              <Route path="orders" element={<div>Orders Page</div>} />
               <Route path="banner" element={<div>Banner Page</div>} />
               <Route path="inventory" element={<div>Inventory Page</div>} />
               <Route path="settings" element={<Settings />} />

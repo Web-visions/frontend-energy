@@ -2,7 +2,9 @@ import Home from "./Home";
 import Payment from "./Payment";
 import ProductPage from "./ProductPage";
 import ProductListing from "./ProductPage";
-import AddtoCartPage from "./AddtoCartPage";
+import CartPage from "./CartPage";
+import CheckoutPage from "./CheckoutPage";
+import OrderSuccessPage from "./OrderSuccessPage";
 import Contact from "./Contact";
 import Help from "./Help";
 import Login from "./Login";
@@ -16,7 +18,9 @@ export {
   Payment,
   Help,
   Login,
-  AddtoCartPage,
+  CartPage,
+  CheckoutPage,
+  OrderSuccessPage,
   Services,
   Signup,
 };

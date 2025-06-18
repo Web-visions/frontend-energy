@@ -34,6 +34,7 @@ const SolarPCUManagement = () => {
     warranty: "",
     dimension: "",
     weight: "",
+    price: "",
   });
   const [pagination, setPagination] = useState({ page: 0, limit: 10, total: 0 });
   const [search, setSearch] = useState("");
@@ -58,8 +59,8 @@ const SolarPCUManagement = () => {
   }, [pagination.page, pagination.limit, search, filters]);
 
   // Fetch Categories/Brands
-  const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch {} };
-  const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch {} };
+  const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch { } };
+  const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch { } };
 
   useEffect(() => { fetchPCUs(); fetchCategories(); fetchBrands(); }, [fetchPCUs]);
 
@@ -106,6 +107,7 @@ const SolarPCUManagement = () => {
         warranty: item.warranty || "",
         dimension: item.dimension || "",
         weight: item.weight || "",
+        price: item.price || "",
       });
       setFeaturesInput((item.features || []).join(", "));
       setTagsInput((item.staticTags || []).join(", "));
@@ -116,7 +118,7 @@ const SolarPCUManagement = () => {
     } else {
       setFormData({
         category: "", brand: "", name: "", description: "", features: [], type: "", wattage: "",
-        modelName: "", staticTags: [], warranty: "", dimension: "", weight: "",
+        modelName: "", staticTags: [], warranty: "", dimension: "", weight: "", price: "",
       });
       setFeaturesInput("");
       setTagsInput("");
@@ -179,10 +181,6 @@ const SolarPCUManagement = () => {
     }
   };
 
-  // Actions: Quote / Callback
-  const handleGetQuote = (id) => toast.success("Quote request sent for ID " + id);
-  const handleRequestCallback = (id) => toast.success("Callback requested for ID " + id);
-
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
@@ -242,10 +240,11 @@ const SolarPCUManagement = () => {
               <TableCell>Model</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Wattage</TableCell>
+              <TableCell>Price</TableCell>
               <TableCell>Warranty</TableCell>
               <TableCell>Dimension</TableCell>
               <TableCell>Weight</TableCell>
-              <TableCell>Features</TableCell>
+              {/* <TableCell>Features</TableCell> */}
               <TableCell>Tags</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -253,11 +252,11 @@ const SolarPCUManagement = () => {
           <TableBody>
             {loading && pcus.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={13} align="center">Loading...</TableCell>
+                <TableCell colSpan={14} align="center">Loading...</TableCell>
               </TableRow>
             ) : pcus.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={13} align="center">No PCUs found</TableCell>
+                <TableCell colSpan={14} align="center">No PCUs found</TableCell>
               </TableRow>
             ) : (
               pcus.map((item) => (
@@ -273,20 +272,19 @@ const SolarPCUManagement = () => {
                   <TableCell>{item.modelName || "N/A"}</TableCell>
                   <TableCell>{item.type || "N/A"}</TableCell>
                   <TableCell>{item.wattage || "N/A"}</TableCell>
+                  <TableCell>₹{item.price || "N/A"}</TableCell>
                   <TableCell>{item.warranty || "N/A"}</TableCell>
                   <TableCell>{item.dimension || "N/A"}</TableCell>
                   <TableCell>{item.weight || "N/A"}</TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     {Array.isArray(item.features) ? item.features.join(", ") : ""}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
                     {Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}
                   </TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(item)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(item._id)} color="error"><FiTrash2 /></IconButton>
-                    <IconButton onClick={() => handleGetQuote(item._id)} color="secondary"><FiSend title="Get Quote" /></IconButton>
-                    <IconButton onClick={() => handleRequestCallback(item._id)} color="info"><FiPhoneCall title="Request Callback" /></IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -357,6 +355,9 @@ const SolarPCUManagement = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Weight (Kg)" name="weight" type="number" value={formData.weight} onChange={handleInputChange} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField required fullWidth label="Price (₹)" name="price" type="number" value={formData.price} onChange={handleInputChange} />
               </Grid>
               <Grid item xs={12}>
                 <TextField

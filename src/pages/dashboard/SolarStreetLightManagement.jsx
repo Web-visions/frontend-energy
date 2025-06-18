@@ -29,6 +29,7 @@ const SolarStreetLightManagement = () => {
     description: "",
     replacementPolicy: "",
     staticTags: [],
+    price: "",
   });
   const [pagination, setPagination] = useState({ page: 0, limit: 10, total: 0 });
   const [search, setSearch] = useState("");
@@ -53,8 +54,8 @@ const SolarStreetLightManagement = () => {
   }, [pagination.page, pagination.limit, search, filters]);
 
   // Fetch Categories/Brands
-  const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch {} };
-  const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch {} };
+  const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch { } };
+  const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch { } };
 
   useEffect(() => { fetchLights(); fetchCategories(); fetchBrands(); }, [fetchLights]);
 
@@ -96,6 +97,7 @@ const SolarStreetLightManagement = () => {
         description: item.description || "",
         replacementPolicy: item.replacementPolicy || "",
         staticTags: item.staticTags || [],
+        price: item.price || "",
       });
       setTagsInput((item.staticTags || []).join(", "));
       setIsEditing(true);
@@ -104,7 +106,7 @@ const SolarStreetLightManagement = () => {
       setImageFile(null);
     } else {
       setFormData({
-        category: "", brand: "", name: "", modelName: "", power: "", description: "", replacementPolicy: "", staticTags: [],
+        category: "", brand: "", name: "", modelName: "", power: "", description: "", replacementPolicy: "", staticTags: [], price: "",
       });
       setTagsInput("");
       setIsEditing(false);
@@ -162,10 +164,6 @@ const SolarStreetLightManagement = () => {
       }
     }
   };
-
-  // Actions: Quote / Callback
-  const handleGetQuote = (id) => toast.success("Quote request sent for ID " + id);
-  const handleRequestCallback = (id) => toast.success("Callback requested for ID " + id);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -225,6 +223,7 @@ const SolarStreetLightManagement = () => {
               <TableCell>Brand</TableCell>
               <TableCell>Model</TableCell>
               <TableCell>Power (W)</TableCell>
+              <TableCell>Price</TableCell>
               <TableCell>Replacement Policy</TableCell>
               <TableCell>Tags</TableCell>
               <TableCell>Actions</TableCell>
@@ -233,11 +232,11 @@ const SolarStreetLightManagement = () => {
           <TableBody>
             {loading && lights.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center">Loading...</TableCell>
+                <TableCell colSpan={10} align="center">Loading...</TableCell>
               </TableRow>
             ) : lights.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center">No lights found</TableCell>
+                <TableCell colSpan={10} align="center">No lights found</TableCell>
               </TableRow>
             ) : (
               lights.map((item) => (
@@ -252,6 +251,7 @@ const SolarStreetLightManagement = () => {
                   <TableCell>{item.brand?.name || "N/A"}</TableCell>
                   <TableCell>{item.modelName || "N/A"}</TableCell>
                   <TableCell>{item.power || "N/A"}</TableCell>
+                  <TableCell>₹{item.price || "N/A"}</TableCell>
                   <TableCell>{item.replacementPolicy || "N/A"}</TableCell>
                   <TableCell>
                     {Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}
@@ -259,8 +259,6 @@ const SolarStreetLightManagement = () => {
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(item)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(item._id)} color="error"><FiTrash2 /></IconButton>
-                    <IconButton onClick={() => handleGetQuote(item._id)} color="secondary"><FiSend title="Get Quote" /></IconButton>
-                    <IconButton onClick={() => handleRequestCallback(item._id)} color="info"><FiPhoneCall title="Request Callback" /></IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -314,6 +312,9 @@ const SolarStreetLightManagement = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Replacement Policy" name="replacementPolicy" value={formData.replacementPolicy} onChange={handleInputChange} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField required fullWidth label="Price (₹)" name="price" type="number" value={formData.price} onChange={handleInputChange} />
               </Grid>
               <Grid item xs={12}>
                 <TextField fullWidth label="Description" name="description" value={formData.description} onChange={handleInputChange} multiline rows={2} />

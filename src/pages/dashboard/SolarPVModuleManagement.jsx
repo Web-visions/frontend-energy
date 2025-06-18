@@ -35,6 +35,7 @@ const SolarPVModuleManagement = () => {
     importer: "",
     replacementPolicy: "",
     staticTags: [],
+    price: "",
   });
   const [pagination, setPagination] = useState({ page: 0, limit: 10, total: 0 });
   const [search, setSearch] = useState("");
@@ -58,8 +59,8 @@ const SolarPVModuleManagement = () => {
   }, [pagination.page, pagination.limit, search]);
 
   // Fetch Categories/Brands
-  const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch {} };
-  const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch {} };
+  const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch { } };
+  const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch { } };
 
   useEffect(() => { fetchModules(); fetchCategories(); fetchBrands(); }, [fetchModules]);
 
@@ -105,6 +106,7 @@ const SolarPVModuleManagement = () => {
         importer: item.importer || "",
         replacementPolicy: item.replacementPolicy || "",
         staticTags: item.staticTags || [],
+        price: item.price || "",
       });
       setTagsInput((item.staticTags || []).join(", "));
       setIsEditing(true);
@@ -119,7 +121,7 @@ const SolarPVModuleManagement = () => {
       setFormData({
         category: "", brand: "", name: "", description: "", modelName: "", sku: "", type: "",
         weight: "", dimension: "", manufacturer: "", packer: "", importer: "",
-        replacementPolicy: "", staticTags: [],
+        replacementPolicy: "", staticTags: [], price: "",
       });
       setTagsInput("");
       setIsEditing(false);
@@ -179,10 +181,6 @@ const SolarPVModuleManagement = () => {
     }
   };
 
-  // Actions: Quote / Callback
-  const handleGetQuote = (id) => toast.success("Quote request sent for ID " + id);
-  const handleRequestCallback = (id) => toast.success("Callback requested for ID " + id);
-
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
@@ -229,6 +227,7 @@ const SolarPVModuleManagement = () => {
               <TableCell>Model</TableCell>
               <TableCell>SKU</TableCell>
               <TableCell>Type</TableCell>
+              <TableCell>Price</TableCell>
               <TableCell>Dimension</TableCell>
               <TableCell>Weight</TableCell>
               <TableCell>Manufacturer</TableCell>
@@ -242,11 +241,11 @@ const SolarPVModuleManagement = () => {
           <TableBody>
             {loading && modules.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={15} align="center">Loading...</TableCell>
+                <TableCell colSpan={16} align="center">Loading...</TableCell>
               </TableRow>
             ) : modules.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={15} align="center">No PV Modules found</TableCell>
+                <TableCell colSpan={16} align="center">No PV Modules found</TableCell>
               </TableRow>
             ) : (
               modules.map((item) => (
@@ -266,6 +265,7 @@ const SolarPVModuleManagement = () => {
                   <TableCell>{item.modelName || "N/A"}</TableCell>
                   <TableCell>{item.sku || "N/A"}</TableCell>
                   <TableCell>{item.type || "N/A"}</TableCell>
+                  <TableCell>₹{item.price || "N/A"}</TableCell>
                   <TableCell>{item.dimension || "N/A"}</TableCell>
                   <TableCell>{item.weight || "N/A"}</TableCell>
                   <TableCell>{item.manufacturer || "N/A"}</TableCell>
@@ -280,8 +280,6 @@ const SolarPVModuleManagement = () => {
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(item)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(item._id)} color="error"><FiTrash2 /></IconButton>
-                    <IconButton onClick={() => handleGetQuote(item._id)} color="secondary"><FiSend title="Get Quote" /></IconButton>
-                    <IconButton onClick={() => handleRequestCallback(item._id)} color="info"><FiPhoneCall title="Request Callback" /></IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -360,6 +358,9 @@ const SolarPVModuleManagement = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Replacement Policy" name="replacementPolicy" value={formData.replacementPolicy} onChange={handleInputChange} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField required fullWidth label="Price (₹)" name="price" type="number" value={formData.price} onChange={handleInputChange} />
               </Grid>
               <Grid item xs={12}>
                 <TextField

@@ -12,7 +12,22 @@ export const productService = {
 
     // Get single product
     getProduct: async (type, id) => {
-        const response = await axios.get(`${API_URL}/products/${type}/${id}`);
+        console.log('Product service - Fetching product:', { type, id });
+        // Map URL types to backend types
+        const typeMap = {
+            'solar-pcu': 'solar-pcu',
+            'solar-pv': 'solar-pv',
+            'solar-street-light': 'solar-street-light',
+            'ups': 'ups',
+            'inverter': 'inverter',
+            'battery': 'battery'
+        };
+
+        const backendType = typeMap[type] || type;
+        console.log('Product service - Using backend type:', backendType);
+
+        const response = await axios.get(`${API_URL}/products/${backendType}/${id}`);
+        console.log('Product service - Received response:', response.data);
         return response.data;
     },
 
