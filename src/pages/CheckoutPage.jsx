@@ -6,10 +6,24 @@ import { img_url } from '../config/api_route';
 import { toast } from 'react-hot-toast';
 import { FiArrowLeft, FiMapPin, FiPhone, FiMail, FiCreditCard, FiTruck } from 'react-icons/fi';
 import noImageFound from '../assets/no_img_found.png';
-import API from '../utils/api';
+import { getData, postData } from '../utils/http';
+
+const loadScript = (src) => {
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => {
+            resolve(true);
+        };
+        script.onerror = () => {
+            resolve(false);
+        };
+        document.body.appendChild(script);
+    });
+};
 
 const CheckoutPage = () => {
-    const { cart, loading: cartLoading } = useCart();
+    const { cart, loading: cartLoading, refreshCart } = useCart();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
@@ -33,21 +47,22 @@ const CheckoutPage = () => {
             return;
         }
 
-        if (!cart?.items || cart.items.length === 0) {
-            navigate('/cart');
+        if (!cartLoading && (!cart?.items || cart.items.length === 0)) {
+            toast.error("Your cart is empty. Add items to proceed.");
+            navigate('/products');
             return;
         }
 
-        // Fetch active cities
         fetchActiveCities();
-    }, [currentUser, cart, navigate]);
+    }, [currentUser, cart, cartLoading, navigate]);
 
     const fetchActiveCities = async () => {
         try {
-            const response = await API.get('/cities/active');
-            setCities(response.data.data || []);
+            const response = await getData('/cities/active');
+            setCities(response.data || []);
         } catch (error) {
             console.error('Error fetching cities:', error);
+            toast.error("Could not fetch cities.");
         }
     };
 
@@ -79,14 +94,12 @@ const CheckoutPage = () => {
             }
         }
 
-        // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(shippingDetails.email)) {
             toast.error('Please enter a valid email address');
             return false;
         }
 
-        // Phone validation
         const phoneRegex = /^[6-9]\d{9}$/;
         if (!phoneRegex.test(shippingDetails.phone)) {
             toast.error('Please enter a valid 10-digit phone number');
@@ -100,38 +113,80 @@ const CheckoutPage = () => {
         if (!validateForm()) return;
 
         setIsProcessing(true);
-        try {
-            const totalAmount = cart.totalAmount + (selectedCity?.deliveryCharge || 0);
 
-            // Here you would typically make an API call to create a Razorpay order
-            // For now, we'll simulate the process
+        const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+
+        if (!res) {
+            toast.error('Razorpay SDK failed to load. Are you online?');
+            setIsProcessing(false);
+            return;
+        }
+
+        try {
+            const order = await postData('/payment/order', { cityId: selectedCity._id });
+            const keyData = await getData('/payment/key');
+            const razorpayKey = keyData.key;
 
             const options = {
-                key: process.env.REACT_APP_RAZORPAY_KEY_ID, // Replace with your Razorpay key
-                amount: totalAmount * 100, // Amount in paise
-                currency: "INR",
+                key: razorpayKey,
+                amount: order.amount,
+                currency: order.currency,
                 name: "Solar Energy Store",
                 description: "Purchase from Solar Energy Store",
-                image: "/logo.jpg",
-                order_id: "order_" + Date.now(), // This should come from your backend
-                handler: function (response) {
-                    handleOrderSuccess(response);
+                image: img_url, // Make sure you have a logo in your public folder
+                order_id: order.id,
+                handler: async function (response) {
+                    setIsProcessing(true);
+                    const data = {
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        shippingInfo: { ...shippingDetails, city: selectedCity?.name },
+                    };
+
+                    try {
+                        const verifyResponse = await postData('/payment/verify', data);
+                        if (verifyResponse.success) {
+                            toast.success('Order placed successfully!');
+                            refreshCart(); // To clear the cart
+                            navigate('/order-success', {
+                                state: {
+                                    orderId: verifyResponse.order._id,
+                                    orderNumber: verifyResponse.order.orderNumber,
+                                    paymentMethod: 'razorpay',
+                                    total: verifyResponse.order.totalAmount,
+                                },
+                            });
+                        } else {
+                            toast.error(verifyResponse.message || 'Payment verification failed.');
+                        }
+                    } catch (error) {
+                        toast.error(error.response?.data?.message || 'Payment verification failed.');
+                    } finally {
+                        setIsProcessing(false);
+                    }
                 },
                 prefill: {
                     name: shippingDetails.fullName,
                     email: shippingDetails.email,
-                    contact: shippingDetails.phone
+                    contact: shippingDetails.phone,
                 },
                 theme: {
-                    color: "#008246"
-                }
+                    color: "#008246",
+                },
+                modal: {
+                    ondismiss: function () {
+                        setIsProcessing(false);
+                    },
+                },
             };
 
-            const rzp = new window.Razorpay(options);
-            rzp.open();
+            const paymentObject = new window.Razorpay(options);
+            paymentObject.open();
+
         } catch (error) {
-            toast.error('Payment initialization failed');
-        } finally {
+            console.error('Error during Razorpay payment:', error);
+            toast.error(error.response?.data?.message || 'An error occurred during payment.');
             setIsProcessing(false);
         }
     };
@@ -141,48 +196,35 @@ const CheckoutPage = () => {
 
         setIsProcessing(true);
         try {
-            // Simulate API call for COD order
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            handleOrderSuccess({ payment_method: 'cod' });
+            const orderData = {
+                shippingInfo: { ...shippingDetails, city: selectedCity?.name },
+                paymentMethod: 'cod',
+            };
+
+            const result = await postData('/orders', orderData);
+
+            if (result.success) {
+                toast.success('Order placed successfully!');
+                refreshCart(); // To clear the cart
+                navigate('/order-success', {
+                    state: {
+                        orderId: result.data.orderId,
+                        orderNumber: result.data.orderNumber,
+                        paymentMethod: 'cod',
+                        total: result.data.total
+                    }
+                });
+            } else {
+                toast.error(result.message || 'Failed to create order');
+            }
         } catch (error) {
-            toast.error('Failed to place COD order');
+            console.error('Error creating COD order:', error);
+            toast.error(error.response?.data?.message || 'Failed to place COD order');
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const handleOrderSuccess = async (paymentResponse) => {
-        try {
-            // Create order in backend
-            const orderData = {
-                shippingDetails,
-                paymentMethod: paymentResponse.payment_method || 'razorpay',
-                transactionId: paymentResponse.razorpay_payment_id || null
-            };
-
-            const response = await API.post('/orders', orderData);
-
-            if (response.status === 201) {
-                const orderResult = response.data;
-                toast.success('Order placed successfully!');
-
-                // Navigate to order success page
-                navigate('/order-success', {
-                    state: {
-                        orderId: orderResult.data.orderId,
-                        orderNumber: orderResult.data.orderNumber,
-                        paymentMethod: paymentResponse.payment_method || 'razorpay',
-                        total: orderResult.data.total
-                    }
-                });
-            } else {
-                toast.error('Failed to create order');
-            }
-        } catch (error) {
-            console.error('Error creating order:', error);
-            toast.error(error.response?.data?.message || 'Failed to create order');
-        }
-    };
 
     const getProductPrice = (product, productType) => {
         if (productType.startsWith('solar-')) {
@@ -193,17 +235,19 @@ const CheckoutPage = () => {
 
     const getProductMRP = (product, productType) => {
         if (productType.startsWith('solar-')) {
-            return null; // Solar products don't have MRP
+            return null;
         }
         return product.mrp || null;
     };
 
     const getProductImage = (product) => {
-        if (product.images && product.images.length > 0) {
-            return img_url + product.images[0];
+        const imagePath = (product.images && product.images.length > 0) ? product.images[0] : product.image;
+        if (imagePath) {
+            return `${img_url}${imagePath}`;
         }
-        return img_url + product.image;
+        return noImageFound;
     };
+
 
     if (cartLoading) {
         return (
@@ -216,7 +260,6 @@ const CheckoutPage = () => {
     return (
         <div className="min-h-screen bg-gray-50 mt-28">
             <div className="max-w-7xl mx-auto px-4 py-8">
-                {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => navigate('/cart')}
@@ -229,9 +272,7 @@ const CheckoutPage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Checkout Form */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Shipping Details */}
                         <div className="bg-white rounded-2xl shadow-lg p-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                                 <FiMapPin className="w-5 h-5" />
@@ -264,6 +305,7 @@ const CheckoutPage = () => {
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008246] focus:border-transparent"
                                         placeholder="Enter your email"
+                                        readOnly
                                     />
                                 </div>
 
@@ -287,7 +329,7 @@ const CheckoutPage = () => {
                                     </label>
                                     <select
                                         name="city"
-                                        value={shippingDetails.city}
+                                        value={selectedCity?._id || ""}
                                         onChange={handleCityChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008246] focus:border-transparent"
                                     >
@@ -309,8 +351,9 @@ const CheckoutPage = () => {
                                         name="state"
                                         value={shippingDetails.state}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008246] focus:border-transparent"
-                                        placeholder="Enter state"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100"
+                                        placeholder="State"
+                                        readOnly
                                     />
                                 </div>
 
@@ -344,7 +387,6 @@ const CheckoutPage = () => {
                             </div>
                         </div>
 
-                        {/* Payment Method */}
                         <div className="bg-white rounded-2xl shadow-lg p-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                                 <FiCreditCard className="w-5 h-5" />
@@ -391,13 +433,11 @@ const CheckoutPage = () => {
                         </div>
                     </div>
 
-                    {/* Order Summary */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8">
+                        <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-28">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
 
-                            {/* Order Items */}
-                            <div className="space-y-4 mb-6">
+                            <div className="space-y-4 mb-6 max-h-64 overflow-y-auto pr-2">
                                 {cart.items.map((item) => {
                                     const itemPrice = getProductPrice(item.productId, item.productType);
                                     const itemMRP = getProductMRP(item.productId, item.productType);
@@ -409,9 +449,6 @@ const CheckoutPage = () => {
                                                 src={getProductImage(item.productId)}
                                                 alt={item.productId.name}
                                                 className="w-16 h-16 object-cover rounded-lg"
-                                                onError={(e) => {
-                                                    e.target.src = noImageFound;
-                                                }}
                                             />
                                             <div className="flex-grow">
                                                 <h4 className="font-medium text-gray-900 text-sm line-clamp-2">
@@ -427,52 +464,6 @@ const CheckoutPage = () => {
                                                         Qty: {item.quantity} × ₹{itemPrice.toLocaleString()}
                                                     </p>
                                                 </div>
-                                                {itemMRP && itemMRP > itemPrice && (
-                                                    <p className="text-xs text-green-600 font-medium">
-                                                        Save ₹{(itemMRP - itemPrice).toLocaleString()}
-                                                    </p>
-                                                )}
-                                                <p className="text-xs text-gray-500">
-                                                    Brand: {item.productId.brand?.name || 'N/A'}
-                                                </p>
-                                                {/* Product Specifications */}
-                                                <div className="mt-1 space-y-0.5">
-                                                    {item.productId.modelName && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Model: {item.productId.modelName}
-                                                        </p>
-                                                    )}
-                                                    {item.productId.capacity && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Capacity: {item.productId.capacity}VA
-                                                        </p>
-                                                    )}
-                                                    {item.productId.AH && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Capacity: {item.productId.AH}Ah
-                                                        </p>
-                                                    )}
-                                                    {item.productId.wattage && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Wattage: {item.productId.wattage}W
-                                                        </p>
-                                                    )}
-                                                    {item.productId.power && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Power: {item.productId.power}W
-                                                        </p>
-                                                    )}
-                                                    {item.productId.batteryType && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Type: {item.productId.batteryType}
-                                                        </p>
-                                                    )}
-                                                    {item.productId.warranty && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Warranty: {item.productId.warranty}
-                                                        </p>
-                                                    )}
-                                                </div>
                                             </div>
                                             <div className="text-right">
                                                 <p className="font-medium text-gray-900">
@@ -484,7 +475,6 @@ const CheckoutPage = () => {
                                 })}
                             </div>
 
-                            {/* Price Breakdown */}
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-gray-600">
                                     <span>Subtotal ({cart.items.length} items)</span>
@@ -496,18 +486,6 @@ const CheckoutPage = () => {
                                         {selectedCity?.deliveryCharge > 0 ? `₹${selectedCity.deliveryCharge.toLocaleString()}` : 'Free'}
                                     </span>
                                 </div>
-                                {selectedCity && (
-                                    <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                                        <div className="flex items-center gap-1">
-                                            <FiTruck className="w-3 h-3" />
-                                            Estimated delivery: {selectedCity.estimatedDeliveryDays}
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Tax</span>
-                                    <span>₹0</span>
-                                </div>
                                 <div className="border-t border-gray-200 pt-3">
                                     <div className="flex justify-between text-xl font-bold text-gray-900">
                                         <span>Total</span>
@@ -517,10 +495,9 @@ const CheckoutPage = () => {
                                 </div>
                             </div>
 
-                            {/* Place Order Button */}
                             <button
                                 onClick={paymentMethod === 'razorpay' ? handleRazorpayPayment : handleCODPayment}
-                                disabled={isProcessing}
+                                disabled={isProcessing || !cart.items.length}
                                 className="w-full bg-[#008246] text-white font-semibold py-4 rounded-xl text-lg hover:bg-[#005a2f] transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isProcessing ? (
@@ -533,7 +510,6 @@ const CheckoutPage = () => {
                                 )}
                             </button>
 
-                            {/* Security Notice */}
                             <div className="mt-4 text-center">
                                 <p className="text-xs text-gray-500">
                                     🔒 Your payment information is secure and encrypted

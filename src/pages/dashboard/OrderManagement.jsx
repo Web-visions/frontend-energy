@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiSearch, FiEye, FiDownload, FiPackage, FiTruck, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import InvoiceDownload from '../../Components/InvoiceDownload';
-import { getData, postData, putData, deleteData } from '../../utils/http';
+import { getData, putData } from '../../utils/http';
 import OrderDetailsModal from './OrderDetailsModal';
 
 const OrderManagement = () => {
@@ -61,6 +61,13 @@ const OrderManagement = () => {
 
     const getStatusColor = (status) => {
         const colors = {
+            Pending: 'bg-yellow-100 text-yellow-800',
+            Confirmed: 'bg-blue-100 text-blue-800',
+            Processing: 'bg-purple-100 text-purple-800',
+            Shipped: 'bg-indigo-100 text-indigo-800',
+            Delivered: 'bg-green-100 text-green-800',
+            Cancelled: 'bg-red-100 text-red-800',
+            // Fallbacks for old status values
             pending: 'bg-yellow-100 text-yellow-800',
             confirmed: 'bg-blue-100 text-blue-800',
             processing: 'bg-purple-100 text-purple-800',
@@ -73,6 +80,13 @@ const OrderManagement = () => {
 
     const getStatusIcon = (status) => {
         const icons = {
+            Pending: FiPackage,
+            Confirmed: FiCheckCircle,
+            Processing: FiPackage,
+            Shipped: FiTruck,
+            Delivered: FiCheckCircle,
+            Cancelled: FiXCircle,
+            // Fallbacks for old status values
             pending: FiPackage,
             confirmed: FiCheckCircle,
             processing: FiPackage,
@@ -94,6 +108,9 @@ const OrderManagement = () => {
     };
 
     const formatCurrency = (amount) => {
+        if (typeof amount !== 'number') {
+            return 'N/A';
+        }
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR'
@@ -102,7 +119,9 @@ const OrderManagement = () => {
 
     const handleViewOrder = async (orderId) => {
         try {
-            const data = await getData(`/orders/details/${orderId}`);
+            // This endpoint name 'details' might not exist, you may need to adjust it
+            // to point to your general getOrderById endpoint.
+            const data = await getData(`/orders/${orderId}`);
             setSelectedOrder(data.data);
             setShowOrderModal(true);
         } catch (error) {
@@ -143,12 +162,12 @@ const OrderManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008246] focus:border-transparent"
                             >
                                 <option value="all">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="processing">Processing</option>
-                                <option value="shipped">Shipped</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="cancelled">Cancelled</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
                         <div className="flex items-end">
@@ -204,7 +223,9 @@ const OrderManagement = () => {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {orders.map((order) => {
-                                        const StatusIcon = getStatusIcon(order.status);
+                                        const status = order.orderStatus ?? order.status;
+                                        const StatusIcon = getStatusIcon(status);
+
                                         return (
                                             <tr key={order._id} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -213,11 +234,11 @@ const OrderManagement = () => {
                                                             {order.orderNumber}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            {order.paymentDetails.method.toUpperCase()}
+                                                            {(order.paymentInfo?.method ?? order.paymentDetails?.method)?.toUpperCase()}
                                                         </div>
-                                                        {order.paymentDetails.transactionId && (
+                                                        {(order.paymentInfo?.razorpay_transaction_id || order.paymentDetails?.transactionId) && (
                                                             <div className="text-xs text-gray-400">
-                                                                TXN: {order.paymentDetails.transactionId}
+                                                                TXN: {order.paymentInfo?.razorpay_transaction_id || order.paymentDetails?.transactionId}
                                                             </div>
                                                         )}
                                                     </div>
@@ -225,13 +246,13 @@ const OrderManagement = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div>
                                                         <div className="text-sm font-medium text-gray-900">
-                                                            {order.shippingDetails.fullName}
+                                                            {order.shippingInfo?.fullName ?? order.shippingDetails?.fullName}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            {order.shippingDetails.email}
+                                                            {order.shippingInfo?.email ?? order.shippingDetails?.email}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            {order.shippingDetails.phone}
+                                                            {order.shippingInfo?.phone ?? order.shippingDetails?.phone}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -240,25 +261,25 @@ const OrderManagement = () => {
                                                         {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                                                     </div>
                                                     <div className="text-sm text-gray-500">
-                                                        {order.items.map(item => item.productId?.name).slice(0, 2).join(', ')}
+                                                        {order.items.map(item => item.product?.name ?? item.productId?.name).slice(0, 2).join(', ')}
                                                         {order.items.length > 2 && '...'}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {formatCurrency(order.pricing.total)}
+                                                    {formatCurrency(order.totalAmount ?? order.pricing?.total)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <select
-                                                        value={order.status}
+                                                        value={status}
                                                         onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                                                        className={`text-sm px-2 py-1 rounded-full font-medium ${getStatusColor(order.status)}`}
+                                                        className={`text-sm px-2 py-1 rounded-full font-medium ${getStatusColor(status)}`}
                                                     >
-                                                        <option value="pending">Pending</option>
-                                                        <option value="confirmed">Confirmed</option>
-                                                        <option value="processing">Processing</option>
-                                                        <option value="shipped">Shipped</option>
-                                                        <option value="delivered">Delivered</option>
-                                                        <option value="cancelled">Cancelled</option>
+                                                        <option value="Pending">Pending</option>
+                                                        <option value="Confirmed">Confirmed</option>
+                                                        <option value="Processing">Processing</option>
+                                                        <option value="Shipped">Shipped</option>
+                                                        <option value="Delivered">Delivered</option>
+                                                        <option value="Cancelled">Cancelled</option>
                                                     </select>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -332,4 +353,4 @@ const OrderManagement = () => {
     );
 };
 
-export default OrderManagement; 
+export default OrderManagement;

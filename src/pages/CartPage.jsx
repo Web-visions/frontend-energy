@@ -48,7 +48,7 @@ const CartPage = () => {
 
     const getProductPrice = (product, productType) => {
         if (productType.startsWith('solar-')) {
-            return product.price || 0;
+            return product?.price || 0;
         }
         return product.sellingPrice || product.mrp || 0;
     };
@@ -61,10 +61,10 @@ const CartPage = () => {
     };
 
     const getProductImage = (product) => {
-        if (product.images && product.images.length > 0) {
-            return img_url + product.images[0];
+        if (product?.images && product?.images?.length > 0) {
+            return img_url + product?.images[0];
         }
-        return img_url + product.image;
+        return img_url + product?.image;
     };
 
     if (loading) {
@@ -133,15 +133,15 @@ const CartPage = () => {
                     {/* Cart Items */}
                     <div className="lg:col-span-2 space-y-4">
                         {cart.items.map((item) => {
-                            const isUpdating = updatingItems.has(`${item.productType}-${item.productId._id}`);
-                            const isRemoving = removingItems.has(`${item.productType}-${item.productId._id}`);
-                            const itemPrice = getProductPrice(item.productId, item.productType);
-                            const itemMRP = getProductMRP(item.productId, item.productType);
-                            const totalItemPrice = itemPrice * item.quantity;
+                            const isUpdating = updatingItems?.has(`${item.productType}-${item.productId?._id}`);
+                            const isRemoving = removingItems.has(`${item.productType}-${item.productId?._id}`);
+                            const itemPrice = getProductPrice(item.productId, item?.productType);
+                            const itemMRP = getProductMRP(item.productId, item?.productType);
+                            const totalItemPrice = itemPrice * item?.quantity;
 
                             return (
                                 <div
-                                    key={`${item.productType}-${item.productId._id}`}
+                                    key={`${item.productType}-${item.productId?._id}`}
                                     className={`bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 ${isRemoving ? 'opacity-50' : ''
                                         }`}
                                 >
@@ -149,8 +149,8 @@ const CartPage = () => {
                                         {/* Product Image */}
                                         <div className="w-24 h-24 flex-shrink-0">
                                             <img
-                                                src={getProductImage(item.productId)}
-                                                alt={item.productId.name}
+                                                src={getProductImage(item?.productId)}
+                                                alt={item?.productId?.name}
                                                 className="w-full h-full object-cover rounded-xl"
                                                 onError={(e) => {
                                                     e.target.src = noImageFound;
@@ -163,47 +163,47 @@ const CartPage = () => {
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
                                                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                                        {item.productId.name}
+                                                        {item?.productId?.name}
                                                     </h3>
                                                     <p className="text-sm text-gray-600 capitalize">
                                                         {item.productType.replace('-', ' ')}
                                                     </p>
                                                     <p className="text-sm text-gray-500">
-                                                        Brand: {item.productId.brand?.name || 'N/A'}
+                                                        Brand: {item?.productId?.brand?.name || 'N/A'}
                                                     </p>
                                                     {/* Product Specifications */}
                                                     <div className="mt-2 space-y-1">
-                                                        {item.productId.modelName && (
+                                                        {item?.productId?.modelName && (
                                                             <p className="text-xs text-gray-500">
-                                                                Model: {item.productId.modelName}
+                                                                Model: {item?.productId?.modelName}
                                                             </p>
                                                         )}
-                                                        {item.productId.capacity && (
+                                                        {item?.productId?.capacity && (
                                                             <p className="text-xs text-gray-500">
                                                                 Capacity: {item.productId.capacity}VA
                                                             </p>
                                                         )}
-                                                        {item.productId.AH && (
+                                                        {item.productId?.AH && (
                                                             <p className="text-xs text-gray-500">
                                                                 Capacity: {item.productId.AH}Ah
                                                             </p>
                                                         )}
-                                                        {item.productId.wattage && (
+                                                        {item.productId?.wattage && (
                                                             <p className="text-xs text-gray-500">
                                                                 Wattage: {item.productId.wattage}W
                                                             </p>
                                                         )}
-                                                        {item.productId.power && (
+                                                        {item.productId?.power && (
                                                             <p className="text-xs text-gray-500">
                                                                 Power: {item.productId.power}W
                                                             </p>
                                                         )}
-                                                        {item.productId.batteryType && (
+                                                        {item.productId?.batteryType && (
                                                             <p className="text-xs text-gray-500">
                                                                 Type: {item.productId.batteryType}
                                                             </p>
                                                         )}
-                                                        {item.productId.warranty && (
+                                                        {item.productId?.warranty && (
                                                             <p className="text-xs text-gray-500">
                                                                 Warranty: {item.productId.warranty}
                                                             </p>
