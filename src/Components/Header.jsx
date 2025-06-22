@@ -15,7 +15,7 @@ import {
   LogOut,
   LayoutDashboard,
 } from "lucide-react";
-import logo from "../assets/logo.jpg";
+import logo from "../assets/logo.png";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // Adjust path as needed
 import { useCart } from '../context/CartContext';
@@ -118,7 +118,7 @@ const Header = () => {
   };
 
   // Calculate cart item count
-  const cartItemCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+  const cartItemCount = cart?.items?.length || 0;
 
   const handleLogout = async () => {
     try {
@@ -138,7 +138,7 @@ const Header = () => {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
           ? "bg-white/95 backdrop-blur-md shadow-lg"
-          : "bg-gradient-to-r from-[#008246] to-[#009c55]"
+          : "bg-gradient-to-r from-white via-[#009c55] to-[#008246]"
           }`}
       >
         {/* Top Bar */}
@@ -177,7 +177,7 @@ const Header = () => {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <NavLink to="/" className="flex items-center space-x-3">
-              <img src={logo} alt="Solar Energy" className="h-12" />
+              <img src={logo} alt="Solar Energy" className="h-24" />
             </NavLink>
 
             {/* Desktop Navigation */}
@@ -189,8 +189,8 @@ const Header = () => {
                     className={({ isActive }) =>
                       `flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 ${isScrolled
                         ? "text-gray-700 hover:text-[#008246] hover:bg-[#008246]/5"
-                        : "text-white hover:text-[#E4C73F] hover:bg-white/10"
-                      } relative ${isActive ? (isScrolled ? "font-bold text-[#008246]" : "font-bold text-[#E4C73F]") : ""
+                        : "text-black hover:text-[#008246] hover:bg-black/5"
+                      } relative ${isActive ? (isScrolled ? "font-bold text-[#008246]" : "font-bold text-[#008246]") : ""
                       }`
                     }
                     end
@@ -225,7 +225,7 @@ const Header = () => {
                 onClick={toggleSearch}
                 className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${isScrolled
                   ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
-                  : "text-white hover:bg-white/10"
+                  : "text-black hover:bg-black/5"
                   } ${searchActive ? "bg-[#E4C73F] text-black" : ""}`}
               >
                 <Search size={20} />
@@ -236,7 +236,7 @@ const Header = () => {
                 to="/cart"
                 className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-110 ${isScrolled
                   ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
-                  : "text-white hover:bg-white/10"
+                  : "text-black hover:bg-black/5"
                   }`}
               >
                 <FiShoppingCart className="h-6 w-6" />
@@ -253,7 +253,7 @@ const Header = () => {
                   <button
                     className={`flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 ${isScrolled
                       ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
-                      : "text-white hover:bg-white/10"
+                      : "text-black hover:bg-black/5"
                       }`}
                     onClick={() => setUserDropdown((prev) => !prev)}
                   >
@@ -299,7 +299,7 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => navigate('/signup')}
-                    className="px-5 py-2 border-2 border-[#008246] text-[#fff] rounded-lg font-semibold ml-2 hover:bg-[#008246]/10 transition-all"
+                    className="px-5 py-2 border-2 border-[#008246] text-[#008246] rounded-lg font-semibold ml-2 hover:bg-[#008246]/10 transition-all"
                   >
                     Sign Up
                   </button>
@@ -311,7 +311,7 @@ const Header = () => {
                 onClick={toggleMenu}
                 className={`lg:hidden p-2 rounded-lg transition-all duration-300 ${isScrolled
                   ? "text-gray-700 hover:bg-[#008246]/10"
-                  : "text-white hover:bg-white/10"
+                  : "text-black hover:bg-black/5"
                   }`}
               >
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}

@@ -18,6 +18,7 @@ const RegularProductDetail = () => {
     const [quantity, setQuantity] = useState(1);
     const [hasOldBattery, setHasOldBattery] = useState(false);
     const [reviews, setReviews] = useState([]);
+    const [pagination, setPagination] = useState(null);
     const [userReview, setUserReview] = useState(null);
     const [showReviewForm, setShowReviewForm] = useState(false);
 
@@ -25,15 +26,10 @@ const RegularProductDetail = () => {
     const { addToCart } = useCart();
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchProductData = async () => {
             try {
-                const [productData, reviewsData] = await Promise.all([
-                    productService.getProduct(type, id),
-                    reviewService.getProductReviews(id)
-                ]);
+                const productData = await productService.getProduct(type, id);
                 setProduct(productData);
-                setReviews(reviewsData.reviews);
-                setUserReview(reviewsData.userReview);
             } catch (err) {
                 setError(err.message);
                 toast.error('Error loading product details');
@@ -41,13 +37,26 @@ const RegularProductDetail = () => {
                 setLoading(false);
             }
         };
-
-        fetchData();
+        fetchProductData();
     }, [type, id]);
+
+    useEffect(() => {
+        fetchReviews();
+    }, [id]);
+
+    const fetchReviews = async (page = 1) => {
+        try {
+            const reviewsData = await reviewService.getProductReviews(id, page);
+            setReviews(prev => page === 1 ? reviewsData.reviews : [...prev, ...reviewsData.reviews]);
+            setPagination(reviewsData.pagination);
+        } catch (err) {
+            toast.error('Error loading reviews');
+        }
+    };
 
     const handleAddToCart = async () => {
         try {
-            const success = await addToCart(type, product._id, quantity);
+            const success = await addToCart(type, product._id, quantity, hasOldBattery);
             if (success) {
                 toast.success('Product added to cart successfully!');
             } else {
@@ -86,10 +95,7 @@ const RegularProductDetail = () => {
 
     const handleReviewSubmitted = async () => {
         try {
-            const { reviews: updatedReviews, userReview: updatedUserReview } =
-                await reviewService.getProductReviews(id);
-            setReviews(updatedReviews);
-            setUserReview(updatedUserReview);
+            await fetchReviews();
             setShowReviewForm(false);
         } catch (err) {
             toast.error('Error refreshing reviews');
@@ -104,10 +110,7 @@ const RegularProductDetail = () => {
     const handleDeleteReview = async (reviewId) => {
         try {
             await reviewService.deleteReview(reviewId);
-            const { reviews: updatedReviews, userReview: updatedUserReview } =
-                await reviewService.getProductReviews(id);
-            setReviews(updatedReviews);
-            setUserReview(updatedUserReview);
+            await fetchReviews();
             toast.success('Review deleted successfully');
         } catch (err) {
             toast.error('Error deleting review');
@@ -116,12 +119,12 @@ const RegularProductDetail = () => {
 
     const getProductPrice = () => {
         // Handle solar products
-        if (product?.category?.name?.toLowerCase() === 'solar' || 
-            product?.type?.toLowerCase()?.includes('pcu') || 
+        if (product?.category?.name?.toLowerCase() === 'solar' ||
+            product?.type?.toLowerCase()?.includes('pcu') ||
             product?.type?.toLowerCase()?.includes('solar')) {
             return product?.price;
         }
-        
+
         // Handle regular products
         if (product?.category?.name?.toLowerCase() === 'battery' || product?.category?.name?.toLowerCase() === 'inverter') {
             return hasOldBattery ? product.priceWithOldBattery : product.priceWithoutOldBattery;
@@ -303,37 +306,64 @@ const RegularProductDetail = () => {
                         {/* Pricing */}
                         <div className="bg-white rounded-xl p-8 shadow-lg">
                             <div className="space-y-6">
+                                <div className="flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-gray-200 pb-4">
+                                    {product.warranty && (
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-500">Warranty</p>
+                                            <p className="text-lg font-semibold text-gray-800">{product.warranty}</p>
+                                        </div>
+                                    )}
+                                    {product.AH && (
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-500">Capacity</p>
+                                            <p className="text-lg font-semibold text-gray-800">{product.AH} AH</p>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="flex items-baseline gap-3">
                                     <span className="text-3xl font-bold text-[#008246]">
                                         ₹{currentPrice?.toLocaleString() || 'Contact for Price'}
                                     </span>
                                     {product.mrp > currentPrice && (
-                                        <>
-                                            <span className="text-xl text-gray-500 line-through">
-                                                ₹{product.mrp?.toLocaleString()}
-                                            </span>
-                                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
-                                                {Math.round(((product.mrp - currentPrice) / product.mrp) * 100)}% OFF
-                                            </span>
-                                        </>
+                                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
+                                            {Math.round(((product.mrp - currentPrice) / product.mrp) * 100)}% OFF
+                                        </span>
                                     )}
                                 </div>
 
-                                {/* Old Battery Exchange Option - Only for battery and inverter products */}
-                                {(product.category?.name?.toLowerCase() === 'battery' || product.category?.name?.toLowerCase() === 'inverter') && 
-                                 !product.type?.toLowerCase()?.includes('pcu') && !product.type?.toLowerCase()?.includes('solar') && (
-                                    <div className="flex items-center gap-3">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={hasOldBattery}
-                                                onChange={(e) => setHasOldBattery(e.target.checked)}
-                                                className="w-4 h-4 text-[#008246] rounded border-gray-300 focus:ring-[#008246]"
-                                            />
-                                            <span className="text-gray-700">I have an old battery to exchange</span>
-                                        </label>
+                                {/* Price breakdown for battery/inverter */}
+                                {(product.category?.name?.toLowerCase() === 'battery' || product.category?.name?.toLowerCase() === 'inverter') && (
+                                    <div className="space-y-1 text-sm text-gray-600 border-t pt-4 mt-4">
+                                        <div className="flex justify-between">
+                                            <span>MRP:</span>
+                                            <span className="line-through">₹{product.mrp?.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Price (no exchange):</span>
+                                            <span className="font-semibold">₹{product.priceWithoutOldBattery?.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-semibold">With Old Battery:</span>
+                                            <span className="font-semibold text-green-600">₹{product.priceWithOldBattery?.toLocaleString()}</span>
+                                        </div>
                                     </div>
                                 )}
+
+                                {/* Old Battery Exchange Option - Only for battery and inverter products */}
+                                {(product.category?.name?.toLowerCase() === 'battery' || product.category?.name?.toLowerCase() === 'inverter') &&
+                                    !product.type?.toLowerCase()?.includes('pcu') && !product.type?.toLowerCase()?.includes('solar') && (
+                                        <div className="flex items-center gap-3">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={hasOldBattery}
+                                                    onChange={(e) => setHasOldBattery(e.target.checked)}
+                                                    className="w-4 h-4 text-[#008246] rounded border-gray-300 focus:ring-[#008246]"
+                                                />
+                                                <span className="text-gray-700">I have an old battery to exchange</span>
+                                            </label>
+                                        </div>
+                                    )}
 
                                 <div className="flex items-center gap-4">
                                     <label className="text-sm font-medium text-gray-700">Quantity:</label>
@@ -360,9 +390,6 @@ const RegularProductDetail = () => {
                                         className="flex-1 bg-[#008246] text-white px-6 py-4 rounded-xl font-semibold text-lg hover:bg-[#009c55] transition-colors duration-200 shadow-lg"
                                     >
                                         Add to Cart
-                                    </button>
-                                    <button className="flex-1 bg-[#E4C73F] text-black px-6 py-4 rounded-xl font-semibold text-lg hover:bg-[#f7da5e] transition-colors duration-200 shadow-lg">
-                                        Buy Now
                                     </button>
                                 </div>
                             </div>
@@ -464,6 +491,16 @@ const RegularProductDetail = () => {
                         onEdit={handleEditReview}
                         onDelete={handleDeleteReview}
                     />
+                    {pagination && pagination.hasNextPage && (
+                        <div className="text-center mt-8">
+                            <button
+                                onClick={() => fetchReviews(pagination.nextPage)}
+                                className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                                Load More Reviews
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

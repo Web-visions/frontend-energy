@@ -6,6 +6,26 @@ import { useCart } from "../context/CartContext";
 import { img_url } from "../config/api_route";
 import { no_image } from "../assets";
 
+const renderStars = (rating) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+
+  for (let i = 0; i < fullStars; i++) {
+    stars.push(<span key={`full_${i}`} className="text-yellow-400">★</span>);
+  }
+
+  if (hasHalfStar) {
+    // Simple version: just show empty star for half star
+    stars.push(<span key="half" className="text-gray-300">☆</span>);
+  }
+
+  for (let i = stars.length; i < 5; i++) {
+    stars.push(<span key={`empty_${i}`} className="text-gray-300">☆</span>);
+  }
+  return stars;
+};
+
 export default function ProductListing() {
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
@@ -179,6 +199,10 @@ export default function ProductListing() {
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2 text-gray-800 line-clamp-2">{prod.name}</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  {renderStars(prod.averageRating)}
+                  <span className="text-xs text-gray-500">({prod.reviewCount} reviews)</span>
+                </div>
                 <div className="space-y-1 mb-4">
                   <p className="text-sm text-gray-600">Brand: {prod.brand?.name}</p>
                   <p className="text-sm text-gray-600">Category: {prod.category?.name}</p>

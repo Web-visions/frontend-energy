@@ -108,7 +108,7 @@ const getSidebarSections = (userRole) => {
 function DashboardSidebar({ isOpen, onClose }) {
   const [hoveredLink, setHoveredLink] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { logout, setUser, currentUser: user } = useAuth();
+  const { logout, setCurrentUser, currentUser: user } = useAuth();
   const navigate = useNavigate();
 
   const sidebarSections = getSidebarSections(user?.role || 'user');
@@ -118,7 +118,7 @@ function DashboardSidebar({ isOpen, onClose }) {
       await logout();
       localStorage.removeItem('refreshToken');
 
-      setUser(null);
+      setCurrentUser(null);
 
       setShowLogoutModal(false);
       toast.success('Logged out successfully');

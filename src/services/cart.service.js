@@ -7,12 +7,8 @@ export const cartService = {
     },
 
     // Add item to cart
-    addToCart: async (productType, productId, quantity) => {
-        return await postData('/cart/add', {
-            productType,
-            productId,
-            quantity
-        });
+    addToCart: async (cartData) => {
+        return await postData('/cart/add', cartData);
     },
 
     // Update cart item quantity

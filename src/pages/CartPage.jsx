@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { img_url } from '../config/api_route';
 import { toast } from 'react-hot-toast';
-import { FiTrash2, FiMinus, FiPlus, FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
+import { FiTrash2, FiMinus, FiPlus, FiArrowLeft, FiShoppingBag, FiTag } from 'react-icons/fi';
 import noImageFound from '../assets/no_img_found.png';
 
 const CartPage = () => {
@@ -44,6 +44,51 @@ const CartPage = () => {
                 return newSet;
             });
         }
+    };
+
+    const cartCalculations = useMemo(() => {
+        if (!cart?.items) return { totalMRP: 0, subtotal: 0, discountOnMRP: 0, exchangeDiscount: 0 };
+
+        let totalMRP = 0;
+        let subtotal = 0;
+        let finalTotal = 0;
+
+        cart.items.forEach(item => {
+            const product = item.productId;
+            if (!product) return;
+
+            const priceWithoutExchange = product.priceWithoutOldBattery || product.sellingPrice || product.price || 0;
+            const priceWithExchange = product.priceWithOldBattery || priceWithoutExchange;
+            const mrp = product.mrp || priceWithoutExchange;
+
+            totalMRP += mrp * item.quantity;
+            subtotal += priceWithoutExchange * item.quantity;
+            finalTotal += (item.withOldBattery ? priceWithExchange : priceWithoutExchange) * item.quantity;
+        });
+
+        const discountOnMRP = totalMRP - subtotal;
+        const exchangeDiscount = subtotal - finalTotal;
+
+        return { totalMRP, subtotal, discountOnMRP, exchangeDiscount };
+    }, [cart]);
+
+    const getItemDisplayPrice = (item) => {
+        const product = item.productId;
+        if (!product) return { current: 0, original: null };
+
+        if (item.productType === 'battery' || item.productType === 'inverter') {
+            const original = product.priceWithoutOldBattery || 0;
+            const current = item.withOldBattery ? (product.priceWithOldBattery || original) : original;
+            return { current, original: current < original ? original : null };
+        }
+
+        if (item.productType.startsWith('solar-')) {
+            return { current: product.price || 0, original: null };
+        }
+
+        const current = product.sellingPrice || product.mrp || 0;
+        const original = product.mrp > current ? product.mrp : null;
+        return { current, original };
     };
 
     const getProductPrice = (product, productType) => {
@@ -135,9 +180,8 @@ const CartPage = () => {
                         {cart.items.map((item) => {
                             const isUpdating = updatingItems?.has(`${item.productType}-${item.productId?._id}`);
                             const isRemoving = removingItems.has(`${item.productType}-${item.productId?._id}`);
-                            const itemPrice = getProductPrice(item.productId, item?.productType);
-                            const itemMRP = getProductMRP(item.productId, item?.productType);
-                            const totalItemPrice = itemPrice * item?.quantity;
+                            const itemPrice = getItemDisplayPrice(item);
+                            const totalItemPrice = itemPrice.current * item?.quantity;
 
                             return (
                                 <div
@@ -171,6 +215,12 @@ const CartPage = () => {
                                                     <p className="text-sm text-gray-500">
                                                         Brand: {item?.productId?.brand?.name || 'N/A'}
                                                     </p>
+                                                    {item.withOldBattery && (
+                                                        <div className="mt-2 inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-md">
+                                                            <FiTag className="h-3 w-3" />
+                                                            <span className="text-xs font-medium">Old Battery Exchange</span>
+                                                        </div>
+                                                    )}
                                                     {/* Product Specifications */}
                                                     <div className="mt-2 space-y-1">
                                                         {item?.productId?.modelName && (
@@ -244,21 +294,21 @@ const CartPage = () => {
                                                 {/* Price */}
                                                 <div className="text-right">
                                                     <p className="text-lg font-semibold text-gray-900">
-                                                        ₹{totalItemPrice.toLocaleString()}
+                                                        ₹{(itemPrice.current * item.quantity).toLocaleString()}
                                                     </p>
                                                     <div className="flex items-center justify-end gap-2">
-                                                        {itemMRP && itemMRP > itemPrice && (
+                                                        {itemPrice.original && (
                                                             <p className="text-sm text-gray-400 line-through">
-                                                                ₹{itemMRP.toLocaleString()}
+                                                                ₹{itemPrice.original.toLocaleString()}
                                                             </p>
                                                         )}
                                                         <p className="text-sm text-gray-500">
-                                                            ₹{itemPrice.toLocaleString()} each
+                                                            ₹{itemPrice.current.toLocaleString()} each
                                                         </p>
                                                     </div>
-                                                    {itemMRP && itemMRP > itemPrice && (
+                                                    {itemPrice.original && (
                                                         <p className="text-xs text-green-600 font-medium">
-                                                            Save ₹{(itemMRP - itemPrice).toLocaleString()}
+                                                            Save ₹{(itemPrice.original - itemPrice.current).toLocaleString()}
                                                         </p>
                                                     )}
                                                 </div>
@@ -277,17 +327,26 @@ const CartPage = () => {
 
                             <div className="space-y-4 mb-6">
                                 <div className="flex justify-between text-gray-600">
-                                    <span>Subtotal ({cart.items.length} items)</span>
-                                    <span>₹{cart.totalAmount.toLocaleString()}</span>
+                                    <span>Total MRP</span>
+                                    <span>₹{cartCalculations.totalMRP.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Shipping</span>
-                                    <span className="text-green-600 font-medium">Free</span>
+                                {cartCalculations.discountOnMRP > 0 && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Discount on MRP</span>
+                                        <span>- ₹{cartCalculations.discountOnMRP.toLocaleString()}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-gray-600 font-semibold">
+                                    <span>Subtotal</span>
+                                    <span>₹{cartCalculations.subtotal.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Tax</span>
-                                    <span>₹0</span>
-                                </div>
+                                {cartCalculations.exchangeDiscount > 0 && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Old Battery Exchange</span>
+                                        <span>- ₹{cartCalculations.exchangeDiscount.toLocaleString()}</span>
+                                    </div>
+                                )}
+
                                 <div className="border-t border-gray-200 pt-4">
                                     <div className="flex justify-between text-xl font-bold text-gray-900">
                                         <span>Total</span>

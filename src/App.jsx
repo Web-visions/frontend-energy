@@ -44,6 +44,7 @@ import SolarStreetLightManagement from './pages/dashboard/SolarStreetLightManage
 import SolarPCUManagement from './pages/dashboard/SolarPCUManagement';
 import SolarPVModuleManagement from './pages/dashboard/SolarPVModuleManagement';
 import ProductDetails from './pages/ProductDetail';
+import FAQ from './pages/FAQ';
 
 export default function App() {
   return (
@@ -64,7 +65,7 @@ export default function App() {
             <Route path="/services" element={<><Header /><Services /><Footer /></>} />
             <Route path="/help" element={<><Header /><Help /><Footer /></>} />
             <Route path="/contact" element={<><Header /><Contact /><Footer /></>} />
-
+            <Route path="/faq" element={<><Header /><FAQ /><Footer /></>} />
             {/* Auth-related */}
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

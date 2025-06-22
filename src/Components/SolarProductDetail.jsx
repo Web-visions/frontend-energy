@@ -273,12 +273,12 @@ const SolarProductDetail = () => {
                                     >
                                         Add to Cart
                                     </button>
-                                    <button
+                                    {/* <button
                                         onClick={() => navigate('/contact?type=inquiry')}
                                         className="bg-[#E4C73F] text-black px-8 py-4 rounded-xl font-semibold text-lg hover:bg-[#f7da5e] transition-colors duration-200 shadow-lg"
                                     >
                                         Contact Sales
-                                    </button>
+                                    </button> */}
                                 </div>
                             </div>
                         </div>

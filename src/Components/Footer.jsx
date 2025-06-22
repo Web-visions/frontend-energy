@@ -10,10 +10,10 @@ const Footer = () => {
     gsap.fromTo(
       footerRef.current.querySelectorAll('.footer-section'),
       { opacity: 0, y: 20 },
-      { 
-        opacity: 1, 
-        y: 0, 
-        duration: 0.8, 
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
         stagger: 0.15,
         ease: "power2.out",
         scrollTrigger: {
@@ -67,7 +67,7 @@ const Footer = () => {
             <li><a href="#" className="hover:text-[#E4C73F] transition-colors">Services</a></li>
             <li><a href="#" className="hover:text-[#E4C73F] transition-colors">Contact</a></li>
             <li><a href="#" className="hover:text-[#E4C73F] transition-colors">Blog</a></li>
-            <li><a href="#" className="hover:text-[#E4C73F] transition-colors">FAQ</a></li>
+            <li><a href="/faq" className="hover:text-[#E4C73F] transition-colors">FAQ</a></li>
           </ul>
         </div>
 

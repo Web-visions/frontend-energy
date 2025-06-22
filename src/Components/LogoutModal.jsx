@@ -7,11 +7,11 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
         <button
@@ -28,7 +28,7 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
           <p className="text-gray-600 mb-6">
             Are you sure you want to logout from your account?
           </p>
-          
+
           <div className="flex justify-center gap-4">
             <button
               onClick={onClose}
@@ -38,7 +38,7 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 text-white bg-gradient-to-r from-brand-purple via-brand-purple-light to-brand-purple-dark hover:from-brand-purple-dark hover:via-brand-purple hover:to-brand-purple-light rounded-lg transition-all duration-300"
+              className="px-4 py-2 text-white bg-red-500 rounded-lg transition-all duration-300"
             >
               Logout
             </button>

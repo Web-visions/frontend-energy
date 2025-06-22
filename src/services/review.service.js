@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { backend_url as API_URL } from '../config/api_route';
-import { postData } from '../utils/http';
+import { postData, deleteData, putData } from '../utils/http';
 
 const createReview = async (reviewData) => {
     const formData = new FormData();
@@ -22,9 +22,17 @@ const createReview = async (reviewData) => {
     return response.data;
 };
 
-const getProductReviews = async (productId) => {
-    const response = await axios.get(`${API_URL}/reviews/product/${productId}`);
-    return response.data;
+const getProductReviews = async (productId, page = 1, limit = 10) => {
+    try {
+        const response = await axios.get(`${API_URL}/reviews/product/${productId}?page=${page}&limit=${limit}`);
+        return {
+            reviews: response.data.data,
+            pagination: response.data.pagination
+        };
+    } catch (error) {
+        console.error("Error fetching product reviews:", error);
+        return { reviews: [], pagination: {} };
+    }
 };
 
 const updateReview = async (reviewId, reviewData) => {
@@ -39,7 +47,7 @@ const updateReview = async (reviewId, reviewData) => {
         }
     });
 
-    const response = await axios.put(`${API_URL}/reviews/${reviewId}`, formData, {
+    const response = await putData(`/reviews/${reviewId}`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }
@@ -48,7 +56,7 @@ const updateReview = async (reviewId, reviewData) => {
 };
 
 const deleteReview = async (reviewId) => {
-    const response = await axios.delete(`${API_URL}/reviews/${reviewId}`);
+    const response = await deleteData(`/reviews/${reviewId}`);
     return response.data;
 };
 
