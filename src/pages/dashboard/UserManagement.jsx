@@ -22,7 +22,7 @@ const UserManagement = () => {
   const [message, setMessage] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  
+
   // Pagination state
   const [pagination, setPagination] = useState({
     page: 1,
@@ -30,15 +30,16 @@ const UserManagement = () => {
     total: 0,
     pages: 0
   });
-  
+
   // Search state
   const [search, setSearch] = useState('');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     role: 'user',
-    isEmailVerified: false
+    isEmailVerified: false,
+    password: ''
   });
 
   // Create debounced search function
@@ -62,13 +63,13 @@ const UserManagement = () => {
         page: pagination.page,
         limit: pagination.limit
       };
-      
+
       if (search) {
         params.search = search;
       }
-      
+
       const response = await getData('users', params);
-      
+
       if (response.success) {
         setUsers(response.data);
         setPagination({
@@ -87,7 +88,7 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
-  
+
   // Handle search input change
   const handleSearchChange = (e) => {
     debouncedSearch(e.target.value);
@@ -100,7 +101,7 @@ const UserManagement = () => {
       [name]: value
     });
   };
-  
+
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
     setFormData({
@@ -116,7 +117,8 @@ const UserManagement = () => {
         name: user.name,
         email: user.email,
         role: user.role,
-        isEmailVerified: user.isEmailVerified || false
+        isEmailVerified: user.isEmailVerified || false,
+        password: ''
       });
     } else {
       setSelectedUser(null);
@@ -124,7 +126,8 @@ const UserManagement = () => {
         name: '',
         email: '',
         role: 'user',
-        isEmailVerified: false
+        isEmailVerified: false,
+        password: ''
       });
     }
     setModalOpen(true);
@@ -137,7 +140,8 @@ const UserManagement = () => {
       name: '',
       email: '',
       role: 'user',
-      isEmailVerified: false
+      isEmailVerified: false,
+      password: ''
     });
   };
 
@@ -148,12 +152,13 @@ const UserManagement = () => {
 
     try {
       let response;
-      
+
       if (selectedUser) {
-        // Update existing user
-        response = await putData(`users/${selectedUser._id}`, formData);
+        // Update existing user (do not send password)
+        const { password, ...updateData } = formData;
+        response = await putData(`users/${selectedUser._id}`, updateData);
       } else {
-        // Create new user
+        // Create new user (send password)
         response = await postData('users', formData);
       }
 
@@ -171,16 +176,16 @@ const UserManagement = () => {
   };
 
   // We're not implementing delete functionality as per requirements
-  
+
   const handleToggleStatus = async (userId, isActive) => {
     setError('');
     setMessage('');
-    
+
     try {
       const response = await putData(`users/${userId}/status`, {
         isActive: !isActive
       });
-      
+
       if (response.success) {
         setMessage(`User ${isActive ? 'deactivated' : 'activated'} successfully!`);
         fetchUsers();
@@ -192,7 +197,7 @@ const UserManagement = () => {
       console.error(err);
     }
   };
-  
+
   // Handle pagination
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= pagination.pages) {
@@ -220,13 +225,13 @@ const UserManagement = () => {
           {message}
         </div>
       )}
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
-      
+
       {/* Search and filter section */}
       <div className="mb-6">
         <div className="relative">
@@ -341,7 +346,7 @@ const UserManagement = () => {
               )}
             </tbody>
           </table>
-          
+
           {/* Pagination Controls */}
           {pagination.pages > 1 && (
             <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
@@ -386,7 +391,7 @@ const UserManagement = () => {
                       <span className="sr-only">Previous</span>
                       <span>Prev</span>
                     </button>
-                    
+
                     {/* Page numbers */}
                     {[...Array(pagination.pages).keys()].map(x => {
                       const pageNumber = x + 1;
@@ -421,7 +426,7 @@ const UserManagement = () => {
                       }
                       return null;
                     })}
-                    
+
                     <button
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={pagination.page === pagination.pages}
@@ -464,7 +469,7 @@ const UserManagement = () => {
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
@@ -480,8 +485,8 @@ const UserManagement = () => {
                   required
                 />
               </div>
-              
-              
+
+
               <div className="mb-4">
                 <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
                   Email
@@ -500,8 +505,27 @@ const UserManagement = () => {
                   <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                 )}
               </div>
-              
-              
+
+              {/* Password field only for new user */}
+              {!selectedUser && (
+                <div className="mb-4">
+                  <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                    minLength={6}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters.</p>
+                </div>
+              )}
+
               <div className="mb-6">
                 <label htmlFor="role" className="block text-gray-700 text-sm font-bold mb-2">
                   Role
@@ -519,7 +543,7 @@ const UserManagement = () => {
                   <option value="admin">Admin</option>
                 </select>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <button
                   type="submit"

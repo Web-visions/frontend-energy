@@ -54,19 +54,6 @@ const getSidebarSections = (userRole) => {
 
         ]
       },
-
-      {
-        title: 'Customization',
-        links: [
-          { title: 'Banner', path: '/dashboard/admin/banner', icon: <Image className='w-5 h-5' /> }
-        ]
-      },
-      {
-        title: 'Inventory',
-        links: [
-          { title: 'Inventory', path: '/dashboard/admin/inventory', icon: <Boxes className='w-5 h-5' /> }
-        ]
-      },
       commonSections[1]
     ];
   }

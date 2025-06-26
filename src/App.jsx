@@ -21,6 +21,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
+import OrderFailurePage from './pages/OrderFailurePage';
 
 // Dashboard
 import DashboardLayout from './layout/dashboard-layout';
@@ -45,6 +46,7 @@ import SolarPCUManagement from './pages/dashboard/SolarPCUManagement';
 import SolarPVModuleManagement from './pages/dashboard/SolarPVModuleManagement';
 import ProductDetails from './pages/ProductDetail';
 import FAQ from './pages/FAQ';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -59,6 +61,7 @@ export default function App() {
             <Route path="/cart" element={<><Header /><CartPage /><Footer /></>} />
             <Route path="/checkout" element={<><Header /><CheckoutPage /><Footer /></>} />
             <Route path="/order-success" element={<><Header /><OrderSuccessPage /><Footer /></>} />
+            <Route path="/order-failure" element={<><Header /><OrderFailurePage /><Footer /></>} />
             <Route path="/payment" element={<><Header /><Payment /><Footer /></>} />
             <Route path="/login" element={<><Header /><Login /><Footer /></>} />
             <Route path="/signup" element={<><Header /><Signup /><Footer /></>} />
@@ -66,6 +69,7 @@ export default function App() {
             <Route path="/help" element={<><Header /><Help /><Footer /></>} />
             <Route path="/contact" element={<><Header /><Contact /><Footer /></>} />
             <Route path="/faq" element={<><Header /><FAQ /><Footer /></>} />
+            <Route path="/*" element={<><Header /><NotFound /><Footer /></>} />
             {/* Auth-related */}
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -102,10 +106,6 @@ export default function App() {
               <Route path="lead" element={<LeadManagement />} />
               <Route path="orders" element={<OrderManagement />} />
               <Route path="repair-orders" element={<div>Repair Orders Page</div>} />
-              <Route path="banner" element={<div>Banner Page</div>} />
-              <Route path="inventory" element={<div>Inventory Page</div>} />
-              <Route path="settings" element={<Settings />} />
-              {/* ...add more nested routes as needed */}
             </Route>
           </Routes>
         </Router>

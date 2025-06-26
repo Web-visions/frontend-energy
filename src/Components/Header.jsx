@@ -50,7 +50,7 @@ const navigationItems = [
   { name: "Batteries", href: "/products?type=battery", icon: Battery },
   { name: "UPS", href: "/products?type=ups", icon: Zap },
   { name: "Inverters", href: "/products?type=inverter", icon: null },
-  { name: "Contact", href: "/contact", icon: null },
+  // { name: "Contact", href: "/contact", icon: null },
 ];
 
 const Header = () => {
@@ -125,7 +125,7 @@ const Header = () => {
       await logout();
       setShowLogoutModal(false);
       toast.success('Logged out successfully');
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       toast.error('Failed to logout');
     }
@@ -146,7 +146,7 @@ const Header = () => {
           className={`transition-all duration-300 ${isScrolled ? "h-0 overflow-hidden opacity-0" : "h-auto opacity-100"
             }`}
         >
-          <div className="bg-gradient-to-r from-[#E4C73F] to-[#f7da5e] text-black">
+          {/* <div className="bg-gradient-to-r from-[#E4C73F] to-[#f7da5e] text-black">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between h-10 text-sm">
                 <div className="hidden md:flex items-center space-x-6">
@@ -169,7 +169,7 @@ const Header = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Main Nav */}

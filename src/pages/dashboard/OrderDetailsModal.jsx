@@ -5,69 +5,107 @@ import { img_url } from '../../config/api_route';
 import noImageFound from '../../assets/no_img_found.png';
 import { toast } from 'react-hot-toast';
 
+// --- A to Z helpers (put at top of file) ---
+const getItemUnitPrice = (item) => {
+    if (typeof item.price === 'number') return item.price;
+    // Try to infer price from product if needed
+    if (item.product?.priceWithOldBattery && item.product?.priceWithoutOldBattery) {
+        // If both present, default to "with old battery" for showing price unless logic is present
+        return item.product.priceWithOldBattery;
+    }
+    return item.product?.mrp || 0;
+};
+
+const getItemTotalPrice = (item) => {
+    if (typeof item.totalPrice === "number") return item.totalPrice;
+    const unit = getItemUnitPrice(item);
+    return unit * (item.quantity || 1);
+};
+
+const getSubtotal = (ord) => {
+    if (typeof ord.pricing?.subtotal === "number") return ord.pricing.subtotal;
+    return (ord.items || []).reduce((sum, item) => sum + getItemTotalPrice(item), 0);
+};
+
+const getDeliveryCharge = (ord) => {
+    if (typeof ord?.deliveryCharge === "number") return ord.deliveryCharge;
+    return 0;
+};
+
+const getTax = (ord) => {
+    if (typeof ord.pricing?.tax === "number") return ord.pricing.tax;
+    return 0;
+};
+
+const getTotal = (ord) => {
+    if (typeof ord.totalAmount === "number") return ord.totalAmount;
+    if (typeof ord.pricing?.total === "number") return ord.pricing.total;
+    const subtotal = getSubtotal(ord);
+    const delivery = getDeliveryCharge(ord);
+    const tax = getTax(ord);
+    return subtotal + delivery + tax;
+};
+
+const getStatus = (ord) => ord.orderStatus ?? ord.status;
+const getShippingInfo = (ord) => ord.shippingInfo ?? ord.shippingDetails;
+const getPaymentInfo = (ord) => ord.paymentInfo ?? ord.paymentDetails;
+const getItemProduct = (item) => item.product ?? item.productId;
+
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+};
+
+const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') return 'N/A';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+};
+
+const getStatusColor = (status) => {
+    const colors = {
+        Pending: 'bg-yellow-100 text-yellow-800', Confirmed: 'bg-blue-100 text-blue-800',
+        Processing: 'bg-purple-100 text-purple-800', Shipped: 'bg-indigo-100 text-indigo-800',
+        Delivered: 'bg-green-100 text-green-800', Cancelled: 'bg-red-100 text-red-800',
+        pending: 'bg-yellow-100 text-yellow-800', confirmed: 'bg-blue-100 text-blue-800',
+        processing: 'bg-purple-100 text-purple-800', shipped: 'bg-indigo-100 text-indigo-800',
+        delivered: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+};
+
+// --- COMPONENT ---
 const OrderDetailsModal = ({ order, onClose }) => {
-    // --- Data Access Helpers ---
-    // These functions safely access data from either the new or old order schema.
-    const getStatus = (ord) => ord.orderStatus ?? ord.status;
-    const getTotal = (ord) => ord.totalAmount ?? ord.pricing?.total;
-    const getSubtotal = (ord) => ord.pricing?.subtotal ?? ord.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const getDeliveryCharge = (ord) => ord.pricing?.deliveryCharge ?? (getTotal(ord) - getSubtotal(ord));
-    const getTax = (ord) => ord.pricing?.tax ?? 0;
-    const getShippingInfo = (ord) => ord.shippingInfo ?? ord.shippingDetails;
-    const getPaymentInfo = (ord) => ord.paymentInfo ?? ord.paymentDetails;
-    const getItemProduct = (item) => item.product ?? item.productId;
-    const getItemTotalPrice = (item) => item.totalPrice ?? (item.price * item.quantity);
+    const shipping = getShippingInfo(order);
+    const payment = getPaymentInfo(order);
 
-    // --- UI Helpers ---
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-IN', {
-            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    // Calculate totals with and without old battery exchange
+    const hasExchangeOptions = order.items.some(item => {
+        const product = getItemProduct(item);
+        return product?.priceWithOldBattery && product?.priceWithoutOldBattery;
+    });
+    let totalWithExchange = 0;
+    let totalWithoutExchange = 0;
+    if (hasExchangeOptions) {
+        order.items.forEach(item => {
+            const product = getItemProduct(item);
+            if (product?.priceWithOldBattery && product?.priceWithoutOldBattery) {
+                totalWithExchange += product.priceWithOldBattery * item.quantity;
+                totalWithoutExchange += product.priceWithoutOldBattery * item.quantity;
+            } else {
+                // Fallback to item price
+                totalWithExchange += getItemUnitPrice(item) * item.quantity;
+                totalWithoutExchange += getItemUnitPrice(item) * item.quantity;
+            }
         });
-    };
-
-    const formatCurrency = (amount) => {
-        if (typeof amount !== 'number') return 'N/A';
-        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
-    };
-
-    const getStatusColor = (status) => {
-        const colors = {
-            Pending: 'bg-yellow-100 text-yellow-800', Confirmed: 'bg-blue-100 text-blue-800',
-            Processing: 'bg-purple-100 text-purple-800', Shipped: 'bg-indigo-100 text-indigo-800',
-            Delivered: 'bg-green-100 text-green-800', Cancelled: 'bg-red-100 text-red-800',
-            // Fallbacks for old lowercase statuses
-            pending: 'bg-yellow-100 text-yellow-800', confirmed: 'bg-blue-100 text-blue-800',
-            processing: 'bg-purple-100 text-purple-800', shipped: 'bg-indigo-100 text-indigo-800',
-            delivered: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800'
-        };
-        return colors[status] || 'bg-gray-100 text-gray-800';
-    };
+        totalWithExchange += getDeliveryCharge(order) + getTax(order);
+        totalWithoutExchange += getDeliveryCharge(order) + getTax(order);
+    }
 
     const handleDownloadInvoice = async () => {
         toast.error("Invoice download is not yet implemented.");
-        // The implementation below might need adjustment based on your backend route.
-        /*
-        try {
-            const response = await getData(`/invoice/download/${order.orderNumber}`, null, { responseType: 'blob' });
-            const blob = new Blob([response], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `invoice-${order.orderNumber}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Error downloading invoice:', error);
-            toast.error("Failed to download invoice.");
-        }
-        */
     };
-
-    const shipping = getShippingInfo(order);
-    const payment = getPaymentInfo(order);
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -158,6 +196,17 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                     {order.items.map((item, index) => {
                                         const product = getItemProduct(item);
                                         const imageSrc = product?.image ? `${img_url}${product.image}` : noImageFound;
+
+                                        // Decide which price was used for this item
+                                        let priceTypeLabel = "";
+                                        if (product?.priceWithOldBattery && product?.priceWithoutOldBattery) {
+                                            if (getItemUnitPrice(item) === product.priceWithOldBattery) {
+                                                priceTypeLabel = "With Old Battery Exchange";
+                                            } else if (getItemUnitPrice(item) === product.priceWithoutOldBattery) {
+                                                priceTypeLabel = "Without Old Battery Exchange";
+                                            }
+                                        }
+
                                         return (
                                             <tr key={index}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -166,11 +215,30 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                                         <div>
                                                             <div className="text-sm font-medium text-gray-900">{product?.name || 'Product Name Not Available'}</div>
                                                             <div className="text-sm text-gray-500">{item.productType}</div>
+                                                            {/* Show all prices if present */}
+                                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                                {product?.mrp && (
+                                                                    <span className="text-xs text-gray-400 line-through">{formatCurrency(product.mrp)}</span>
+                                                                )}
+                                                                {product?.priceWithoutOldBattery && (
+                                                                    <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+                                                                        Without Exchange: {formatCurrency(product.priceWithoutOldBattery)}
+                                                                    </span>
+                                                                )}
+                                                                {product?.priceWithOldBattery && (
+                                                                    <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded">
+                                                                        With Exchange: {formatCurrency(product.priceWithOldBattery)}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {priceTypeLabel && (
+                                                                <span className="inline-block mt-1 ml-0.5 px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">{priceTypeLabel}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.quantity}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(item.price)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(getItemUnitPrice(item))}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(getItemTotalPrice(item))}</td>
                                             </tr>
                                         )
@@ -186,7 +254,12 @@ const OrderDetailsModal = ({ order, onClose }) => {
                         <div className="space-y-2">
                             <div className="flex justify-between"><span className="text-gray-600">Subtotal:</span><span className="font-medium">{formatCurrency(getSubtotal(order))}</span></div>
                             <div className="flex justify-between"><span className="text-gray-600">Delivery Charges:</span><span className="font-medium">{formatCurrency(getDeliveryCharge(order))}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-600">Tax:</span><span className="font-medium">{formatCurrency(getTax(order))}</span></div>
+                            {hasExchangeOptions && (
+                                <>
+                                    <div className="flex justify-between text-sm text-green-700"><span>Total With Old Battery Exchange:</span><span>{formatCurrency(totalWithExchange)}</span></div>
+                                    <div className="flex justify-between text-sm text-blue-700"><span>Total Without Old Battery Exchange:</span><span>{formatCurrency(totalWithoutExchange)}</span></div>
+                                </>
+                            )}
                             <div className="flex justify-between text-lg font-bold text-gray-800 border-t pt-2"><span>Total Amount:</span><span>{formatCurrency(getTotal(order))}</span></div>
                         </div>
                     </div>
@@ -196,4 +269,4 @@ const OrderDetailsModal = ({ order, onClose }) => {
     );
 };
 
-export default OrderDetailsModal; 
+export default OrderDetailsModal;

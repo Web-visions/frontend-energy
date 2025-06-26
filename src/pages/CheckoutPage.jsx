@@ -141,7 +141,7 @@ const CheckoutPage = () => {
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_signature: response.razorpay_signature,
-                        shippingInfo: { ...shippingDetails, city: selectedCity?.name },
+                        shippingInfo: { ...shippingDetails, city: selectedCity?.name, cityId: selectedCity?._id },
                     };
 
                     try {
@@ -197,7 +197,7 @@ const CheckoutPage = () => {
         setIsProcessing(true);
         try {
             const orderData = {
-                shippingInfo: { ...shippingDetails, city: selectedCity?.name },
+                shippingInfo: { ...shippingDetails, city: selectedCity?.name, cityId: selectedCity?._id },
                 paymentMethod: 'cod',
             };
 
@@ -205,7 +205,7 @@ const CheckoutPage = () => {
 
             if (result.success) {
                 toast.success('Order placed successfully!');
-                refreshCart(); // To clear the cart
+                refreshCart();
                 navigate('/order-success', {
                     state: {
                         orderId: result.data.orderId,
