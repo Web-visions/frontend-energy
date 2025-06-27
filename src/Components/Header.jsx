@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import logo from "../assets/logo.png";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Adjust path as needed
+import { useAuth } from "../context/AuthContext";
 import { useCart } from '../context/CartContext';
 import { FiShoppingCart, FiUser, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
@@ -39,12 +39,12 @@ const navigationItems = [
   },
   {
     name: "Solar Projects",
-    href: "#",
+    href: "/",
     icon: Sun,
     dropdown: [
-      { name: "Off Grid Project", href: "#", type: "off-grid-lead" },
-      { name: "On Grid Project", href: "#", type: "on-grid-lead" },
-      { name: "Hybrid Project", href: "#", type: "hybrid-lead" }
+      { name: "Off Grid Project", type: "off-grid-lead" },
+      { name: "On Grid Project", type: "on-grid-lead" },
+      { name: "Hybrid Project", type: "hybrid-lead" }
     ]
   },
   { name: "Batteries", href: "/products?type=battery", icon: Battery },

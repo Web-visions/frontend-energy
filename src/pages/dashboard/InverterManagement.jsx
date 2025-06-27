@@ -51,8 +51,7 @@ const InverterManagement = () => {
     capacity: '',
     warranty: '',
     mrp: '',
-    priceWithoutOldBattery: '',
-    priceWithOldBattery: ''
+    sellingPrice: ''
   });
   const [pagination, setPagination] = useState({
     page: 0,
@@ -93,13 +92,13 @@ const InverterManagement = () => {
     try {
       const response = await getData('/categories');
       setCategories(response.data);
-    } catch {}
+    } catch { }
   };
   const fetchBrands = async () => {
     try {
       const response = await getData('/brands');
       setBrands(response.data);
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -161,8 +160,7 @@ const InverterManagement = () => {
         capacity: inverter.capacity || '',
         warranty: inverter.warranty || '',
         mrp: inverter.mrp || '',
-        priceWithoutOldBattery: inverter.priceWithoutOldBattery || '',
-        priceWithOldBattery: inverter.priceWithOldBattery || ''
+        sellingPrice: inverter.sellingPrice || ''
       });
       setFeaturesInput((inverter.features || []).join(', '));
       setIsEditing(true);
@@ -180,8 +178,7 @@ const InverterManagement = () => {
         capacity: '',
         warranty: '',
         mrp: '',
-        priceWithoutOldBattery: '',
-        priceWithOldBattery: ''
+        sellingPrice: ''
       });
       setFeaturesInput('');
       setIsEditing(false);
@@ -342,17 +339,17 @@ const InverterManagement = () => {
               </TableRow>
             ) : (
               inverters.map((inverter) => {
-                console.log(img_url+inverter.image,"INV")
- return <TableRow key={inverter._id}>
+                console.log(img_url + inverter.image, "INV")
+                return <TableRow key={inverter._id}>
                   <TableCell>
                     {inverter ? (
                       <img
-                      src={`${img_url}${inverter.image}`}
-                      alt={inverter.name}
-                      style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }}
-                      onError={e => { e.target.onerror = null; e.target.src = no_image; }}
-                    />
-                      ) : <img src={no_image} alt='no image found'/>}
+                        src={`${img_url}${inverter.image}`}
+                        alt={inverter.name}
+                        style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }}
+                        onError={e => { e.target.onerror = null; e.target.src = no_image; }}
+                      />
+                    ) : <img src={no_image} alt='no image found' />}
                   </TableCell>
                   <TableCell>{inverter.name}</TableCell>
                   <TableCell>{inverter.category?.name || 'N/A'}</TableCell>
@@ -367,7 +364,7 @@ const InverterManagement = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-})
+              })
             )}
           </TableBody>
         </Table>
@@ -434,10 +431,7 @@ const InverterManagement = () => {
                 <TextField fullWidth label="MRP" name="mrp" type="number" value={formData.mrp} onChange={handleInputChange} />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Price Without Old Battery" name="priceWithoutOldBattery" type="number" value={formData.priceWithoutOldBattery} onChange={handleInputChange} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Price With Old Battery" name="priceWithOldBattery" type="number" value={formData.priceWithOldBattery} onChange={handleInputChange} />
+                <TextField fullWidth label="Selling Price" name="sellingPrice" type="number" value={formData.sellingPrice} onChange={handleInputChange} />
               </Grid>
               <Grid item xs={12}>
                 <TextField

@@ -103,6 +103,14 @@ const OrderDetailsModal = ({ order, onClose }) => {
         totalWithoutExchange += getDeliveryCharge(order) + getTax(order);
     }
 
+    // Calculate actual battery discount if withOldBattery is true
+    let batteryExchangeDiscount = 0;
+    order.items.forEach(item => {
+        if (item.productType === 'battery' && item.withOldBattery && item.product?.priceWithoutOldBattery && item.product?.priceWithOldBattery) {
+            batteryExchangeDiscount += (item.product.priceWithoutOldBattery - item.product.priceWithOldBattery) * item.quantity;
+        }
+    });
+
     const handleDownloadInvoice = async () => {
         toast.error("Invoice download is not yet implemented.");
     };
@@ -197,15 +205,14 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                         const product = getItemProduct(item);
                                         const imageSrc = product?.image ? `${img_url}${product.image}` : noImageFound;
 
-                                        // Decide which price was used for this item
-                                        let priceTypeLabel = "";
-                                        if (product?.priceWithOldBattery && product?.priceWithoutOldBattery) {
-                                            if (getItemUnitPrice(item) === product.priceWithOldBattery) {
-                                                priceTypeLabel = "With Old Battery Exchange";
-                                            } else if (getItemUnitPrice(item) === product.priceWithoutOldBattery) {
-                                                priceTypeLabel = "Without Old Battery Exchange";
-                                            }
-                                        }
+                                        // Battery price logic
+                                        let displayUnitPrice = item.productType === 'battery'
+                                            ? (item.withOldBattery ? product.priceWithOldBattery : product.priceWithoutOldBattery)
+                                            : getItemUnitPrice(item);
+                                        let displayMRP = product?.mrp;
+                                        let showDiscount = item.productType === 'battery' && item.withOldBattery && product.priceWithoutOldBattery && product.priceWithOldBattery;
+                                        let discountAmount = showDiscount ? (product.priceWithoutOldBattery - product.priceWithOldBattery) : 0;
+                                        let discountPercent = showDiscount && product.priceWithoutOldBattery ? Math.round(100 * discountAmount / product.priceWithoutOldBattery) : 0;
 
                                         return (
                                             <tr key={index}>
@@ -215,31 +222,31 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                                         <div>
                                                             <div className="text-sm font-medium text-gray-900">{product?.name || 'Product Name Not Available'}</div>
                                                             <div className="text-sm text-gray-500">{item.productType}</div>
-                                                            {/* Show all prices if present */}
                                                             <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                                {product?.mrp && (
-                                                                    <span className="text-xs text-gray-400 line-through">{formatCurrency(product.mrp)}</span>
+                                                                {displayMRP && (
+                                                                    <span className="text-xs text-gray-400 line-through">{formatCurrency(displayMRP)}</span>
                                                                 )}
-                                                                {product?.priceWithoutOldBattery && (
-                                                                    <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                                                                        Without Exchange: {formatCurrency(product.priceWithoutOldBattery)}
-                                                                    </span>
-                                                                )}
-                                                                {product?.priceWithOldBattery && (
-                                                                    <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded">
-                                                                        With Exchange: {formatCurrency(product.priceWithOldBattery)}
+                                                                <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+                                                                    {formatCurrency(displayUnitPrice)}
+                                                                </span>
+                                                                {showDiscount && (
+                                                                    <span className="text-xs text-white bg-green-500 px-2 py-0.5 rounded">
+                                                                        -{discountPercent}%
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            {priceTypeLabel && (
-                                                                <span className="inline-block mt-1 ml-0.5 px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">{priceTypeLabel}</span>
+                                                            {/* Show exchange badge for battery items */}
+                                                            {item.productType === 'battery' && (
+                                                                <span className={`inline-block mt-1 ml-0.5 px-2 py-1 rounded-full text-xs font-semibold ${item.withOldBattery === true ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                                    {item.withOldBattery === true ? 'With Old Battery Exchange' : 'Without Old Battery Exchange'}
+                                                                </span>
                                                             )}
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.quantity}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(getItemUnitPrice(item))}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(getItemTotalPrice(item))}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(displayUnitPrice)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(displayUnitPrice * item.quantity)}</td>
                                             </tr>
                                         )
                                     })}
@@ -252,14 +259,20 @@ const OrderDetailsModal = ({ order, onClose }) => {
                     <div className="bg-gray-50 p-6 rounded-lg">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h3>
                         <div className="space-y-2">
-                            <div className="flex justify-between"><span className="text-gray-600">Subtotal:</span><span className="font-medium">{formatCurrency(getSubtotal(order))}</span></div>
+                            {/* Subtotal: sum of actual charged prices (battery logic included) */}
+                            <div className="flex justify-between"><span className="text-gray-600">Subtotal:</span><span className="font-medium">{
+                                formatCurrency(
+                                    (order.items || []).reduce((sum, item) => {
+                                        const product = getItemProduct(item);
+                                        let price = item.productType === 'battery'
+                                            ? (item.withOldBattery ? product.priceWithOldBattery : product.priceWithoutOldBattery)
+                                            : getItemUnitPrice(item);
+                                        return sum + price * (item.quantity || 1);
+                                    }, 0)
+                                )
+                            }</span></div>
                             <div className="flex justify-between"><span className="text-gray-600">Delivery Charges:</span><span className="font-medium">{formatCurrency(getDeliveryCharge(order))}</span></div>
-                            {hasExchangeOptions && (
-                                <>
-                                    <div className="flex justify-between text-sm text-green-700"><span>Total With Old Battery Exchange:</span><span>{formatCurrency(totalWithExchange)}</span></div>
-                                    <div className="flex justify-between text-sm text-blue-700"><span>Total Without Old Battery Exchange:</span><span>{formatCurrency(totalWithoutExchange)}</span></div>
-                                </>
-                            )}
+                            {/* No separate discount row, since price already reflects exchange */}
                             <div className="flex justify-between text-lg font-bold text-gray-800 border-t pt-2"><span>Total Amount:</span><span>{formatCurrency(getTotal(order))}</span></div>
                         </div>
                     </div>

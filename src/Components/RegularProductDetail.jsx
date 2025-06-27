@@ -125,9 +125,13 @@ const RegularProductDetail = () => {
             return product?.price;
         }
 
-        // Handle regular products
-        if (product?.category?.name?.toLowerCase() === 'battery' || product?.category?.name?.toLowerCase() === 'inverter') {
+        // Handle battery products (old battery logic)
+        if (product?.category?.name?.toLowerCase() === 'battery') {
             return hasOldBattery ? product.priceWithOldBattery : product.priceWithoutOldBattery;
+        }
+        // Handle inverter (new response: use sellingPrice)
+        if (product?.category?.name?.toLowerCase() === 'inverter') {
+            return product?.sellingPrice || product?.mrp;
         }
         return product?.sellingPrice || product?.mrp;
     };
@@ -324,7 +328,18 @@ const RegularProductDetail = () => {
                                     <span className="text-3xl font-bold text-[#008246]">
                                         ₹{currentPrice?.toLocaleString() || 'Contact for Price'}
                                     </span>
-                                    {product.mrp > currentPrice && (
+                                    {/* Show cut price and percent off for inverters */}
+                                    {product.category?.name?.toLowerCase() === 'inverter' && product.mrp > product.sellingPrice && (
+                                        <>
+                                            <span className="text-lg text-gray-400 line-through">
+                                                ₹{product.mrp.toLocaleString()}
+                                            </span>
+                                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
+                                                {Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100)}% OFF
+                                            </span>
+                                        </>
+                                    )}
+                                    {product.mrp > currentPrice && product.category?.name?.toLowerCase() !== 'inverter' && (
                                         <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
                                             {Math.round(((product.mrp - currentPrice) / product.mrp) * 100)}% OFF
                                         </span>
@@ -332,7 +347,7 @@ const RegularProductDetail = () => {
                                 </div>
 
                                 {/* Price breakdown for battery/inverter */}
-                                {(product.category?.name?.toLowerCase() === 'battery' || product.category?.name?.toLowerCase() === 'inverter') && (
+                                {product.category?.name?.toLowerCase() === 'battery' && (
                                     <div className="space-y-1 text-sm text-gray-600 border-t pt-4 mt-4">
                                         <div className="flex justify-between">
                                             <span>MRP:</span>
@@ -348,22 +363,18 @@ const RegularProductDetail = () => {
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Old Battery Exchange Option - Only for battery and inverter products */}
-                                {(product.category?.name?.toLowerCase() === 'battery' || product.category?.name?.toLowerCase() === 'inverter') &&
-                                    !product.type?.toLowerCase()?.includes('pcu') && !product.type?.toLowerCase()?.includes('solar') && (
-                                        <div className="flex items-center gap-3">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={hasOldBattery}
-                                                    onChange={(e) => setHasOldBattery(e.target.checked)}
-                                                    className="w-4 h-4 text-[#008246] rounded border-gray-300 focus:ring-[#008246]"
-                                                />
-                                                <span className="text-gray-700">I have an old battery to exchange</span>
-                                            </label>
+                                {product.category?.name?.toLowerCase() === 'inverter' && (
+                                    <div className="space-y-1 text-sm text-gray-600 border-t pt-4 mt-4">
+                                        <div className="flex justify-between">
+                                            <span>MRP:</span>
+                                            <span className="line-through">₹{product.mrp?.toLocaleString()}</span>
                                         </div>
-                                    )}
+                                        <div className="flex justify-between">
+                                            <span className="font-semibold">Selling Price:</span>
+                                            <span className="font-semibold text-blue-600">₹{product.sellingPrice?.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="flex items-center gap-4">
                                     <label className="text-sm font-medium text-gray-700">Quantity:</label>
@@ -382,6 +393,18 @@ const RegularProductDetail = () => {
                                             +
                                         </button>
                                     </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={hasOldBattery}
+                                            onChange={(e) => setHasOldBattery(e.target.checked)}
+                                            className="w-4 h-4 text-[#008246] rounded border-gray-300 focus:ring-[#008246]"
+                                        />
+                                        <span className="text-gray-700">I have an old battery to exchange</span>
+                                    </label>
                                 </div>
 
                                 <div className="flex gap-4">
