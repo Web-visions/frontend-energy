@@ -171,13 +171,13 @@ const SliderComponent = () => {
 
                           <div className="flex items-center gap-4 mt-6">
                             <button
-                              className="bg-gradient-to-r from-[#008246] to-[#009c55] text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                              className="text-base sm:text-lg bg-gradient-to-r from-[#008246] to-[#009c55] text-white px-5 py-2 sm:px-8 sm:py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
                               onClick={() => navigate('/about')}
                             >
                               Learn More
                             </button>
                             <button
-                              className="border-2 border-white/30 text-white px-8 py-3 rounded-xl font-semibold backdrop-blur-sm hover:bg-white/10 transition-all duration-300"
+                              className="text-base sm:text-lg border-2 border-white/30 text-white px-5 py-2 sm:px-8 sm:py-3 rounded-xl font-semibold backdrop-blur-sm hover:bg-white/10 transition-all duration-300"
                               onClick={() => navigate('/contact')}
                             >
                               Contact Us
@@ -204,7 +204,7 @@ const SliderComponent = () => {
               {/* Navigation Arrows */}
               <button
                 onClick={prevSlide}
-                className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300 group"
+                className="hidden sm:block absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300 group"
                 aria-label="Previous slide"
               >
                 <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform duration-300" />
@@ -212,21 +212,21 @@ const SliderComponent = () => {
 
               <button
                 onClick={nextSlide}
-                className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300 group"
+                className="hidden sm:block absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300 group"
                 aria-label="Next slide"
               >
                 <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform duration-300" />
               </button>
 
               {/* Slide Indicators */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
+              <div className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 gap-3">
                 {slides.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
                     className={`transition-all duration-300 ${currentSlide === index
-                        ? 'w-8 h-3 bg-white rounded-full'
-                        : 'w-3 h-3 bg-white/50 rounded-full hover:bg-white/70'
+                      ? 'w-8 h-3 bg-white rounded-full'
+                      : 'w-3 h-3 bg-white/50 rounded-full hover:bg-white/70'
                       }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />
@@ -261,8 +261,8 @@ const SliderComponent = () => {
                   {[1, 2, 3].map((num) => (
                     <div key={num} className="flex items-center">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${step >= num
-                          ? 'bg-[#E4C73F] text-black'
-                          : 'bg-white/20 text-white'
+                        ? 'bg-[#E4C73F] text-black'
+                        : 'bg-white/20 text-white'
                         }`}>
                         {num}
                       </div>
@@ -287,8 +287,8 @@ const SliderComponent = () => {
                         <label
                           key={product.name}
                           className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${selectedProduct === product.name
-                              ? 'border-[#008246] bg-[#008246]/5 shadow-md'
-                              : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
+                            ? 'border-[#008246] bg-[#008246]/5 shadow-md'
+                            : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
                             }`}
                         >
                           <input
@@ -302,8 +302,8 @@ const SliderComponent = () => {
                           <span className="text-2xl mr-3">{product.icon}</span>
                           <span className="font-medium text-gray-700">{product.name}</span>
                           <div className={`ml-auto w-5 h-5 rounded-full border-2 transition-all duration-300 ${selectedProduct === product.name
-                              ? 'border-[#008246] bg-[#008246]'
-                              : 'border-gray-300'
+                            ? 'border-[#008246] bg-[#008246]'
+                            : 'border-gray-300'
                             }`}>
                             {selectedProduct === product.name && (
                               <div className="w-full h-full rounded-full bg-white scale-50" />
@@ -332,8 +332,8 @@ const SliderComponent = () => {
                         <label
                           key={company}
                           className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-300 ${selectedCompanies.includes(company)
-                              ? 'border-[#008246] bg-[#008246]/5'
-                              : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
+                            ? 'border-[#008246] bg-[#008246]/5'
+                            : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
                             }`}
                         >
                           <input
@@ -343,8 +343,8 @@ const SliderComponent = () => {
                             className="sr-only"
                           />
                           <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-all duration-300 ${selectedCompanies.includes(company)
-                              ? 'border-[#008246] bg-[#008246]'
-                              : 'border-gray-300'
+                            ? 'border-[#008246] bg-[#008246]'
+                            : 'border-gray-300'
                             }`}>
                             {selectedCompanies.includes(company) && (
                               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">

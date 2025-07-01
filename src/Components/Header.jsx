@@ -154,7 +154,7 @@ const Header = () => {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <NavLink to="/" className="flex items-center space-x-3">
-              <img src={logo} alt="Solar Energy" className="h-16 sm:h-40" />
+              <img src={logo} alt="Solar Energy" className="h-20 sm:h-40" />
             </NavLink>
 
             {/* Desktop Navigation */}
