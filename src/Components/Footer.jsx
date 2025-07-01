@@ -1,4 +1,5 @@
 import React from 'react';
+import logo_footer from '../assets/logo_footer.png';
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -8,7 +9,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
         {/* Logo & About */}
         <div className="footer-section">
-          <h1 className="text-2xl font-bold mb-4">Energy Storage System</h1>
+          <img src={logo_footer} alt='logo' className='mb-5' />
           <p className="text-sm text-gray-200 mb-4">
             Providing reliable power backup solutions for homes and businesses since 2005. Your trusted partner for all energy storage needs.
           </p>
@@ -37,7 +38,9 @@ const Footer = () => {
           <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
           <ul className="space-y-2 text-sm text-gray-200">
             <li><a href="/" className="hover:text-[#E4C73F] transition-colors">Home</a></li>
-            <li><a href="/about" className="hover:text-[#E4C73F] transition-colors">About Us</a></li>
+            <li><a href="/about" className="hover:text-[#E4C73F] transition-colors">About</a></li>
+            <li><a href="/services" className="hover:text-[#E4C73F] transition-colors">Services</a></li>
+
             <li><a href="/products" className="hover:text-[#E4C73F] transition-colors">Products</a></li>
             <li><a href="/contact" className="hover:text-[#E4C73F] transition-colors">Contact</a></li>
             <li><a href="/faq" className="hover:text-[#E4C73F] transition-colors">FAQ</a></li>
@@ -87,7 +90,7 @@ const Footer = () => {
           <span>|</span>
           <a href="#" className="hover:text-[#E4C73F] transition-colors">Terms of Service</a>
           <span>|</span>
-          <a href="#" className="hover:text-[#E4C73F] transition-colors">Sitemap</a>
+          <a href="/sitemap" className="hover:text-[#E4C73F] transition-colors">Sitemap</a>
         </div>
       </div>
     </footer>
