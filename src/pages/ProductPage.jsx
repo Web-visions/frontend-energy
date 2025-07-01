@@ -5,6 +5,7 @@ import { productService } from "../services/product.service";
 import { useCart } from "../context/CartContext";
 import { img_url } from "../config/api_route";
 import { no_image } from "../assets";
+import { Filter, X } from "lucide-react";
 
 // Helper function to render rating stars
 const renderStars = (rating) => {
@@ -58,12 +59,15 @@ export default function ProductListing() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // The addToCart function from the context is no longer used in the card,
-  // but we'll keep it here in case it's used elsewhere.
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   useEffect(() => {
     const type = searchParams.get('type');
@@ -118,6 +122,10 @@ export default function ProductListing() {
     navigate(`/product/${type}/${product._id}`);
   };
 
+  const toggleFilter = () => {
+    setIsFilterOpen(!isFilterOpen);
+  };
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
@@ -133,14 +141,46 @@ export default function ProductListing() {
     <div className="bg-white min-h-screen">
       <div className="max-w-screen-xl mt-24 mx-auto p-4 md:p-8">
         <div className="flex flex-col md:flex-row gap-8">
-          <FilterSidebar
-            priceRange={priceRange}
-            setPriceRange={setPriceRange}
-            selectedFilters={selectedFilters}
-            setSelectedFilters={setSelectedFilters}
-            onReset={handleReset}
-            filterOptions={filters}
-          />
+          {/* Desktop Filter Sidebar */}
+          <div className="hidden md:block">
+            <FilterSidebar
+              priceRange={priceRange}
+              setPriceRange={setPriceRange}
+              selectedFilters={selectedFilters}
+              setSelectedFilters={setSelectedFilters}
+              onReset={handleReset}
+              filterOptions={filters}
+            />
+          </div>
+
+          {/* Mobile Filter Overlay */}
+          {isFilterOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
+              <div className="fixed inset-y-0 left-0 w-80 bg-white shadow-xl z-50 overflow-y-auto">
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+                    <button
+                      onClick={toggleFilter}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <FilterSidebar
+                    priceRange={priceRange}
+                    setPriceRange={setPriceRange}
+                    selectedFilters={selectedFilters}
+                    setSelectedFilters={setSelectedFilters}
+                    onReset={handleReset}
+                    filterOptions={filters}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <section className="w-full">
             {loading ? (
@@ -235,6 +275,17 @@ export default function ProductListing() {
             )}
           </section>
         </div>
+      </div>
+
+      {/* Mobile Filter Button - Fixed at bottom */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 md:hidden z-40">
+        <button
+          onClick={toggleFilter}
+          className="bg-green-700 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-800 transition-all duration-200 flex items-center gap-2 font-semibold"
+        >
+          <Filter size={20} />
+          Filters
+        </button>
       </div>
     </div>
   );

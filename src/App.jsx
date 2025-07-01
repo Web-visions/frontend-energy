@@ -16,12 +16,15 @@ import {
 } from './pages';
 
 import { Header, Footer } from './Components';
+import WhatsAppButton from './Components/WhatsAppButton';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import OrderFailurePage from './pages/OrderFailurePage';
+import About from './pages/About';
+import Sitemap from './pages/Sitemap';
 
 // Dashboard
 import DashboardLayout from './layout/dashboard-layout';
@@ -69,6 +72,8 @@ export default function App() {
             <Route path="/help" element={<><Header /><Help /><Footer /></>} />
             <Route path="/contact" element={<><Header /><Contact /><Footer /></>} />
             <Route path="/faq" element={<><Header /><FAQ /><Footer /></>} />
+            <Route path="/about" element={<><Header /><About /><Footer /></>} />
+            <Route path="/sitemap" element={<><Header /><Sitemap /><Footer /></>} />
             <Route path="/*" element={<><Header /><NotFound /><Footer /></>} />
             {/* Auth-related */}
             <Route path="/verify-email" element={<VerifyEmail />} />
@@ -108,6 +113,9 @@ export default function App() {
               <Route path="repair-orders" element={<div>Repair Orders Page</div>} />
             </Route>
           </Routes>
+          {/* WhatsApp Floating Button */}
+          <WhatsAppButton />
+
         </Router>
       </CartProvider>
     </AuthProvider>

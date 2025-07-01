@@ -13,6 +13,17 @@ const Login = () => {
   const location = useLocation();
   const redirectPath = location.state?.from || '/';
 
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [])
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
   useEffect(() => {
     if (isAuthenticated()) {
       if (!isEmailVerified()) {

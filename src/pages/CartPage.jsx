@@ -1,16 +1,25 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { img_url } from '../config/api_route';
 import { toast } from 'react-hot-toast';
 import { FiTrash2, FiMinus, FiPlus, FiArrowLeft, FiShoppingBag, FiTag } from 'react-icons/fi';
 import noImageFound from '../assets/no_img_found.png';
+import { useAuth } from '../context/AuthContext';
 
 const CartPage = () => {
     const { cart, loading, error, updateCartItem, removeFromCart, refreshCart } = useCart();
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const [updatingItems, setUpdatingItems] = useState(new Set());
     const [removingItems, setRemovingItems] = useState(new Set());
+
+
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            navigate('/login');
+        }
+    }, []);
 
     const handleQuantityChange = async (productType, productId, newQuantity) => {
         if (newQuantity < 1) return;

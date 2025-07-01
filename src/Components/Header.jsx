@@ -26,11 +26,11 @@ import LogoutModal from './LogoutModal';
 import LeadFormModal from './LeadFormModal';
 
 const navigationItems = [
-  { name: "Home", href: "/", icon: null },
+  // { name: "Home", href: "/", icon: null },
   {
     name: "Solar",
     href: "/products?type=solar-pv",
-    icon: Sun,
+    icon: null,
     dropdown: [
       { name: "Solar PCU", href: "/products?type=solar-pcu" },
       { name: "Solar PV", href: "/products?type=solar-pv" },
@@ -40,15 +40,15 @@ const navigationItems = [
   {
     name: "Solar Projects",
     href: "/",
-    icon: Sun,
+    icon: null,
     dropdown: [
       { name: "Off Grid Project", type: "off-grid-lead" },
       { name: "On Grid Project", type: "on-grid-lead" },
       { name: "Hybrid Project", type: "hybrid-lead" }
     ]
   },
-  { name: "Batteries", href: "/products?type=battery", icon: Battery },
-  { name: "UPS", href: "/products?type=ups", icon: Zap },
+  { name: "Batteries", href: "/products?type=battery", icon: null },
+  { name: "UPS", href: "/products?type=ups", icon: null },
   { name: "Inverters", href: "/products?type=inverter", icon: null },
   // { name: "Contact", href: "/contact", icon: null },
 ];
@@ -146,30 +146,7 @@ const Header = () => {
           className={`transition-all duration-300 ${isScrolled ? "h-0 overflow-hidden opacity-0" : "h-auto opacity-100"
             }`}
         >
-          {/* <div className="bg-gradient-to-r from-[#E4C73F] to-[#f7da5e] text-black">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between h-10 text-sm">
-                <div className="hidden md:flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <Phone size={14} />
-                    <span className="font-medium">
-                      24/7 Support: +91-987654321
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Mail size={14} />
-                    <span>info@solarenergy.com</span>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="hidden sm:flex items-center space-x-2">
-                    <MapPin size={14} />
-                    <span>Free Installation Across India</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div> */}
+
         </div>
 
         {/* Main Nav */}
@@ -177,11 +154,11 @@ const Header = () => {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <NavLink to="/" className="flex items-center space-x-3">
-              <img src={logo} alt="Solar Energy" className="h-24" />
+              <img src={logo} alt="Solar Energy" className="h-16 sm:h-40" />
             </NavLink>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
+            <nav className="hidden lg:flex  text-sm items-center space-x-0">
               {navigationItems.map((item, index) => (
                 <div key={index} className="relative group">
                   <NavLink
@@ -219,7 +196,7 @@ const Header = () => {
             </nav>
 
             {/* Right Side Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-4">
               {/* Search */}
               <button
                 onClick={toggleSearch}
@@ -293,13 +270,13 @@ const Header = () => {
                   {/* Login / Signup Buttons */}
                   <button
                     onClick={() => navigate('/login')}
-                    className="px-5 py-2 bg-[#008246] text-white rounded-lg font-semibold hover:bg-[#009c55] transition-all"
+                    className="px-5 py-2 text-sm bg-[#008246] border-2 border-white text-white rounded-lg font-semibold hover:bg-[#009c55] transition-all"
                   >
                     Login
                   </button>
                   <button
                     onClick={() => navigate('/signup')}
-                    className="px-5 py-2 border-2 border-[#008246] text-[#008246] rounded-lg font-semibold ml-2 hover:bg-[#008246]/10 transition-all"
+                    className="px-5 hidden sm:block text-sm py-2 bg-white border-2 border-[#008246] text-[#008246] rounded-lg font-semibold ml-2 hover:bg-[#008246]/10 transition-all"
                   >
                     Sign Up
                   </button>
@@ -453,11 +430,11 @@ const Header = () => {
                 <div className="pt-6 space-y-3 text-sm text-gray-600">
                   <div className="flex items-center space-x-2">
                     <Phone size={16} className="text-[#008246]" />
-                    <span>+91-987654321</span>
+                    <span>+91-8929490346</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Mail size={16} className="text-[#008246]" />
-                    <span>info@solarenergy.com</span>
+                    <span>connect@energystoragesystem.in</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <MapPin size={16} className="text-[#008246]" />

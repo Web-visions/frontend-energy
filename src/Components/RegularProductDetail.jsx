@@ -8,6 +8,8 @@ import ReviewForm from './ReviewForm';
 import ReviewList from './ReviewList';
 import { toast } from 'react-hot-toast';
 import noImageFound from '../assets/no_img_found.png';
+import FAQ from '../pages/FAQ';
+import { useAuth } from '../context/AuthContext';
 
 const RegularProductDetail = () => {
     const { type, id } = useParams();
@@ -24,6 +26,11 @@ const RegularProductDetail = () => {
 
     const navigate = useNavigate();
     const { addToCart } = useCart();
+    const { currentUser } = useAuth();
+
+    useEffect(() => {
+        window.scrollTo(0, 0)
+    }, [])
 
     useEffect(() => {
         const fetchProductData = async () => {
@@ -408,12 +415,21 @@ const RegularProductDetail = () => {
                                 </div>
 
                                 <div className="flex gap-4">
-                                    <button
-                                        onClick={handleAddToCart}
-                                        className="flex-1 bg-[#008246] text-white px-6 py-4 rounded-xl font-semibold text-lg hover:bg-[#009c55] transition-colors duration-200 shadow-lg"
-                                    >
-                                        Add to Cart
-                                    </button>
+                                    {!currentUser ? (
+                                        <button
+                                            onClick={() => navigate('/login')}
+                                            className="flex-1 bg-[#008246] text-white px-6 py-4 rounded-xl font-semibold text-lg hover:bg-[#009c55] transition-colors duration-200 shadow-lg"
+                                        >
+                                            Login to add to cart
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleAddToCart}
+                                            className="flex-1 bg-[#008246] text-white px-6 py-4 rounded-xl font-semibold text-lg hover:bg-[#009c55] transition-colors duration-200 shadow-lg"
+                                        >
+                                            Add to Cart
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -484,11 +500,20 @@ const RegularProductDetail = () => {
                     </div>
                 </div>
 
+                <FAQ />
+
                 {/* Reviews */}
                 <div className="mt-12">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">Customer Reviews</h2>
-                        {!userReview && !showReviewForm && (
+                        {!currentUser && !showReviewForm ? (
+                            <button
+                                onClick={() => navigate('/login')}
+                                className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800"
+                            >
+                                Login to review
+                            </button>
+                        ) : !userReview && !showReviewForm && (
                             <button
                                 onClick={() => setShowReviewForm(true)}
                                 className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800"
@@ -511,8 +536,8 @@ const RegularProductDetail = () => {
 
                     <ReviewList
                         reviews={reviews}
-                        onEdit={handleEditReview}
-                        onDelete={handleDeleteReview}
+                        onEdit={currentUser ? handleEditReview : undefined}
+                        onDelete={currentUser ? handleDeleteReview : undefined}
                     />
                     {pagination && pagination.hasNextPage && (
                         <div className="text-center mt-8">

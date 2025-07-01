@@ -24,7 +24,7 @@ const FilterSidebar = ({
   };
 
   return (
-    <aside className="w-full md:w-1/4 bg-white p-6 rounded-xl shadow-lg border border-gray-100 sticky top-8 self-start z-20">
+    <aside className="w-[15rem] bg-white p-6 rounded-xl shadow-lg border border-gray-100">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">Filters</h2>
         <button

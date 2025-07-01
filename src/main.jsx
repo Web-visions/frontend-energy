@@ -4,6 +4,7 @@ import './index.css'
 // import App from './App'
 import App from './App'
 import { Toaster } from 'react-hot-toast'
+import Tawk from './Components/Tawk'
 
 
 createRoot(document.getElementById('root')).render(
@@ -13,5 +14,6 @@ createRoot(document.getElementById('root')).render(
   reverseOrder={false}
 />
     <App/>
+    <Tawk />
   </StrictMode>,
 )

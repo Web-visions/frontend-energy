@@ -1,119 +1,82 @@
-import React, { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { about } from '../assets';
+import React from "react";
+import udyamPDF from '../assets/udyam.pdf';
+import isoPDF from '../assets/ENERGY_STORAGE_SYSTEM__QMS[1].pdf';
+import gstPDF from '../assets/gst-certificate.pdf';
 
-const AboutUs = () => {
-  const sectionRef = useRef(null);
-  const titleRef = useRef(null);
-  const textRef = useRef(null);
-  const buttonRef = useRef(null);
-
-  useEffect(() => {
-    // Create a timeline for sequential animations
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-    // Animate the title
-    tl.fromTo(
-      titleRef.current,
-      { opacity: 0, y: -50 },
-      { opacity: 1, y: 0, duration: 1.2 }
-    );
-
-    // Animate the text
-    tl.fromTo(
-      textRef.current,
-      { opacity: 0 },
-      { opacity: 1, duration: 1 },
-      "-=0.8" // Start slightly before the previous animation finishes
-    );
-
-    // Animate the button
-    tl.fromTo(
-      buttonRef.current,
-      { opacity: 0, y: 20 },
-      { 
-        opacity: 1, 
-        y: 0, 
-        duration: 0.8,
-        onComplete: () => {
-          // Add the bounce animation after the button appears
-          gsap.to(buttonRef.current, {
-            y: "-10px",
-            repeat: -1,
-            yoyo: true,
-            duration: 1,
-            ease: "power1.inOut"
-          });
-        }
-      },
-      "-=0.5" // Start slightly before the previous animation finishes
-    );
-
-    // Create a parallax effect on scroll
-    gsap.to(sectionRef.current.querySelector('.parallax-bg'), {
-      backgroundPosition: "50% 30%",
-      ease: "none",
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: "top bottom",
-        end: "bottom top",
-        scrub: true
-      }
-    });
-  }, []);
-
-  return (
-    <div ref={sectionRef} className="relative min-h-[75vh] flex items-center justify-center overflow-hidden">
-  {/* Parallax Background */}
-  <div 
-    className="absolute inset-0 z-0 parallax-bg"
-    style={{
-      backgroundImage: `url(${about})`,
-      backgroundAttachment: 'fixed',
-      backgroundPosition: 'center',
-      backgroundSize: 'cover',
-      backgroundRepeat: 'no-repeat',
-    }}
-  >
-    {/* Overlay */}
-    <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/40 to-[#00824699]"></div>
-  </div>
-
-  {/* Content */}
-  <div className="relative z-10 max-w-3xl md:max-w-4xl mx-auto px-6 py-20 text-center">
-    <div className="space-y-8">
-      <h1
-        ref={titleRef}
-        className="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight text-white drop-shadow-lg"
-      >
-        <span className="block text-[#E4C73F] mb-1 text-base md:text-lg font-bold tracking-widest uppercase">
-          About Us
-        </span>
-        <span>
-          Empowering India with <span className="text-[#E4C73F]">Next-Gen</span> Power Solutions
-        </span>
-      </h1>
-      <p
-        ref={textRef}
-        className="text-lg md:text-2xl text-white/90 leading-relaxed max-w-2xl mx-auto"
-      >
-        We are pioneers in inverter systems, batteries, and solar energy—providing future-ready backup solutions for every home, business, and industry.
-        <br />
-        <span className="mt-2 block text-white/80 text-base">
-          From residential apartments to commercial giants, we deliver reliability, expertise, and trust across India.
-        </span>
+const AboutUs = () => (
+  <main className="bg-gray-50 min-h-screen py-16 mt-20">
+    <div className="container mx-auto px-4 max-w-4xl">
+      <h1 className="text-4xl md:text-5xl font-bold text-[#008246] mb-6 text-center">About Energy Storage System (ESS)</h1>
+      <p className="text-lg text-gray-700 mb-8 text-center">
+        Energy Storage System (ESS) is your one-stop destination for complete power backup and energy solutions. We are committed to powering homes, businesses, and institutions with reliable, efficient, and future-ready energy systems.
       </p>
-      <button
-        ref={buttonRef}
-        className="mt-8 px-10 py-3 bg-gradient-to-r from-[#E4C73F] to-[#ffe477] text-[#008246] font-bold rounded-full shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#d4b82f] focus:outline-none focus:ring-2 focus:ring-[#E4C73F] focus:ring-offset-2 text-lg"
-      >
-        Explore Our Solutions
-      </button>
+      <div className="bg-white rounded-2xl shadow-lg p-8 mb-10">
+        <p className="mb-4 text-gray-800">
+          Established with a mission to bridge the gap between power demand and dependable supply, ESS has quickly grown into a trusted name in the energy sector. We pride ourselves on delivering innovative and scalable solutions that not only meet your present needs but also prepare you for a sustainable future.
+        </p>
+        <p className="mb-4 text-gray-800">
+          Our commitment to excellence, combined with our technical expertise and customer-centric approach, ensures that we deliver nothing but the best—no matter the scale or complexity of the project.
+        </p>
+      </div>
+      <div className="grid md:grid-cols-2 gap-8 mb-10">
+        <section className="bg-[#e4c73f]/10 rounded-xl p-6 shadow">
+          <h2 className="text-2xl font-semibold text-[#008246] mb-4">Our Key Offerings</h2>
+          <ul className="list-disc pl-6 space-y-2 text-gray-700">
+            <li><b>Inverters & Batteries (Home & Commercial Use):</b> Reliable and efficient systems designed to provide backup power during outages and ensure continuous operation of essential appliances.</li>
+            <li><b>UPS Systems (Online/Offline):</b> Uninterruptible Power Supply systems that protect sensitive equipment from power fluctuations, surges, and outages.</li>
+            <li><b>Solar Rooftop Systems (On-grid, Off-grid, Hybrid):</b> Customized solar energy solutions tailored for residential, commercial, and industrial use, ensuring maximum efficiency and return on investment.</li>
+            <li><b>Solar Street Lights & Solar Car Batteries:</b> Environmentally friendly and cost-effective lighting and energy solutions for outdoor and automotive applications.</li>
+            <li><b>Advanced Lithium Batteries for EVs & Backup:</b> High-performance, lightweight, and long-lasting lithium battery systems built for electric vehicles and power storage.</li>
+            <li><b>Installation, Maintenance & After-Sales Support:</b> End-to-end project execution with ongoing support and maintenance to keep your systems running smoothly and efficiently.</li>
+          </ul>
+        </section>
+        <section className="bg-[#e4c73f]/10 rounded-xl p-6 shadow">
+          <h2 className="text-2xl font-semibold text-[#008246] mb-4">Why Choose ESS?</h2>
+          <ul className="list-disc pl-6 space-y-2 text-gray-700">
+            <li><b>Comprehensive product portfolio</b> that covers all power and energy backup needs.</li>
+            <li><b>Expert technical support,</b> including free site visits and load assessments for precise solutions.</li>
+            <li><b>Top-tier brands and high-quality equipment</b> sourced for durability and performance.</li>
+            <li><b>Seamless integration with government policies</b> and subsidy programs to reduce your investment burden.</li>
+            <li><b>Efficient project execution</b> with minimal downtime and superior workmanship.</li>
+            <li><b>Dedicated customer service team</b> providing timely maintenance, upgrades, and AMC services.</li>
+            <li><b>Transparency, integrity, and customer satisfaction</b> as the core values guiding every interaction.</li>
+          </ul>
+        </section>
+      </div>
+      <div className="bg-white rounded-2xl shadow-lg p-8 mb-10">
+        <p className="mb-4 text-gray-800">
+          At Energy Storage System (ESS), we believe energy is not just a utility—it's a necessity. With a passion for technology and a commitment to sustainable progress, we continue to deliver solutions that empower lives, drive businesses, and protect the environment.
+        </p>
+        <p className="mb-4 text-gray-800">
+          Join the ESS family and experience the power of reliable, affordable, and clean energy—today and for the future.
+        </p>
+      </div>
+      {/* Certificates Grid */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold text-[#008246] mb-6 text-center">Our Certifications</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Udyam Certificate */}
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+            <span className="text-[#008246] font-bold mb-2">Udyam Certificate</span>
+            <embed src={udyamPDF} type="application/pdf" className="w-full h-48 rounded mb-3 border" />
+            <a href={udyamPDF} target="_blank" rel="noopener noreferrer" className="text-sm text-[#008246] font-semibold hover:underline">View Full PDF</a>
+          </div>
+          {/* ISO Certificate */}
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+            <span className="text-[#008246] font-bold mb-2">ISO 9001:2015 Certificate</span>
+            <embed src={isoPDF} type="application/pdf" className="w-full h-48 rounded mb-3 border" />
+            <a href={isoPDF} target="_blank" rel="noopener noreferrer" className="text-sm text-[#008246] font-semibold hover:underline">View Full PDF</a>
+          </div>
+          {/* GST Certificate */}
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
+            <span className="text-[#008246] font-bold mb-2">GST Certificate</span>
+            <embed src={gstPDF} type="application/pdf" className="w-full h-48 rounded mb-3 border" />
+            <a href={gstPDF} target="_blank" rel="noopener noreferrer" className="text-sm text-[#008246] font-semibold hover:underline">View Full PDF</a>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
-  );
-};
+  </main>
+);
 
 export default AboutUs;

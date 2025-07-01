@@ -11,6 +11,10 @@ const Signup = () => {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [])
+
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated()) {
