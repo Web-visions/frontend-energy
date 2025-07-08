@@ -226,9 +226,9 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                                                 {displayMRP && (
                                                                     <span className="text-xs text-gray-400 line-through">{formatCurrency(displayMRP)}</span>
                                                                 )}
-                                                                <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+                                                                    <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                                                                     {formatCurrency(displayUnitPrice)}
-                                                                </span>
+                                                                    </span>
                                                                 {showDiscount && (
                                                                     <span className="text-xs text-white bg-green-500 px-2 py-0.5 rounded">
                                                                         -{discountPercent}%

@@ -36,6 +36,7 @@ const SolarPVModuleManagement = () => {
     replacementPolicy: "",
     staticTags: [],
     price: "",
+    isFeatured: false,
   });
   const [pagination, setPagination] = useState({ page: 0, limit: 10, total: 0 });
   const [search, setSearch] = useState("");
@@ -76,7 +77,7 @@ const SolarPVModuleManagement = () => {
   const handleChangeRowsPerPage = (e) => setPagination((p) => ({ ...p, limit: parseInt(e.target.value, 10), page: 0 }));
 
   // Modal Form handlers
-  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.value }));
+  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const handleTagsInputChange = (e) => setTagsInput(e.target.value);
 
   // Multiple Images Upload
@@ -107,6 +108,7 @@ const SolarPVModuleManagement = () => {
         replacementPolicy: item.replacementPolicy || "",
         staticTags: item.staticTags || [],
         price: item.price || "",
+        isFeatured: !!item.isFeatured,
       });
       setTagsInput((item.staticTags || []).join(", "));
       setIsEditing(true);
@@ -121,7 +123,7 @@ const SolarPVModuleManagement = () => {
       setFormData({
         category: "", brand: "", name: "", description: "", modelName: "", sku: "", type: "",
         weight: "", dimension: "", manufacturer: "", packer: "", importer: "",
-        replacementPolicy: "", staticTags: [], price: "",
+        replacementPolicy: "", staticTags: [], price: "", isFeatured: false,
       });
       setTagsInput("");
       setIsEditing(false);
@@ -235,6 +237,7 @@ const SolarPVModuleManagement = () => {
               <TableCell>Importer</TableCell>
               <TableCell>Replacement Policy</TableCell>
               <TableCell>Tags</TableCell>
+              <TableCell>Featured</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -277,6 +280,7 @@ const SolarPVModuleManagement = () => {
                       item.staticTags.map((tag, idx) => <Chip size="small" label={tag} key={idx} sx={{ m: 0.25 }} />)
                     ) : ""}
                   </TableCell>
+                  <TableCell>{item.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(item)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(item._id)} color="error"><FiTrash2 /></IconButton>
@@ -387,6 +391,21 @@ const SolarPVModuleManagement = () => {
                     ))}
                   </Box>
                 )}
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <Box display="flex" alignItems="center" mt={2}>
+                    <input
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={handleInputChange}
+                      id="isFeatured"
+                      style={{ marginRight: 8 }}
+                    />
+                    <label htmlFor="isFeatured">Featured Product</label>
+                  </Box>
+                </FormControl>
               </Grid>
             </Grid>
           </Box>

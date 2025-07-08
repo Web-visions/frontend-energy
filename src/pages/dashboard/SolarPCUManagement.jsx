@@ -35,6 +35,7 @@ const SolarPCUManagement = () => {
     dimension: "",
     weight: "",
     price: "",
+    isFeatured: false,
   });
   const [pagination, setPagination] = useState({ page: 0, limit: 10, total: 0 });
   const [search, setSearch] = useState("");
@@ -79,7 +80,7 @@ const SolarPCUManagement = () => {
   const handleChangeRowsPerPage = (e) => setPagination((p) => ({ ...p, limit: parseInt(e.target.value, 10), page: 0 }));
 
   // Modal Form handlers
-  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.value }));
+  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const handleFeaturesInputChange = (e) => setFeaturesInput(e.target.value);
   const handleTagsInputChange = (e) => setTagsInput(e.target.value);
   const handleImageChange = (e) => {
@@ -108,6 +109,7 @@ const SolarPCUManagement = () => {
         dimension: item.dimension || "",
         weight: item.weight || "",
         price: item.price || "",
+        isFeatured: !!item.isFeatured,
       });
       setFeaturesInput((item.features || []).join(", "));
       setTagsInput((item.staticTags || []).join(", "));
@@ -118,7 +120,7 @@ const SolarPCUManagement = () => {
     } else {
       setFormData({
         category: "", brand: "", name: "", description: "", features: [], type: "", wattage: "",
-        modelName: "", staticTags: [], warranty: "", dimension: "", weight: "", price: "",
+        modelName: "", staticTags: [], warranty: "", dimension: "", weight: "", price: "", isFeatured: false,
       });
       setFeaturesInput("");
       setTagsInput("");
@@ -244,7 +246,7 @@ const SolarPCUManagement = () => {
               <TableCell>Warranty</TableCell>
               <TableCell>Dimension</TableCell>
               <TableCell>Weight</TableCell>
-              {/* <TableCell>Features</TableCell> */}
+              <TableCell>Featured</TableCell>
               <TableCell>Tags</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -276,9 +278,7 @@ const SolarPCUManagement = () => {
                   <TableCell>{item.warranty || "N/A"}</TableCell>
                   <TableCell>{item.dimension || "N/A"}</TableCell>
                   <TableCell>{item.weight || "N/A"}</TableCell>
-                  {/* <TableCell>
-                    {Array.isArray(item.features) ? item.features.join(", ") : ""}
-                  </TableCell> */}
+                  <TableCell>{item.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
                     {Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}
                   </TableCell>
@@ -389,6 +389,21 @@ const SolarPCUManagement = () => {
                     <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 6, border: "1px solid #eee" }} />
                   </Box>
                 )}
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <Box display="flex" alignItems="center" mt={2}>
+                    <input
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={handleInputChange}
+                      id="isFeatured"
+                      style={{ marginRight: 8 }}
+                    />
+                    <label htmlFor="isFeatured">Featured Product</label>
+                  </Box>
+                </FormControl>
               </Grid>
             </Grid>
           </Box>

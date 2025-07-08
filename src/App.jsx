@@ -17,6 +17,7 @@ import {
 
 import { Header, Footer } from './Components';
 import WhatsAppButton from './Components/WhatsAppButton';
+import GoogleRatingBadge from './Components/GoogleRatingBadge';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -115,7 +116,7 @@ export default function App() {
           </Routes>
           {/* WhatsApp Floating Button */}
           <WhatsAppButton />
-
+          <GoogleRatingBadge />
         </Router>
       </CartProvider>
     </AuthProvider>

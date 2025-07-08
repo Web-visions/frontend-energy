@@ -30,12 +30,12 @@ const OrderSuccessPage = () => {
                         <div className="mb-2"><span className="font-semibold">Delivery Charge:</span> ₹{order.deliveryCharge?.toLocaleString()}</div>
                     )}
                 </div>
-                <button
-                    onClick={() => navigate('/')}
+                        <button
+                            onClick={() => navigate('/')}
                     className="mt-4 px-6 py-3 bg-[#008246] text-white rounded-full font-semibold shadow hover:bg-[#005a2f] transition-all text-lg"
                 >
                     Go to Home
-                </button>
+                        </button>
             </div>
         </div>
     );

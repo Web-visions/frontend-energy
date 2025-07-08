@@ -3,14 +3,18 @@ import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { gsap } from 'gsap';
 import { slide1, slide2, slide3 } from '../assets';
 import { useNavigate } from 'react-router-dom';
+import { productService } from '../services/product.service';
 
 const SliderComponent = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [step, setStep] = useState(1);
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [selectedCompanies, setSelectedCompanies] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('');
   const [budget, setBudget] = useState([0, 100000]);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
   const sliderRef = useRef(null);
   const formRef = useRef(null);
   const intervalRef = useRef(null);
@@ -40,23 +44,19 @@ const SliderComponent = () => {
     },
   ];
 
-  const products = [
-    { name: 'Inverter', icon: '🔌' },
-    { name: 'UPS', icon: '⚡' },
-    { name: 'Batteries', icon: '🔋' },
-    { name: 'Battery water', icon: '💧' },
-    { name: 'Solar products', icon: '☀️' },
-    { name: 'Stabilizers', icon: '⚖️' }
-  ];
+  // Fetch all brands on mount
+  useEffect(() => {
+    productService.getFilterOptions().then((opts) => {
+      setBrands(opts.brands || []);
+    });
+  }, []);
 
-  const companies = {
-    'Inverter': ['Su-vastika', 'Luminous', 'Microtek', 'Apc', 'Online ups', 'Exide', 'Bi-Cell', 'Sf', 'Amaron', 'Dynex', 'Livfast'],
-    'UPS': ['Online ups', 'Apc', 'Su-vastika', 'Luminous', 'Microtek', 'Exide', 'Bi-Cell', 'Sf', 'Amaron', 'Dynex', 'Livfast'],
-    'Batteries': ['Lead acid battery', 'Exide', 'Luminous', 'Bi-Cell', 'Sf', 'Amaron', 'Dynex', 'Livfast'],
-    'Solar products': ['Warree', 'Vikram', 'Aadani', 'Exide', 'Luminous', 'Bi-Cell', 'Sf', 'Amaron', 'Dynex', 'Livfast'],
-    'Battery water': ['Su-vastika', 'Luminous', 'Exide', 'Bi-Cell', 'Sf', 'Amaron', 'Dynex', 'Livfast'],
-    'Stabilizers': ['Su-vastika', 'Microtek', 'Luminous', 'Apc', 'Online ups', 'Exide', 'Bi-Cell', 'Sf', 'Amaron', 'Dynex', 'Livfast']
-  };
+  // Fetch categories on mount
+  useEffect(() => {
+    productService.getFilterOptions().then((opts) => {
+      setCategories(opts.categories || []);
+    });
+  }, []);
 
   const startAutoplay = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -113,21 +113,14 @@ const SliderComponent = () => {
     return () => stopAutoplay();
   }, [isPlaying, startAutoplay, stopAutoplay]);
 
-  const handleProductSelect = (product) => {
-    setSelectedProduct(product);
-    setSelectedCompanies([]);
-  };
-
-  const handleCompanyToggle = (company) => {
-    setSelectedCompanies(prev =>
-      prev.includes(company)
-        ? prev.filter(c => c !== company)
-        : [...prev, company]
-    );
-  };
-
   const handleSubmit = () => {
-    alert(`Selected Product: ${selectedProduct}\nSelected Companies: ${selectedCompanies.join(', ')}\nBudget Range: ₹${budget[0]} - ₹${budget[1]}`);
+    // Navigate to product page with selected filters
+    const params = new URLSearchParams();
+    if (selectedCategory && selectedCategory !== '') params.append('category', selectedCategory);
+    if (selectedBrand && selectedBrand !== '') params.append('brand', selectedBrand);
+    params.append('minPrice', budget[0]);
+    params.append('maxPrice', budget[1]);
+    navigate(`/products?${params.toString()}`);
   };
 
   return (
@@ -283,29 +276,31 @@ const SliderComponent = () => {
                       What are you looking for?
                     </h4>
                     <div className="flex-1 space-y-3 overflow-y-auto">
-                      {products.map(product => (
+                      {categories.map(category => (
                         <label
-                          key={product.name}
-                          className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${selectedProduct === product.name
+                          key={category._id}
+                          className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${selectedCategory === category._id
                             ? 'border-[#008246] bg-[#008246]/5 shadow-md'
                             : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
                             }`}
                         >
                           <input
                             type="radio"
-                            name="product"
-                            value={product.name}
-                            checked={selectedProduct === product.name}
-                            onChange={() => handleProductSelect(product.name)}
+                            name="category"
+                            value={category._id}
+                            checked={selectedCategory === category._id}
+                            onChange={() => {
+                              setSelectedCategory(category._id);
+                              setSelectedBrand('');
+                            }}
                             className="sr-only"
                           />
-                          <span className="text-2xl mr-3">{product.icon}</span>
-                          <span className="font-medium text-gray-700">{product.name}</span>
-                          <div className={`ml-auto w-5 h-5 rounded-full border-2 transition-all duration-300 ${selectedProduct === product.name
+                          <span className="font-medium text-gray-700">{category.name}</span>
+                          <div className={`ml-auto w-5 h-5 rounded-full border-2 transition-all duration-300 ${selectedCategory === category._id
                             ? 'border-[#008246] bg-[#008246]'
                             : 'border-gray-300'
                             }`}>
-                            {selectedProduct === product.name && (
+                            {selectedCategory === category._id && (
                               <div className="w-full h-full rounded-full bg-white scale-50" />
                             )}
                           </div>
@@ -313,9 +308,9 @@ const SliderComponent = () => {
                       ))}
                     </div>
                     <button
-                      onClick={() => selectedProduct && setStep(2)}
+                      onClick={() => selectedCategory && setStep(2)}
                       className="w-full bg-gradient-to-r from-[#008246] to-[#009c55] text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-                      disabled={!selectedProduct}
+                      disabled={!selectedCategory}
                     >
                       Continue
                     </button>
@@ -325,34 +320,38 @@ const SliderComponent = () => {
                 {step === 2 && (
                   <div className="h-full flex flex-col">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                      Select Preferred Brands
+                      Select Preferred Brand
                     </h4>
                     <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-                      {companies[selectedProduct]?.map(company => (
+                      {loadingBrands ? (
+                        <div className="text-gray-500">Loading brands...</div>
+                      ) : brands.length === 0 ? (
+                        <div className="text-gray-500">No brands found for this category.</div>
+                      ) : brands.map(brand => (
                         <label
-                          key={company}
-                          className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-300 ${selectedCompanies.includes(company)
+                          key={brand._id}
+                          className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-300 ${selectedBrand === brand._id
                             ? 'border-[#008246] bg-[#008246]/5'
                             : 'border-gray-200 hover:border-[#008246]/30 hover:bg-gray-50'
                             }`}
                         >
                           <input
-                            type="checkbox"
-                            checked={selectedCompanies.includes(company)}
-                            onChange={() => handleCompanyToggle(company)}
+                            type="radio"
+                            name="brand"
+                            value={brand._id}
+                            checked={selectedBrand === brand._id}
+                            onChange={() => setSelectedBrand(brand._id)}
                             className="sr-only"
                           />
-                          <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-all duration-300 ${selectedCompanies.includes(company)
+                          <span className="font-medium text-gray-700">{brand.name}</span>
+                          <div className={`ml-auto w-5 h-5 rounded-full border-2 transition-all duration-300 ${selectedBrand === brand._id
                             ? 'border-[#008246] bg-[#008246]'
                             : 'border-gray-300'
                             }`}>
-                            {selectedCompanies.includes(company) && (
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
+                            {selectedBrand === brand._id && (
+                              <div className="w-full h-full rounded-full bg-white scale-50" />
                             )}
                           </div>
-                          <span className="font-medium text-gray-700">{company}</span>
                         </label>
                       ))}
                     </div>
@@ -364,9 +363,9 @@ const SliderComponent = () => {
                         Back
                       </button>
                       <button
-                        onClick={() => selectedCompanies.length > 0 && setStep(3)}
+                        onClick={() => selectedBrand && setStep(3)}
                         className="flex-1 bg-gradient-to-r from-[#008246] to-[#009c55] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={selectedCompanies.length === 0}
+                        disabled={!selectedBrand}
                       >
                         Continue
                       </button>

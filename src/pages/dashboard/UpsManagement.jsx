@@ -56,6 +56,7 @@ const UPSManagement = () => {
     warranty: '',
     mrp: '',
     sellingPrice: '',
+    isFeatured: false,
   });
   const [pagination, setPagination] = useState({
     page: 0,
@@ -129,10 +130,10 @@ const UPSManagement = () => {
 
   // Form Input Handlers
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     });
   };
   const handleFeaturesInputChange = (e) => setFeaturesInput(e.target.value);
@@ -165,6 +166,7 @@ const UPSManagement = () => {
         warranty: ups.warranty || '',
         mrp: ups.mrp || '',
         sellingPrice: ups.sellingPrice || '',
+        isFeatured: !!ups.isFeatured,
       });
       setFeaturesInput((ups.features || []).join(', '));
       setIsEditing(true);
@@ -188,6 +190,7 @@ const UPSManagement = () => {
         warranty: '',
         mrp: '',
         sellingPrice: '',
+        isFeatured: false,
       });
       setFeaturesInput('');
       setIsEditing(false);
@@ -335,6 +338,7 @@ const UPSManagement = () => {
               <TableCell>MRP</TableCell>
               <TableCell>Selling Price</TableCell>
               <TableCell>Warranty</TableCell>
+              <TableCell>Featured</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -363,6 +367,7 @@ const UPSManagement = () => {
                   <TableCell>₹{ups.mrp || 'N/A'}</TableCell>
                   <TableCell>₹{ups.sellingPrice || 'N/A'}</TableCell>
                   <TableCell>{ups.warranty || 'N/A'}</TableCell>
+                  <TableCell>{ups.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(ups)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(ups._id)} color="error"><FiTrash2 /></IconButton>
@@ -498,6 +503,21 @@ const UPSManagement = () => {
                     <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid #eee' }} />
                   </Box>
                 )}
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <Box display="flex" alignItems="center" mt={2}>
+                    <input
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={handleInputChange}
+                      id="isFeatured"
+                      style={{ marginRight: 8 }}
+                    />
+                    <label htmlFor="isFeatured">Featured Product</label>
+                  </Box>
+                </FormControl>
               </Grid>
             </Grid>
           </Box>

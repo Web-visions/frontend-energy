@@ -51,7 +51,8 @@ const InverterManagement = () => {
     capacity: '',
     warranty: '',
     mrp: '',
-    sellingPrice: ''
+    sellingPrice: '',
+    isFeatured: false,
   });
   const [pagination, setPagination] = useState({
     page: 0,
@@ -127,10 +128,10 @@ const InverterManagement = () => {
 
   // Form Input Handlers
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     });
   };
   // Use a separate input for features as string
@@ -160,7 +161,8 @@ const InverterManagement = () => {
         capacity: inverter.capacity || '',
         warranty: inverter.warranty || '',
         mrp: inverter.mrp || '',
-        sellingPrice: inverter.sellingPrice || ''
+        sellingPrice: inverter.sellingPrice || '',
+        isFeatured: !!inverter.isFeatured,
       });
       setFeaturesInput((inverter.features || []).join(', '));
       setIsEditing(true);
@@ -178,7 +180,8 @@ const InverterManagement = () => {
         capacity: '',
         warranty: '',
         mrp: '',
-        sellingPrice: ''
+        sellingPrice: '',
+        isFeatured: false,
       });
       setFeaturesInput('');
       setIsEditing(false);
@@ -325,6 +328,7 @@ const InverterManagement = () => {
               <TableCell>Capacity</TableCell>
               <TableCell>MRP</TableCell>
               <TableCell>Warranty</TableCell>
+              <TableCell>Featured</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -356,6 +360,7 @@ const InverterManagement = () => {
                   <TableCell>{inverter.capacity || 'N/A'}</TableCell>
                   <TableCell>₹{inverter.mrp || 'N/A'}</TableCell>
                   <TableCell>{inverter.warranty || 'N/A'}</TableCell>
+                  <TableCell>{inverter.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(inverter)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(inverter._id)} color="error"><FiTrash2 /></IconButton>
@@ -464,6 +469,21 @@ const InverterManagement = () => {
                     <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid #eee' }} />
                   </Box>
                 )}
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <Box display="flex" alignItems="center" mt={2}>
+                    <input
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={handleInputChange}
+                      id="isFeatured"
+                      style={{ marginRight: 8 }}
+                    />
+                    <label htmlFor="isFeatured">Featured Product</label>
+                  </Box>
+                </FormControl>
               </Grid>
             </Grid>
           </Box>

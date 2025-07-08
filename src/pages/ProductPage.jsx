@@ -65,6 +65,9 @@ export default function ProductListing() {
 
   const { addToCart } = useCart();
 
+  // Get current type from URL
+  const currentType = searchParams.get('type') || '';
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
@@ -77,17 +80,35 @@ export default function ProductListing() {
   }, [searchParams]);
 
   useEffect(() => {
+    // Parse query params from URL
+    const params = Object.fromEntries([...searchParams]);
+    // Set initial filters from URL
+    setSelectedFilters(prev => {
+      const newFilters = {
+        ...prev,
+        brand: params.brand || "",
+        category: params.category || "",
+      };
+      if (params.type && params.type !== "") newFilters.type = params.type;
+      return newFilters;
+    });
+    // Set price range from URL if present
+    if (params.minPrice && params.maxPrice) {
+      setPriceRange(Number(params.maxPrice));
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const type = searchParams.get('type');
+        // Build filters object, only include type if not empty
+        const filtersToSend = { ...selectedFilters, minPrice: 0, maxPrice: priceRange };
+        if (type && type !== "") filtersToSend.type = type;
+        else delete filtersToSend.type;
         const [productsData, filterOptions] = await Promise.all([
-          productService.getAllProducts({
-            ...selectedFilters,
-            type: type || selectedFilters.type,
-            minPrice: 0,
-            maxPrice: priceRange
-          }),
+          productService.getAllProducts(filtersToSend),
           productService.getFilterOptions()
         ]);
         setProducts(productsData.data);
@@ -102,6 +123,13 @@ export default function ProductListing() {
     fetchData();
   }, [selectedFilters, priceRange, searchParams]);
 
+  // Filter products by rating if selected
+  let filteredProducts = products;
+  if (selectedFilters.rating) {
+    filteredProducts = filteredProducts.filter(
+      (prod) => (prod.averageRating || 0) >= Number(selectedFilters.rating)
+    );
+  }
 
   const handleReset = () => {
     setPriceRange(20000);
@@ -113,18 +141,30 @@ export default function ProductListing() {
   };
 
   const handleProductClick = (product) => {
-    const type = searchParams.get('type');
-    if (!type) {
-      console.error('No type found in URL');
+    console.log(product, "PROD")
+    if (!product.type) {
       setError('Error loading product details: Product type is missing.');
       return;
     }
-    navigate(`/product/${type}/${product._id}`);
+    navigate(`/product/${product.prodType}/${product._id}`);
   };
 
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
   };
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedFilters.brand) params.set('brand', selectedFilters.brand);
+    if (selectedFilters.category) params.set('category', selectedFilters.category);
+    if (selectedFilters.type) params.set('type', selectedFilters.type);
+    if (selectedFilters.rating) params.set('rating', selectedFilters.rating);
+    if (selectedFilters.batteryType) params.set('batteryType', selectedFilters.batteryType);
+    params.set('minPrice', 0);
+    params.set('maxPrice', priceRange);
+    navigate(`/products?${params.toString()}`, { replace: true });
+  }, [selectedFilters, priceRange, navigate]);
 
   if (error) {
     return (
@@ -150,6 +190,7 @@ export default function ProductListing() {
               setSelectedFilters={setSelectedFilters}
               onReset={handleReset}
               filterOptions={filters}
+              currentType={currentType}
             />
           </div>
 
@@ -187,9 +228,10 @@ export default function ProductListing() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
               </div>
-            ) : products?.length > 0 ? (
+            ) : filteredProducts?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((prod, index) => {
+                {filteredProducts.map((prod, index) => {
+                  console.log(prod, "PROD")
                   const displayPrice = prod?.price || prod?.sellingPrice || prod?.mrp;
                   const hasDiscount = prod.mrp > displayPrice;
 

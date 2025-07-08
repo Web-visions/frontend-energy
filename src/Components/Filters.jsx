@@ -1,12 +1,4 @@
 import React from "react";
-import { Battery, Zap, Package, Settings } from "lucide-react";
-
-const FILTERS = [
-  { icon: Battery, label: "Company", options: ["Exide", "Amaron", "Luminous"] },
-  { icon: Zap, label: "Voltage", options: ["6V", "12V", "24V"] },
-  { icon: Package, label: "Capacity (Ah)", options: ["35Ah", "60Ah", "100Ah"] },
-  { icon: Settings, label: "Battery Type", options: ["Lead Acid", "Li-ion", "Tubular"] },
-];
 
 const FilterSidebar = ({
   priceRange,
@@ -14,7 +6,8 @@ const FilterSidebar = ({
   selectedFilters,
   setSelectedFilters,
   onReset,
-  filterOptions
+  filterOptions,
+  currentType // pass from ProductPage.jsx, e.g. 'battery', 'ups', etc. or ''
 }) => {
   const handleFilterChange = (key, value) => {
     setSelectedFilters(prev => ({
@@ -22,6 +15,13 @@ const FilterSidebar = ({
       [key]: value
     }));
   };
+
+  // Battery type options: dynamic from filterOptions, fallback to enum
+  const batteryTypeOptions = filterOptions.batteryTypes || [
+    { value: 'lead acid', label: 'Lead Acid' },
+    { value: 'li ion', label: 'Li-ion' },
+    { value: 'smf', label: 'SMF' }
+  ];
 
   return (
     <aside className="w-[15rem] bg-white p-6 rounded-xl shadow-lg border border-gray-100">
@@ -69,63 +69,76 @@ const FilterSidebar = ({
         </select>
       </div>
 
-      {/* Category Filter */}
-      <div className="mb-6">
-        <h3 className="font-medium text-gray-900 mb-3">Category</h3>
-        <select
-          value={selectedFilters.category}
-          onChange={(e) => handleFilterChange('category', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="">All Categories</option>
-          {filterOptions.categories?.map((category) => (
-            <option key={category._id} value={category._id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Type Filter */}
-      <div className="mb-6">
-        <h3 className="font-medium text-gray-900 mb-3">Product Type</h3>
-        <select
-          value={selectedFilters.type}
-          onChange={(e) => handleFilterChange('type', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="">All Types</option>
-          <option value="ups">UPS</option>
-          <option value="solar-pcu">Solar PCU</option>
-          <option value="solar-pv">Solar PV Module</option>
-          <option value="solar-street-light">Solar Street Light</option>
-          <option value="inverter">Inverter</option>
-          <option value="battery">Battery</option>
-        </select>
-      </div>
-
-      {FILTERS.map((filter) => (
-        <div key={filter.label} className="mb-6">
-          <label className="flex items-center gap-2 mb-3 font-semibold text-gray-700">
-            <filter.icon size={18} />
-            {filter.label}
-          </label>
+      {/* Category Filter: only show if not on a specific type */}
+      {(!currentType || currentType === '') && (
+        <div className="mb-6">
+          <h3 className="font-medium text-gray-900 mb-3">Category</h3>
           <select
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-white text-gray-700 focus:border-[#008246] focus:ring-1 focus:ring-[#008246] outline-none transition-all"
-            value={selectedFilters[filter.label] || ""}
-            onChange={(e) =>
-              handleFilterChange(filter.label, e.target.value)
-            }
+            value={selectedFilters.category}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">All</option>
-            {filter.options.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
+            <option value="">All Categories</option>
+            {filterOptions.categories?.map((category) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
               </option>
             ))}
           </select>
         </div>
-      ))}
+      )}
+
+      {/* Product Type Filter: only show if not on a specific type */}
+      {/* {(!currentType || currentType === '') && (
+        <div className="mb-6">
+          <h3 className="font-medium text-gray-900 mb-3">Product Type</h3>
+          <select
+            value={selectedFilters.type}
+            onChange={(e) => handleFilterChange('type', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">All Types</option>
+            {filterOptions.types?.map((type) => (
+              <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+            ))}
+          </select>
+        </div>
+      )} */}
+
+      {/* Battery Type Filter: only show if on battery type */}
+      {currentType === 'battery' && (
+        <div className="mb-6">
+          <h3 className="font-medium text-gray-900 mb-3">Battery Type</h3>
+          <select
+            value={selectedFilters.batteryType || ''}
+            onChange={(e) => handleFilterChange('batteryType', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">All Types</option>
+            {batteryTypeOptions.map((opt) => (
+              <option key={opt.value || opt} value={opt.value || opt}>
+                {opt.label || opt}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Rating Filter: always show */}
+      <div className="mb-6">
+        <h3 className="font-medium text-gray-900 mb-3">Rating</h3>
+        <select
+          value={selectedFilters.rating || ''}
+          onChange={(e) => handleFilterChange('rating', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">All Ratings</option>
+          <option value="4">4★ & above</option>
+          <option value="3">3★ & above</option>
+          <option value="2">2★ & above</option>
+          <option value="1">1★ & above</option>
+        </select>
+      </div>
     </aside>
   );
 };

@@ -30,6 +30,7 @@ const SolarStreetLightManagement = () => {
     replacementPolicy: "",
     staticTags: [],
     price: "",
+    isFeatured: false,
   });
   const [pagination, setPagination] = useState({ page: 0, limit: 10, total: 0 });
   const [search, setSearch] = useState("");
@@ -74,7 +75,7 @@ const SolarStreetLightManagement = () => {
   const handleChangeRowsPerPage = (e) => setPagination((p) => ({ ...p, limit: parseInt(e.target.value, 10), page: 0 }));
 
   // Modal Form handlers
-  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.value }));
+  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const handleTagsInputChange = (e) => setTagsInput(e.target.value);
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -98,6 +99,7 @@ const SolarStreetLightManagement = () => {
         replacementPolicy: item.replacementPolicy || "",
         staticTags: item.staticTags || [],
         price: item.price || "",
+        isFeatured: !!item.isFeatured,
       });
       setTagsInput((item.staticTags || []).join(", "));
       setIsEditing(true);
@@ -106,7 +108,7 @@ const SolarStreetLightManagement = () => {
       setImageFile(null);
     } else {
       setFormData({
-        category: "", brand: "", name: "", modelName: "", power: "", description: "", replacementPolicy: "", staticTags: [], price: "",
+        category: "", brand: "", name: "", modelName: "", power: "", description: "", replacementPolicy: "", staticTags: [], price: "", isFeatured: false,
       });
       setTagsInput("");
       setIsEditing(false);
@@ -226,6 +228,7 @@ const SolarStreetLightManagement = () => {
               <TableCell>Price</TableCell>
               <TableCell>Replacement Policy</TableCell>
               <TableCell>Tags</TableCell>
+              <TableCell>Featured</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -256,6 +259,7 @@ const SolarStreetLightManagement = () => {
                   <TableCell>
                     {Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}
                   </TableCell>
+                  <TableCell>{item.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(item)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(item._id)} color="error"><FiTrash2 /></IconButton>
@@ -325,6 +329,21 @@ const SolarStreetLightManagement = () => {
                   value={tagsInput} onChange={handleTagsInputChange}
                   helperText="Enter tags separated by commas"
                 />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <Box display="flex" alignItems="center" mt={2}>
+                    <input
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={handleInputChange}
+                      id="isFeatured"
+                      style={{ marginRight: 8 }}
+                    />
+                    <label htmlFor="isFeatured">Featured Product</label>
+                  </Box>
+                </FormControl>
               </Grid>
               <Grid item xs={12}>
                 <Button variant="contained" component="label">
