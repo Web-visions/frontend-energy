@@ -44,6 +44,41 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
+// Pagination component
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+  return (
+    <div className="flex justify-center items-center gap-2 my-8">
+      <button
+        className="px-3 py-1 rounded border bg-gray-100 text-gray-700 disabled:opacity-50"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        Prev
+      </button>
+      {pageNumbers.map((num) => (
+        <button
+          key={num}
+          className={`px-3 py-1 rounded border ${num === currentPage ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-700'}`}
+          onClick={() => onPageChange(num)}
+          disabled={num === currentPage}
+        >
+          {num}
+        </button>
+      ))}
+      <button
+        className="px-3 py-1 rounded border bg-gray-100 text-gray-700 disabled:opacity-50"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        Next
+      </button>
+    </div>
+  );
+}
 
 export default function ProductListing() {
   const [products, setProducts] = useState([]);
@@ -60,6 +95,9 @@ export default function ProductListing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -68,9 +106,11 @@ export default function ProductListing() {
   // Get current type from URL
   const currentType = searchParams.get('type') || '';
 
+  // Get current page from URL
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    const pageFromUrl = parseInt(searchParams.get('page')) || 1;
+    setCurrentPage(pageFromUrl);
+  }, [searchParams]);
 
   useEffect(() => {
     const type = searchParams.get('type');
@@ -96,6 +136,10 @@ export default function ProductListing() {
     if (params.minPrice && params.maxPrice) {
       setPriceRange(Number(params.maxPrice));
     }
+    // Set page from URL
+    if (params.page) {
+      setCurrentPage(Number(params.page));
+    }
   }, []);
 
   useEffect(() => {
@@ -107,12 +151,21 @@ export default function ProductListing() {
         const filtersToSend = { ...selectedFilters, minPrice: 0, maxPrice: priceRange };
         if (type && type !== "") filtersToSend.type = type;
         else delete filtersToSend.type;
+        // Add pagination params
+        filtersToSend.page = currentPage;
+        filtersToSend.limit = 9;
         const [productsData, filterOptions] = await Promise.all([
           productService.getAllProducts(filtersToSend),
           productService.getFilterOptions()
         ]);
         setProducts(productsData.data);
         setFilters(filterOptions);
+        // Set pagination info from backend
+        if (productsData.pagination) {
+          setTotalPages(productsData.pagination.totalPages || 1);
+          setCurrentPage(productsData.pagination.page || 1);
+        }
+        setTotalCount(productsData.total || 0);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -121,7 +174,7 @@ export default function ProductListing() {
     };
 
     fetchData();
-  }, [selectedFilters, priceRange, searchParams]);
+  }, [selectedFilters, priceRange, searchParams, currentPage]);
 
   // Filter products by rating if selected
   let filteredProducts = products;
@@ -142,18 +195,18 @@ export default function ProductListing() {
 
   const handleProductClick = (product) => {
     console.log(product, "PROD")
-    if (!product.type) {
+    if (!product.prodType) {
       setError('Error loading product details: Product type is missing.');
       return;
     }
-    navigate(`/product/${product.prodType}/${product._id}`);
+    navigate(`/product/${product.prodType?.toLowerCase()}/${product._id}`);
   };
 
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
   };
 
-  // Update URL when filters change
+  // Update URL when filters or page change
   useEffect(() => {
     const params = new URLSearchParams();
     if (selectedFilters.brand) params.set('brand', selectedFilters.brand);
@@ -163,8 +216,9 @@ export default function ProductListing() {
     if (selectedFilters.batteryType) params.set('batteryType', selectedFilters.batteryType);
     params.set('minPrice', 0);
     params.set('maxPrice', priceRange);
+    params.set('page', currentPage);
     navigate(`/products?${params.toString()}`, { replace: true });
-  }, [selectedFilters, priceRange, navigate]);
+  }, [selectedFilters, priceRange, currentPage, navigate]);
 
   if (error) {
     return (
@@ -224,6 +278,7 @@ export default function ProductListing() {
           )}
 
           <section className="w-full">
+
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
@@ -314,6 +369,14 @@ export default function ProductListing() {
                 <h3 className="text-xl font-semibold text-gray-700">No Products Found</h3>
                 <p className="text-gray-500 mt-2">Try adjusting your filters to find what you're looking for.</p>
               </div>
+            )}
+            {/* Pagination Bottom */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             )}
           </section>
         </div>

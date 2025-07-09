@@ -270,7 +270,7 @@ const CartPage = () => {
                                                     </div>
                                                 </div>
                                                 <button
-                                                    onClick={() => handleRemoveItem(item.productType, item.productId._id)}
+                                                    onClick={() => handleRemoveItem(item.productType, item?.productId?._id)}
                                                     disabled={isRemoving}
                                                     className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50"
                                                 >

@@ -138,7 +138,7 @@ const Location = () => {
           </div>
 
           <a
-            href="https://maps.app.goo.gl/voezfGw8UqnVDhLUA?g_st=aw"
+            href="https://g.co/kgs/qjYHDtZ"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 inline-block bg-gradient-to-r from-[#008246] to-[#00b257] text-white w-full text-center px-6 py-3 rounded-full hover:bg-[#006a38] transition-colors duration-300 font-bold shadow-lg text-base"

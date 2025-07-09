@@ -380,8 +380,8 @@ const RegularProductDetail = () => {
                                             <span className="font-semibold">Selling Price:</span>
                                             <span className="font-semibold text-blue-600">₹{product.sellingPrice?.toLocaleString()}</span>
                                         </div>
-                                        </div>
-                                    )}
+                                    </div>
+                                )}
 
                                 <div className="flex items-center gap-4">
                                     <label className="text-sm font-medium text-gray-700">Quantity:</label>
@@ -403,15 +403,17 @@ const RegularProductDetail = () => {
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={hasOldBattery}
-                                            onChange={(e) => setHasOldBattery(e.target.checked)}
-                                            className="w-4 h-4 text-[#008246] rounded border-gray-300 focus:ring-[#008246]"
-                                        />
-                                        <span className="text-gray-700">I have an old battery to exchange</span>
-                                    </label>
+                                    {product.category?.name?.toLowerCase() === 'battery' && (
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={hasOldBattery}
+                                                onChange={(e) => setHasOldBattery(e.target.checked)}
+                                                className="w-4 h-4 text-[#008246] rounded border-gray-300 focus:ring-[#008246]"
+                                            />
+                                            <span className="text-gray-700">I have an old battery to exchange</span>
+                                        </label>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-4">
@@ -423,12 +425,12 @@ const RegularProductDetail = () => {
                                             Login to add to cart
                                         </button>
                                     ) : (
-                                    <button
-                                        onClick={handleAddToCart}
-                                        className="flex-1 bg-[#008246] text-white px-6 py-4 rounded-xl font-semibold text-lg hover:bg-[#009c55] transition-colors duration-200 shadow-lg"
-                                    >
-                                        Add to Cart
-                                    </button>
+                                        <button
+                                            onClick={handleAddToCart}
+                                            className="flex-1 bg-[#008246] text-white px-6 py-4 rounded-xl font-semibold text-lg hover:bg-[#009c55] transition-colors duration-200 shadow-lg"
+                                        >
+                                            Add to Cart
+                                        </button>
                                     )}
                                 </div>
                             </div>
