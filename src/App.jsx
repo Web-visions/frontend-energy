@@ -51,6 +51,9 @@ import SolarPVModuleManagement from './pages/dashboard/SolarPVModuleManagement';
 import ProductDetails from './pages/ProductDetail';
 import FAQ from './pages/FAQ';
 import NotFound from './pages/NotFound';
+import BulkOrderManagement from './pages/dashboard/BulkOrderManagement';
+import BulkOrderPage from './pages/BulkOrderPage';
+import PrivacyTermsPage from './pages/TermsAndConditions';
 
 export default function App() {
   return (
@@ -74,7 +77,12 @@ export default function App() {
             <Route path="/contact" element={<><Header /><Contact /><Footer /></>} />
             <Route path="/faq" element={<><Header /><FAQ /><Footer /></>} />
             <Route path="/about" element={<><Header /><About /><Footer /></>} />
+            <Route path="/terms" element={<><Header /><PrivacyTermsPage /><Footer /></>} />
+
+            <Route path="/bulk-orders" element={<><Header /><BulkOrderPage /><Footer /></>} />
+
             <Route path="/sitemap" element={<><Header /><Sitemap /><Footer /></>} />
+
             <Route path="/*" element={<><Header /><NotFound /><Footer /></>} />
             {/* Auth-related */}
             <Route path="/verify-email" element={<VerifyEmail />} />
@@ -111,7 +119,8 @@ export default function App() {
               <Route path="categories" element={<CategoryManagement />} />
               <Route path="lead" element={<LeadManagement />} />
               <Route path="orders" element={<OrderManagement />} />
-              <Route path="repair-orders" element={<div>Repair Orders Page</div>} />
+              {/* <Route path="repair-orders" element={<div>Repair Orders Page</div>} /> */}
+              <Route path="bulk-orders" element={<BulkOrderManagement />} />
             </Route>
           </Routes>
           {/* WhatsApp Floating Button */}

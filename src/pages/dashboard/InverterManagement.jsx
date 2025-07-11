@@ -80,7 +80,9 @@ const InverterManagement = () => {
       setInverters(response.data);
       setPagination({
         ...pagination,
-        total: response.pagination.total
+        page: response.pagination.page - 1, // backend is 1-based, TablePagination is 0-based
+        limit: response.pagination.limit,
+        total: response.total
       });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to fetch inverters');
@@ -374,7 +376,7 @@ const InverterManagement = () => {
           </TableBody>
         </Table>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
           count={pagination.total}
           rowsPerPage={pagination.limit}

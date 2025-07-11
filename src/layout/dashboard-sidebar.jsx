@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import LogoutModal from '../Components/LogoutModal';
 import { toast } from 'react-hot-toast';
 import { SolarPower } from '@mui/icons-material';
+import { FiBox } from 'react-icons/fi';
 
 const getSidebarSections = (userRole) => {
   const commonSections = [
@@ -51,7 +52,7 @@ const getSidebarSections = (userRole) => {
           { title: 'City', path: '/dashboard/admin/cities', icon: <MapPin className='w-5 h-5' /> },
           { title: 'Categories', path: '/dashboard/admin/categories', icon: <Database className='w-5 h-5' /> },
           { title: 'Orders', path: '/dashboard/admin/orders', icon: <ListOrdered className='w-5 h-5' /> },
-
+          { title: 'Bulk Orders', path: '/dashboard/admin/bulk-orders', icon: <FiBox className="w-5 h-5" /> },
         ]
       },
       commonSections[1]

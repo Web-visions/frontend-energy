@@ -53,6 +53,11 @@ const navigationItems = [
   // { name: "Contact", href: "/contact", icon: null },
 ];
 
+const MINI_HEADER_CONTACTS = {
+  phone: '+91-8929490346',
+  email: 'connect@energystoragesystem.in',
+};
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -135,11 +140,27 @@ const Header = () => {
 
   return (
     <>
+      {/* Mini Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 w-full bg-[#009853] text-white text-xs sm:text-sm py-2 px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1">
+            <Phone size={14} className="inline-block text-[#E4C73F]" />
+            <a href={`tel:${MINI_HEADER_CONTACTS.phone}`} className="hover:underline">{MINI_HEADER_CONTACTS.phone}</a>
+          </span>
+          <span className="hidden sm:inline-block h-4 border-l border-gray-400 mx-2"></span>
+          <span className="flex items-center gap-1">
+            <Mail size={14} className="inline-block text-[#E4C73F]" />
+            <a href={`mailto:${MINI_HEADER_CONTACTS.email}`} className="hover:underline">{MINI_HEADER_CONTACTS.email}</a>
+          </span>
+        </div>
+        <div className="hidden sm:flex items-center gap-4">
+          <MapPin size={14} className="inline-block text-[#E4C73F]" />
+          <span>Free Installation Across India</span>
+        </div>
+      </div>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-lg"
-          : "bg-gradient-to-r from-white via-[#009c55] to-[#008246]"
-          }`}
+        className="fixed left-0 right-0 z-40 bg-white"
+        style={{ top: '36px' }} // Adjust this value to match mini header height (e.g., 32px or 40px)
       >
         {/* Top Bar */}
         <div
@@ -446,6 +467,11 @@ const Header = () => {
           </div>
         </div>
       </header>
+
+      {/* Add padding-top to your main content to avoid overlap */}
+      <div style={{ paddingTop: '96px' }}> {/* 40px mini + 56px main header, adjust as needed */}
+        {/* ...rest of your page... */}
+      </div>
 
       {/* Logout Modal */}
       <LogoutModal

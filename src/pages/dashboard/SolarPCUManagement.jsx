@@ -51,7 +51,12 @@ const SolarPCUManagement = () => {
       if (filters.maxWattage) queryParams += `&maxWattage=${filters.maxWattage}`;
       const res = await getData(`/solar-pcus?${queryParams}`);
       setPcus(res.data || []);
-      setPagination((prev) => ({ ...prev, total: res.pagination?.total || 0 }));
+      setPagination((prev) => ({
+        ...prev,
+        page: res.pagination?.page ? res.pagination.page - 1 : 0, // backend is 1-based, TablePagination is 0-based
+        limit: res.pagination?.limit || prev.limit,
+        total: res.total || 0
+      }));
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to fetch PCUs");
     } finally {
@@ -292,7 +297,7 @@ const SolarPCUManagement = () => {
           </TableBody>
         </Table>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
           count={pagination.total}
           rowsPerPage={pagination.limit}

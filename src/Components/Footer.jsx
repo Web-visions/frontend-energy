@@ -4,6 +4,9 @@ import logo_footer from '../assets/logo_footer.png';
 const Footer = () => {
   const year = new Date().getFullYear();
 
+  // Generate a new random id for the Bulk Order link
+  const randomId = Math.random().toString(36).substring(2, 10);
+
   return (
     <footer className="bg-[#008246] text-white py-12 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -40,10 +43,10 @@ const Footer = () => {
             <li><a href="/" className="hover:text-[#E4C73F] transition-colors">Home</a></li>
             <li><a href="/about" className="hover:text-[#E4C73F] transition-colors">About</a></li>
             <li><a href="/services" className="hover:text-[#E4C73F] transition-colors">Services</a></li>
-
             <li><a href="/products" className="hover:text-[#E4C73F] transition-colors">Products</a></li>
             <li><a href="/contact" className="hover:text-[#E4C73F] transition-colors">Contact</a></li>
             <li><a href="/faq" className="hover:text-[#E4C73F] transition-colors">FAQ</a></li>
+            <li><a href={`/bulk-orders?track_id=${randomId}`} className="hover:text-[#E4C73F] transition-colors font-bold">Bulk Order</a></li>
           </ul>
         </div>
 
@@ -88,8 +91,10 @@ const Footer = () => {
         <div className="mt-2 flex justify-center space-x-4">
           <a href="#" className="hover:text-[#E4C73F] transition-colors">Privacy Policy</a>
           <span>|</span>
-          <a href="#" className="hover:text-[#E4C73F] transition-colors">Terms of Service</a>
+          <a href="/terms" className="hover:text-[#E4C73F] transition-colors">Terms &amp; Conditions</a>
           <span>|</span>
+          {/* <a href="#" className="hover:text-[#E4C73F] transition-colors">Terms of Service</a>
+          <span>|</span> */}
           <a href="/sitemap" className="hover:text-[#E4C73F] transition-colors">Sitemap</a>
         </div>
       </div>

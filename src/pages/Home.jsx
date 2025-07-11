@@ -2,15 +2,15 @@ import { Batteries, Header, SliderComponent, Companies, InverterSect, AboutUs, L
 
 const Home = () => {
   return (
-    <div className='mt-24'>
+    <div className='mt-0'>
 
-        <SliderComponent/>
-        <Batteries/>
-        <Companies/>
-        <InverterSect/>
-        <AboutUs/>
-        <Location/>
-        <Testimonial/>
+      <SliderComponent />
+      <Batteries />
+      <Companies />
+      <InverterSect />
+      <AboutUs />
+      <Location />
+      <Testimonial />
     </div>
   )
 }

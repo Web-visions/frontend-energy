@@ -73,10 +73,10 @@ const AboutUs = () => (
             <embed src={gstPDF} type="application/pdf" className="w-full h-48 rounded mb-3 border" />
             <a href={gstPDF} target="_blank" rel="noopener noreferrer" className="text-sm text-[#008246] font-semibold hover:underline">View Full PDF</a>
           </div>
-        </div>
-      </div>
     </div>
+  </div>
+</div>
   </main>
-);
+  );
 
 export default AboutUs;

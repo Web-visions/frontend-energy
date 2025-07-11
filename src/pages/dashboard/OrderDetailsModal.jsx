@@ -207,7 +207,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
 
                                         // Battery price logic
                                         let displayUnitPrice = item.productType === 'battery'
-                                            ? (item.withOldBattery ? product.priceWithOldBattery : product.priceWithoutOldBattery)
+                                            ? (item?.withOldBattery ? product?.priceWithOldBattery : product?.priceWithoutOldBattery)
                                             : getItemUnitPrice(item);
                                         let displayMRP = product?.mrp;
                                         let showDiscount = item.productType === 'battery' && item.withOldBattery && product.priceWithoutOldBattery && product.priceWithOldBattery;
@@ -226,9 +226,9 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                                                 {displayMRP && (
                                                                     <span className="text-xs text-gray-400 line-through">{formatCurrency(displayMRP)}</span>
                                                                 )}
-                                                                    <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+                                                                <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                                                                     {formatCurrency(displayUnitPrice)}
-                                                                    </span>
+                                                                </span>
                                                                 {showDiscount && (
                                                                     <span className="text-xs text-white bg-green-500 px-2 py-0.5 rounded">
                                                                         -{discountPercent}%
@@ -265,7 +265,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                     (order.items || []).reduce((sum, item) => {
                                         const product = getItemProduct(item);
                                         let price = item.productType === 'battery'
-                                            ? (item.withOldBattery ? product.priceWithOldBattery : product.priceWithoutOldBattery)
+                                            ? (item.withOldBattery ? product?.priceWithOldBattery : product?.priceWithoutOldBattery)
                                             : getItemUnitPrice(item);
                                         return sum + price * (item.quantity || 1);
                                     }, 0)

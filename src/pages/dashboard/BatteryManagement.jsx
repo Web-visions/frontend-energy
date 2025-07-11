@@ -84,7 +84,9 @@ const BatteryManagement = () => {
       setBatteries(response.data);
       setPagination({
         ...pagination,
-        total: response.pagination.total
+        page: response.pagination.page ? response.pagination.page - 1 : 0, // backend is 1-based, TablePagination is 0-based
+        limit: response.pagination.limit || pagination.limit,
+        total: response.pagination.total || 0
       });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to fetch batteries');
@@ -392,7 +394,7 @@ const BatteryManagement = () => {
           </TableBody>
         </Table>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
           count={pagination.total}
           rowsPerPage={pagination.limit}

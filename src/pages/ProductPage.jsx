@@ -164,6 +164,8 @@ export default function ProductListing() {
         if (productsData.pagination) {
           setTotalPages(productsData.pagination.totalPages || 1);
           setCurrentPage(productsData.pagination.page || 1);
+        } else {
+          setTotalPages(1);
         }
         setTotalCount(productsData.total || 0);
       } catch (err) {
@@ -233,7 +235,7 @@ export default function ProductListing() {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-screen-xl mt-24 mx-auto p-4 md:p-8">
+      <div className="max-w-screen-xl mt-0 mx-auto p-4 md:p-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Desktop Filter Sidebar */}
           <div className="hidden md:block">

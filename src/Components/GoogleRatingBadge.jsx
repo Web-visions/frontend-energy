@@ -1,6 +1,6 @@
 import React from "react";
 
-const GOOGLE_MAPS_URL = "https://www.google.com/maps/place/ESS+Solar+Energy/@23.2599,77.4126,17z"; // Replace with actual location if needed
+const GOOGLE_MAPS_URL = "https://g.co/kgs/qjYHDtZ"; // Replace with actual location if needed
 
 const GoogleRatingBadge = () => (
     <a
