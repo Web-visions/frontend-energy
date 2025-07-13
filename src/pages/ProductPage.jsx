@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import FilterSidebar from "../Components/Filters";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { productService } from "../services/product.service";
@@ -82,16 +82,9 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
 export default function ProductListing() {
   const [products, setProducts] = useState([]);
-  const [filters, setFilters] = useState({
-    brands: [],
-    categories: []
-  });
+  const [filters, setFilters] = useState({ brands: [], categories: [] });
   const [priceRange, setPriceRange] = useState(20000);
-  const [selectedFilters, setSelectedFilters] = useState({
-    brand: "",
-    category: "",
-    type: ""
-  });
+  const [selectedFilters, setSelectedFilters] = useState({ brand: "", category: "", type: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -100,70 +93,100 @@ export default function ProductListing() {
   const [totalCount, setTotalCount] = useState(0);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
   const { addToCart } = useCart();
 
-  // Get current type from URL
-  const currentType = searchParams.get('type') || '';
+  // Track initial mount to avoid double-setting state
+  const isFirstLoad = useRef(true);
 
-  // Get current page from URL
+  // Parse URL params and update state only if changed
   useEffect(() => {
-    const pageFromUrl = parseInt(searchParams.get('page')) || 1;
-    setCurrentPage(pageFromUrl);
-  }, [searchParams]);
-
-  useEffect(() => {
-    const type = searchParams.get('type');
-    if (type) {
-      setSelectedFilters(prev => ({ ...prev, type }));
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    // Parse query params from URL
     const params = Object.fromEntries([...searchParams]);
-    // Set initial filters from URL
-    setSelectedFilters(prev => {
-      const newFilters = {
-        ...prev,
-        brand: params.brand || "",
-        category: params.category || "",
-      };
-      if (params.type && params.type !== "") newFilters.type = params.type;
-      return newFilters;
-    });
-    // Set price range from URL if present
-    if (params.minPrice && params.maxPrice) {
-      setPriceRange(Number(params.maxPrice));
+    const urlFilters = {
+      brand: params.brand || "",
+      category: params.category || "",
+      type: params.type || "",
+      rating: params.rating || undefined,
+      batteryType: params.batteryType || undefined,
+    };
+    const urlPrice = params.maxPrice ? Number(params.maxPrice) : 20000;
+    const urlPage = params.page ? Number(params.page) : 1;
+
+    // Update state with URL parameters
+    setSelectedFilters(urlFilters);
+    setPriceRange(urlPrice);
+    setCurrentPage(urlPage);
+    
+    // Only run this on mount or when URL changes
+    // eslint-disable-next-line
+  }, [searchParams]);
+
+  // When filters, price, or page change, update the URL if needed
+  useEffect(() => {
+    // Skip URL update on initial render
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      return;
     }
-    // Set page from URL
-    if (params.page) {
-      setCurrentPage(Number(params.page));
+    
+    // Build params from state
+    const params = new URLSearchParams();
+    if (selectedFilters.brand) params.set('brand', selectedFilters.brand);
+    if (selectedFilters.category) params.set('category', selectedFilters.category);
+    if (selectedFilters.type) params.set('type', selectedFilters.type);
+    if (selectedFilters.rating) params.set('rating', selectedFilters.rating);
+    if (selectedFilters.batteryType) params.set('batteryType', selectedFilters.batteryType);
+    params.set('minPrice', 0);
+    params.set('maxPrice', priceRange);
+    params.set('page', currentPage);
+    const newUrl = `/products?${params.toString()}`;
+    // Only navigate if URL is different
+    if (window.location.pathname + window.location.search !== newUrl) {
+      navigate(newUrl, { replace: true });
     }
-  }, []);
+    // eslint-disable-next-line
+  }, [selectedFilters, priceRange, currentPage]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const type = searchParams.get('type');
-        // Build filters object, only include type if not empty
-        const filtersToSend = { ...selectedFilters, minPrice: 0, maxPrice: priceRange };
-        if (type && type !== "") filtersToSend.type = type;
-        else delete filtersToSend.type;
-        // Add pagination params
-        filtersToSend.page = currentPage;
-        filtersToSend.limit = 9;
+        
+        // Build filters directly from URL parameters to ensure we use the latest values
+        const params = Object.fromEntries([...searchParams]);
+        const filtersToSend = {
+          brand: params.brand || "",
+          category: params.category || "",
+          type: params.type || "",
+          rating: params.rating || undefined,
+          batteryType: params.batteryType || undefined,
+          minPrice: params.minPrice ? Number(params.minPrice) : 0,
+          maxPrice: params.maxPrice ? Number(params.maxPrice) : 20000,
+          page: params.page ? Number(params.page) : 1,
+          limit: 9
+        };
+        
+        // Remove empty filters
+        Object.keys(filtersToSend).forEach(key => {
+          if (filtersToSend[key] === '' || filtersToSend[key] === undefined) {
+            delete filtersToSend[key];
+          }
+        });
+        
+      
+        
         const [productsData, filterOptions] = await Promise.all([
           productService.getAllProducts(filtersToSend),
           productService.getFilterOptions()
         ]);
+        
         setProducts(productsData.data);
         setFilters(filterOptions);
+        
         // Set pagination info from backend
         if (productsData.pagination) {
           setTotalPages(productsData.pagination.totalPages || 1);
-          setCurrentPage(productsData.pagination.page || 1);
+          // Don't update currentPage here to avoid re-render loop
+          // setCurrentPage(productsData.pagination.page || 1);
         } else {
           setTotalPages(1);
         }
@@ -174,9 +197,10 @@ export default function ProductListing() {
         setTimeout(() => setLoading(false), 500);
       }
     };
-
     fetchData();
-  }, [selectedFilters, priceRange, searchParams, currentPage]);
+    window.scrollTo(0, 0);
+    // eslint-disable-next-line
+  }, [searchParams]);
 
   // Filter products by rating if selected
   let filteredProducts = products;
@@ -196,7 +220,6 @@ export default function ProductListing() {
   };
 
   const handleProductClick = (product) => {
-    console.log(product, "PROD")
     if (!product.prodType) {
       setError('Error loading product details: Product type is missing.');
       return;
@@ -207,20 +230,6 @@ export default function ProductListing() {
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
   };
-
-  // Update URL when filters or page change
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (selectedFilters.brand) params.set('brand', selectedFilters.brand);
-    if (selectedFilters.category) params.set('category', selectedFilters.category);
-    if (selectedFilters.type) params.set('type', selectedFilters.type);
-    if (selectedFilters.rating) params.set('rating', selectedFilters.rating);
-    if (selectedFilters.batteryType) params.set('batteryType', selectedFilters.batteryType);
-    params.set('minPrice', 0);
-    params.set('maxPrice', priceRange);
-    params.set('page', currentPage);
-    navigate(`/products?${params.toString()}`, { replace: true });
-  }, [selectedFilters, priceRange, currentPage, navigate]);
 
   if (error) {
     return (
@@ -246,7 +255,7 @@ export default function ProductListing() {
               setSelectedFilters={setSelectedFilters}
               onReset={handleReset}
               filterOptions={filters}
-              currentType={currentType}
+              currentType={searchParams.get('type') || ''}
             />
           </div>
 
@@ -288,7 +297,6 @@ export default function ProductListing() {
             ) : filteredProducts?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((prod, index) => {
-                  console.log(prod, "PROD")
                   const displayPrice = prod?.price || prod?.sellingPrice || prod?.mrp;
                   const hasDiscount = prod.mrp > displayPrice;
 

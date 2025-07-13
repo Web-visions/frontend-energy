@@ -6,19 +6,19 @@ const testimonials = [
     name: 'Rajesh Kumar',
     role: 'Homeowner, Delhi',
     message: 'The inverter I purchased from Energy Storage System has been incredibly reliable during power outages. Their customer service was exceptional from start to finish.',
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+    avatar: 'https://images.unsplash.com/flagged/photo-1571367034861-e6729ad9c2d5?q=80&w=464&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
   {
     name: 'Priya Sharma',
     role: 'Business Owner, Mumbai',
     message: 'We equipped our entire office with UPS systems from Energy Storage System. The quality is outstanding and their technical support team is always available when needed.',
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+    avatar: 'https://plus.unsplash.com/premium_photo-1682092039530-584ae1d9da7f?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
   {
     name: 'Amit Singh',
     role: 'Solar Enthusiast, Bangalore',
     message: 'Their solar solutions have reduced my electricity bills by 70%. The installation team was professional and completed the setup ahead of schedule.',
-    avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+    avatar: 'https://images.unsplash.com/photo-1534235187448-833893dfe3e0?q=80&w=449&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
 ];
 

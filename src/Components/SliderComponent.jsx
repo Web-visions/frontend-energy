@@ -114,8 +114,29 @@ const SliderComponent = () => {
   }, [isPlaying, startAutoplay, stopAutoplay]);
 
   const handleSubmit = () => {
-    // Navigate to product page with selected filters
+    // Category to product type mapping
+    const categoryToTypeMap = {
+      'UPS': 'ups',
+      'Inverter': 'inverter',
+      'Battery': 'battery',
+      'Solar PCU': 'solar-pcu',
+      'Solar PV Module': 'solar-pv',
+      'Solar Street Light': 'solar-street-light'
+    };
+  
+    // Find the selected category object
+    const selectedCategoryObj = categories.find(cat => cat._id === selectedCategory);
+    let productType = null;
+  
+    if (selectedCategoryObj) {
+      productType = categoryToTypeMap[selectedCategoryObj.name]
+        || selectedCategoryObj.name.toLowerCase().replace(/\s+/g, '-');
+    }
+  
+ 
+    // Build params
     const params = new URLSearchParams();
+    if (productType) params.append('type', productType);      // <-- THIS IS THE CRITICAL LINE
     if (selectedCategory && selectedCategory !== '') params.append('category', selectedCategory);
     if (selectedBrand && selectedBrand !== '') params.append('brand', selectedBrand);
     params.append('minPrice', budget[0]);
