@@ -397,24 +397,6 @@ console.log(img_url+brand.logo,"BRAND")
                           <EditIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={brand.isActive ? 'Deactivate' : 'Activate'}>
-                        <IconButton 
-                          color={brand.isActive ? 'error' : 'success'} 
-                          onClick={() => handleToggleStatus(brand._id, brand.isActive)}
-                          size="small"
-                        >
-                          {brand.isActive ? <ToggleOn /> : <ToggleOff />}
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton 
-                          color="error" 
-                          onClick={() => openDeleteConfirm(brand)}
-                          size="small"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -510,29 +492,7 @@ console.log(img_url+brand.logo,"BRAND")
         </DialogActions>
       </Dialog>
 
-          {/* Delete Confirmation Dialog */}
-          <Dialog open={deleteConfirmOpen} onClose={closeDeleteConfirm}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete the brand{' '}
-            <b>{brandToDelete?.name}</b>? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteConfirm} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDelete}
-            color="error"
-            variant="contained"
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={20} /> : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          
     </Box>
   );
 };

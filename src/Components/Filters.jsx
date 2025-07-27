@@ -41,7 +41,7 @@ const FilterSidebar = ({
         <input
           type="range"
           min="0"
-          max="20000"
+          max="100000"
           value={priceRange}
           onChange={(e) => setPriceRange(Number(e.target.value))}
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -123,6 +123,42 @@ const FilterSidebar = ({
           </select>
         </div>
       )}
+
+{selectedFilters.type === 'battery' && (
+  <div className="mb-4">
+    <label className="font-semibold text-sm text-gray-700 mb-2 block">Capacity (AH)</label>
+    <select
+      className="w-full border border-gray-300 rounded p-2"
+      value={selectedFilters.capacity || ''}
+      onChange={(e) =>
+        setSelectedFilters(prev => ({ ...prev, capacity: e.target.value }))
+      }
+    >
+      <option value="">All</option>
+      {[35, 65, 80, 100, 120, 135, 150, 165, 180, 200].map((ah) => (
+        <option key={ah} value={ah}>{ah} AH</option>
+      ))}
+    </select>
+  </div>
+)}
+
+{selectedFilters.type === 'inverter' && (
+  <div className="mb-4">
+    <label className="font-semibold text-sm text-gray-700 mb-2 block">Capacity (VA)</label>
+    <select
+      className="w-full border border-gray-300 rounded p-2"
+      value={selectedFilters.capacity || ''}
+      onChange={(e) =>
+        setSelectedFilters(prev => ({ ...prev, capacity: e.target.value }))
+      }
+    >
+      <option value="">All</option>
+      {[600, 800, 1000, 1100, 1500, 2000, 2200, 3000].map((va) => (
+        <option key={va} value={va}>{va} VA</option>
+      ))}
+    </select>
+  </div>
+)}
 
       {/* Rating Filter: always show */}
       <div className="mb-6">

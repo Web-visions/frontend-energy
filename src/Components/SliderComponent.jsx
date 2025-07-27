@@ -44,16 +44,22 @@ const SliderComponent = () => {
     },
   ];
 
-  // Fetch all brands on mount
+  const categoryBrandMap = {
+    '684c61f2f08ba1dc99d55927': ['Su-vastika', 'Luminous', 'Microtek'],
+    '684c621ef08ba1dc99d55933': ['Exide', 'Luminous', 'Bi Cell', 'SF Batteries', 'Amaron', 'Dynex', 'Livfast'],
+    '684c61f8f08ba1dc99d5592d': ['APC', 'Su-vastika', 'Luminous', 'Microtek'],
+    '684c6222f08ba1dc99d55939': ['Usha', 'Shriram', 'Warree', 'Vikram', 'Adani']
+  };
+  
+  const allowedBrandNames = categoryBrandMap[selectedCategory] || [];
+  const filteredBrands = brands.filter(brand =>
+    allowedBrandNames.includes(brand.name.trim())
+  );
+  
+
   useEffect(() => {
     productService.getFilterOptions().then((opts) => {
       setBrands(opts.brands || []);
-    });
-  }, []);
-
-  // Fetch categories on mount
-  useEffect(() => {
-    productService.getFilterOptions().then((opts) => {
       setCategories(opts.categories || []);
     });
   }, []);
@@ -348,7 +354,7 @@ const SliderComponent = () => {
                         <div className="text-gray-500">Loading brands...</div>
                       ) : brands.length === 0 ? (
                         <div className="text-gray-500">No brands found for this category.</div>
-                      ) : brands.map(brand => (
+                      ) : filteredBrands.map(brand => (
                         <label
                           key={brand._id}
                           className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-300 ${selectedBrand === brand._id

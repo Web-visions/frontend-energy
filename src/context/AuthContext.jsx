@@ -15,29 +15,22 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = async () => {
       try {
         setLoading(true);
-        // Get token from localStorage
         const token = localStorage.getItem('token');
 
 
         if (token) {
-          console.log('Token inside:', token);
-          // Set default auth header for axios
 
-          // Fetch current user data
           const response = await getData('/auth/me');
 
           if (response) {
             setCurrentUser(response.data);
           } else {
-            // If token is invalid, clear it
-            // localStorage.removeItem('token');
-            // delete axios.defaults.headers.common['Authorization'];
+           
           }
         }
       } catch (error) {
         console.error('Auth check error:', error);
-        // localStorage.removeItem('token');
-        // delete axios.defaults.headers.common['Authorization'];
+   
       } finally {
         setLoading(false);
       }
@@ -46,7 +39,6 @@ export const AuthProvider = ({ children }) => {
     checkLoggedIn();
   }, []);
 
-  // Register new user
   const register = async (userData) => {
     try {
       setLoading(true);
@@ -55,16 +47,12 @@ export const AuthProvider = ({ children }) => {
       const response = await postData('/auth/register', userData);
 
       if (response) {
-        // Store token
         localStorage.setItem('token', response.token);
 
-        // Set axios default header
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
 
-        // Set user data
         setCurrentUser(response.user);
 
-        // Return success with verification status and OTP if available (for testing)
         return {
           success: true,
           needsVerification: !response.user.isEmailVerified,
@@ -80,7 +68,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login user
   const login = async (email, password) => {
     try {
       setLoading(true);
@@ -89,13 +76,10 @@ export const AuthProvider = ({ children }) => {
       const response = await postData('/auth/login', { email, password });
 
       if (response) {
-        // Store token
         localStorage.setItem('token', response.token);
 
-        // Set axios default header
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
 
-        // Set user data
         setCurrentUser(response.user);
 
         return { success: true };
@@ -109,7 +93,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Verify email with OTP
   const verifyEmail = async (otp) => {
     try {
       setLoading(true);
@@ -131,7 +114,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Resend OTP
   const resendOTP = async () => {
     try {
       setLoading(true);
@@ -149,7 +131,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout user
   const logout = async () => {
     try {
       setLoading(true);
@@ -167,7 +148,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check if user has specific role
   const hasRole = (role) => {
     if (!currentUser) return false;
     if (Array.isArray(role)) {
@@ -176,12 +156,10 @@ export const AuthProvider = ({ children }) => {
     return currentUser.role === role;
   };
 
-  // Check if user is authenticated
   const isAuthenticated = () => {
     return !!currentUser;
   };
 
-  // Check if email is verified
   const isEmailVerified = () => {
     return currentUser?.isEmailVerified || false;
   };

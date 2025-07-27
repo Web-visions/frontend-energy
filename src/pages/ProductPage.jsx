@@ -14,15 +14,27 @@ const renderStars = (rating) => {
   const hasHalfStar = rating % 1 !== 0;
 
   for (let i = 0; i < fullStars; i++) {
-    stars.push(<span key={`full_${i}`} className="text-yellow-500">★</span>);
+    stars.push(
+      <span key={`full_${i}`} className="text-yellow-500">
+        ★
+      </span>
+    );
   }
 
   if (hasHalfStar) {
-    stars.push(<span key="half" className="text-gray-300">★</span>);
+    stars.push(
+      <span key="half" className="text-gray-300">
+        ★
+      </span>
+    );
   }
 
   for (let i = stars.length; i < 5; i++) {
-    stars.push(<span key={`empty_${i}`} className="text-gray-300">★</span>);
+    stars.push(
+      <span key={`empty_${i}`} className="text-gray-300">
+        ★
+      </span>
+    );
   }
   return stars;
 };
@@ -62,7 +74,11 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       {pageNumbers.map((num) => (
         <button
           key={num}
-          className={`px-3 py-1 rounded border ${num === currentPage ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-700'}`}
+          className={`px-3 py-1 rounded border ${
+            num === currentPage
+              ? "bg-green-700 text-white"
+              : "bg-gray-100 text-gray-700"
+          }`}
           onClick={() => onPageChange(num)}
           disabled={num === currentPage}
         >
@@ -83,8 +99,12 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 export default function ProductListing() {
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({ brands: [], categories: [] });
-  const [priceRange, setPriceRange] = useState(20000);
-  const [selectedFilters, setSelectedFilters] = useState({ brand: "", category: "", type: "" });
+  const [priceRange, setPriceRange] = useState(10000);
+  const [selectedFilters, setSelectedFilters] = useState({
+    brand: "",
+    category: "",
+    type: "",
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -107,51 +127,87 @@ export default function ProductListing() {
       type: params.type || "",
       rating: params.rating || undefined,
       batteryType: params.batteryType || undefined,
+      capacity: params.capacity || "",
     };
     const urlPrice = params.maxPrice ? Number(params.maxPrice) : 20000;
     const urlPage = params.page ? Number(params.page) : 1;
 
-    // Update state with URL parameters
     setSelectedFilters(urlFilters);
     setPriceRange(urlPrice);
     setCurrentPage(urlPage);
-    
-    // Only run this on mount or when URL changes
-    // eslint-disable-next-line
   }, [searchParams]);
 
-  // When filters, price, or page change, update the URL if needed
+  const typeBrandMap = {
+    inverter: ["Su-vastika", "Luminous", "Microtek"],
+    battery: [
+      "Exide",
+      "Luminous",
+      "Bi Cell",
+      "SF Batteries",
+      "Amaron",
+      "Dynex",
+      "Livfast",
+    ],
+    ups: ["APC", "Su-vastika", "Luminous", "Microtek"],
+    solar: ["Usha", "Shriram", "Warree", "Vikram", "Adani"],
+  };
+
+  const batteryTypeMap = {
+    exide: ["lead acid", "li-ion", "smf"],
+    luminous: ["lead acid"],
+    "bi cell": ["lead acid"],
+    "sf batteries": ["lead acid"],
+    amaron: ["lead acid", "smf"],
+    livfast: ["lead acid"],
+  };
+
+  const normalizedType = selectedFilters.type?.toLowerCase().trim() || "";
+  let allowedBrandNames = [];
+  
+  if (normalizedType.split("-")[0] === "solar") {
+    allowedBrandNames = typeBrandMap["solar"];
+  } else {
+    allowedBrandNames = typeBrandMap[normalizedType] || [];
+  }
+  const filteredBrandList =
+    allowedBrandNames.length > 0
+      ? filters.brands.filter((brand) =>
+          allowedBrandNames
+            .map((name) => name.toLowerCase().trim())
+            .includes(brand.name.toLowerCase().trim())
+        )
+      : filters.brands;
+
   useEffect(() => {
-    // Skip URL update on initial render
     if (isFirstLoad.current) {
       isFirstLoad.current = false;
       return;
     }
-    
-    // Build params from state
+
     const params = new URLSearchParams();
-    if (selectedFilters.brand) params.set('brand', selectedFilters.brand);
-    if (selectedFilters.category) params.set('category', selectedFilters.category);
-    if (selectedFilters.type) params.set('type', selectedFilters.type);
-    if (selectedFilters.rating) params.set('rating', selectedFilters.rating);
-    if (selectedFilters.batteryType) params.set('batteryType', selectedFilters.batteryType);
-    params.set('minPrice', 0);
-    params.set('maxPrice', priceRange);
-    params.set('page', currentPage);
+    if (selectedFilters.brand) params.set("brand", selectedFilters.brand);
+    if (selectedFilters.category)
+      params.set("category", selectedFilters.category);
+    if (selectedFilters.type) params.set("type", selectedFilters.type);
+    if (selectedFilters.rating) params.set("rating", selectedFilters.rating);
+    if (selectedFilters.batteryType)
+      params.set("batteryType", selectedFilters.batteryType);
+    if (selectedFilters.capacity)
+      params.set("capacity", selectedFilters.capacity);
+    params.set("minPrice", 0);
+    params.set("maxPrice", priceRange);
+    params.set("page", currentPage);
     const newUrl = `/products?${params.toString()}`;
-    // Only navigate if URL is different
     if (window.location.pathname + window.location.search !== newUrl) {
       navigate(newUrl, { replace: true });
     }
-    // eslint-disable-next-line
   }, [selectedFilters, priceRange, currentPage]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Build filters directly from URL parameters to ensure we use the latest values
+
         const params = Object.fromEntries([...searchParams]);
         const filtersToSend = {
           brand: params.brand || "",
@@ -159,34 +215,29 @@ export default function ProductListing() {
           type: params.type || "",
           rating: params.rating || undefined,
           batteryType: params.batteryType || undefined,
+          capacity: selectedFilters.capacity || undefined,
           minPrice: params.minPrice ? Number(params.minPrice) : 0,
           maxPrice: params.maxPrice ? Number(params.maxPrice) : 20000,
           page: params.page ? Number(params.page) : 1,
-          limit: 9
+          limit: 9,
         };
-        
-        // Remove empty filters
-        Object.keys(filtersToSend).forEach(key => {
-          if (filtersToSend[key] === '' || filtersToSend[key] === undefined) {
+
+        Object.keys(filtersToSend).forEach((key) => {
+          if (filtersToSend[key] === "" || filtersToSend[key] === undefined) {
             delete filtersToSend[key];
           }
         });
-        
-      
-        
+
         const [productsData, filterOptions] = await Promise.all([
           productService.getAllProducts(filtersToSend),
-          productService.getFilterOptions()
+          productService.getFilterOptions(),
         ]);
-        
+
         setProducts(productsData.data);
         setFilters(filterOptions);
-        
-        // Set pagination info from backend
+
         if (productsData.pagination) {
           setTotalPages(productsData.pagination.totalPages || 1);
-          // Don't update currentPage here to avoid re-render loop
-          // setCurrentPage(productsData.pagination.page || 1);
         } else {
           setTotalPages(1);
         }
@@ -199,10 +250,8 @@ export default function ProductListing() {
     };
     fetchData();
     window.scrollTo(0, 0);
-    // eslint-disable-next-line
   }, [searchParams]);
 
-  // Filter products by rating if selected
   let filteredProducts = products;
   if (selectedFilters.rating) {
     filteredProducts = filteredProducts.filter(
@@ -215,13 +264,13 @@ export default function ProductListing() {
     setSelectedFilters({
       brand: "",
       category: "",
-      type: selectedFilters.type
+      type: selectedFilters.type,
     });
   };
 
   const handleProductClick = (product) => {
     if (!product.prodType) {
-      setError('Error loading product details: Product type is missing.');
+      setError("Error loading product details: Product type is missing.");
       return;
     }
     navigate(`/product/${product.prodType?.toLowerCase()}/${product._id}`);
@@ -230,6 +279,22 @@ export default function ProductListing() {
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
   };
+
+  const selectedBrandObj = filters.brands.find(
+    (b) => b._id === selectedFilters.brand
+  );
+  
+  // Get name, normalize, and get allowed battery types
+  const selectedBrandName = selectedBrandObj ? selectedBrandObj.name.trim().toLowerCase() : '';
+  
+  const allowedBatteryTypes =
+    selectedFilters.type === "battery" && selectedBrandName
+      ? batteryTypeMap[selectedBrandName] || []
+      : [];
+
+//   console.log('Selected brand:', selectedFilters.brand);
+// console.log('Normalized:', selectedFilters.brand.trim().toLowerCase());
+// console.log('Allowed types:', allowedBatteryTypes);
 
   if (error) {
     return (
@@ -254,8 +319,17 @@ export default function ProductListing() {
               selectedFilters={selectedFilters}
               setSelectedFilters={setSelectedFilters}
               onReset={handleReset}
-              filterOptions={filters}
-              currentType={searchParams.get('type') || ''}
+              filterOptions={{
+                ...filters,
+                brands: filteredBrandList,
+                batteryTypes: allowedBatteryTypes.length
+                ? allowedBatteryTypes.map(bt => ({
+                    value: bt,
+                    label: bt.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                  }))
+                : filters.batteryTypes,
+              }}
+              currentType={searchParams.get("type") || ""}
             />
           </div>
 
@@ -281,7 +355,17 @@ export default function ProductListing() {
                     selectedFilters={selectedFilters}
                     setSelectedFilters={setSelectedFilters}
                     onReset={handleReset}
-                    filterOptions={filters}
+                    filterOptions={{
+                      ...filters,
+                      brands: filteredBrandList,
+                      batteryTypes: allowedBatteryTypes.length
+                      ? allowedBatteryTypes.map(bt => ({
+                          value: bt,
+                          label: bt.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                        }))
+                      : filters.batteryTypes,
+                    }}
+                    currentType={searchParams.get("type") || ""}
                   />
                 </div>
               </div>
@@ -289,15 +373,17 @@ export default function ProductListing() {
           )}
 
           <section className="w-full">
-
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
               </div>
             ) : filteredProducts?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((prod, index) => {
-                  const displayPrice = prod?.price || prod?.sellingPrice || prod?.mrp;
+                  const displayPrice =
+                    prod?.price || prod?.sellingPrice || prod?.mrp;
                   const hasDiscount = prod.mrp > displayPrice;
 
                   return (
@@ -313,18 +399,28 @@ export default function ProductListing() {
 
                       <div className="relative w-full h-52 flex items-center justify-center p-4 bg-gray-50 group-hover:bg-gray-100 transition-colors duration-300">
                         <img
-                          src={prod.images && prod.images.length > 0 ? (img_url + prod.images[0]) : (img_url + prod.image || no_image)}
+                          src={
+                            prod.images && prod.images.length > 0
+                              ? img_url + prod.images[0]
+                              : img_url + prod.image || no_image
+                          }
                           alt={prod.name}
                           className="max-w-full max-h-full object-contain group-hover:scale-100 transition-transform duration-500"
                         />
                       </div>
 
                       <div className="p-5 flex-grow flex flex-col">
-                        <p className="text-sm text-gray-500 mb-1">{prod.category?.name || 'Category'}</p>
-                        <h3 className="text-lg font-bold text-gray-900 line-clamp-2 leading-tight h-[65px]">{prod.name}</h3>
+                        <p className="text-sm text-gray-500 mb-1">
+                          {prod.category?.name || "Category"}
+                        </p>
+                        <h3 className="text-lg font-bold text-gray-900 line-clamp-2 leading-tight h-[65px]">
+                          {prod.name}
+                        </h3>
 
                         {prod.description && (
-                          <p className="text-gray-600 text-sm my-3 line-clamp-3 min-h-[60px]">{prod.description}</p>
+                          <p className="text-gray-600 text-sm my-3 line-clamp-3 min-h-[60px]">
+                            {prod.description}
+                          </p>
                         )}
 
                         <div className="flex items-center gap-3 my-2">
@@ -348,13 +444,18 @@ export default function ProductListing() {
                                     ₹{prod.mrp.toLocaleString()}
                                   </p>
                                   <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full">
-                                    {`-${Math.round(((prod.mrp - displayPrice) / prod.mrp) * 100)}% OFF`}
+                                    {`-${Math.round(
+                                      ((prod.mrp - displayPrice) / prod.mrp) *
+                                        100
+                                    )}% OFF`}
                                   </span>
                                 </>
                               )}
                             </div>
                           ) : (
-                            <p className="text-lg font-semibold text-blue-600">Contact for Price</p>
+                            <p className="text-lg font-semibold text-blue-600">
+                              Contact for Price
+                            </p>
                           )}
                         </div>
                       </div>
@@ -373,11 +474,26 @@ export default function ProductListing() {
               </div>
             ) : (
               <div className="col-span-full text-center text-gray-500 py-20 flex flex-col items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-16 w-16 text-gray-400 mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
-                <h3 className="text-xl font-semibold text-gray-700">No Products Found</h3>
-                <p className="text-gray-500 mt-2">Try adjusting your filters to find what you're looking for.</p>
+                <h3 className="text-xl font-semibold text-gray-700">
+                  No Products Found
+                </h3>
+                <p className="text-gray-500 mt-2">
+                  Try adjusting your filters to find what you're looking for.
+                </p>
               </div>
             )}
             {/* Pagination Bottom */}

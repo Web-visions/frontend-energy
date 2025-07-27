@@ -154,8 +154,8 @@ const Header = () => {
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-4">
-          <MapPin size={14} className="inline-block text-[#E4C73F]" />
-          <span>Free Installation Across India</span>
+          {/* <MapPin size={14} className="inline-block text-[#E4C73F]" />
+          <span>Free Installation Across India</span> */}
         </div>
       </div>
       <header
@@ -458,8 +458,8 @@ const Header = () => {
                     <span>connect@energystoragesystem.in</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MapPin size={16} className="text-[#008246]" />
-                    <span>Free Installation Across India</span>
+                    {/* <MapPin size={16} className="text-[#008246]" />
+                    <span>Free Installation Across India</span> */}
                   </div>
                 </div>
               </nav>
