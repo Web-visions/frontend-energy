@@ -200,10 +200,10 @@ export default function ProductListing() {
       "Livfast",
     ],
     ups: ["APC", "Su-vastika", "Luminous", "Microtek"],
-    solar: ["Usha", "Shriram", "Warree", "Vikram", "Adani"],
+    solar: ["Usha Shriram", "Warree", "Vikram", "Adani"],
   };
 
-  const batteryTypeMap = {
+  const batteryTypeMap = {gi
     exide: ["lead acid", "li-ion", "smf"],
     luminous: ["lead acid"],
     "bi cell": ["lead acid"],

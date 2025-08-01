@@ -48,7 +48,7 @@ const SliderComponent = () => {
     '684c61f2f08ba1dc99d55927': ['Su-vastika', 'Luminous', 'Microtek'],
     '684c621ef08ba1dc99d55933': ['Exide', 'Luminous', 'Bi Cell', 'SF Batteries', 'Amaron', 'Dynex', 'Livfast'],
     '684c61f8f08ba1dc99d5592d': ['APC', 'Su-vastika', 'Luminous', 'Microtek'],
-    '684c6222f08ba1dc99d55939': ['Usha', 'Shriram', 'Warree', 'Vikram', 'Adani']
+    '684c6222f08ba1dc99d55939': ['Usha Shriram', 'Warree', 'Vikram', 'Adani']
   };
   
   const allowedBrandNames = categoryBrandMap[selectedCategory] || [];
