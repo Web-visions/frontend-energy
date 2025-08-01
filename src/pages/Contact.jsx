@@ -17,7 +17,7 @@ const Contact = () => {
                 <MapPin className="text-[#E4C73F] w-6 h-6 mt-1" />
                 <div>
                   <h3 className="font-semibold text-gray-800">Our Location</h3>
-                  <p className="text-gray-600">123 Energy Street, Power District<br />New Delhi, 110001, India</p>
+                  <p className="text-gray-600">LT Atul Kataria Marg, Part-6<br />Sector 6, Gurugram, Haryana 122001</p>
                 </div>
               </div>
 

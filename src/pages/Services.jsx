@@ -45,9 +45,9 @@ const Services = () => {
                   <h3 className="text-xl font-semibold text-[#008246] ml-3">{service.title}</h3>
                 </div>
                 <p className="text-gray-600">{service.description}</p>
-                <button className="mt-4 bg-[#008246] hover:bg-[#006d3b] text-white px-6 py-2 rounded-md transition-colors duration-300">
+                {/* <button className="mt-4 bg-[#008246] hover:bg-[#006d3b] text-white px-6 py-2 rounded-md transition-colors duration-300">
                   Learn More
-                </button>
+                </button> */}
               </div>
             </div>
           ))}

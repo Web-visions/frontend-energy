@@ -29,7 +29,7 @@ const navigationItems = [
   // { name: "Home", href: "/", icon: null },
   {
     name: "Solar",
-    href: "/products?type=solar-pv",
+    href: "#",
     icon: null,
     dropdown: [
       { name: "Solar PCU", href: "/products?type=solar-pcu" },
@@ -39,7 +39,7 @@ const navigationItems = [
   },
   {
     name: "Solar Projects",
-    href: "/",
+    href: "#",
     icon: null,
     dropdown: [
       { name: "Off Grid Project", type: "off-grid-lead" },
@@ -218,8 +218,7 @@ const Header = () => {
 
             {/* Right Side Actions */}
             <div className="flex items-center space-x-1 sm:space-x-4">
-              {/* Search */}
-              <button
+              {/* <button
                 onClick={toggleSearch}
                 className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${isScrolled
                   ? "text-gray-700 hover:bg-[#008246]/10 hover:text-[#008246]"
@@ -227,7 +226,7 @@ const Header = () => {
                   } ${searchActive ? "bg-[#E4C73F] text-black" : ""}`}
               >
                 <Search size={20} />
-              </button>
+              </button> */}
 
               {/* Cart */}
               <NavLink
@@ -326,7 +325,7 @@ const Header = () => {
           <div className="bg-white border-t border-gray-200">
             <div className="container mx-auto px-4 py-4">
               <div className="flex items-center space-x-3">
-                <div className="flex-1 relative">
+                {/* <div className="flex-1 relative">
                   <input
                     type="text"
                     placeholder="Search for solar panels, batteries, UPS systems..."
@@ -335,7 +334,7 @@ const Header = () => {
                   <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#008246] transition-colors">
                     <Search size={20} />
                   </button>
-                </div>
+                </div> */}
                 <button
                   onClick={toggleSearch}
                   className="px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"

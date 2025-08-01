@@ -8,7 +8,7 @@ const GoogleRatingBadge = () => (
         target="_blank"
         rel="noopener noreferrer"
         aria-label="View Google Rating on Maps"
-        className="fixed bottom-6 left-24 z-50 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 flex items-center space-x-2 transition-all duration-200 hover:shadow-xl group"
+        className="hidden fixed bottom-6 left-24 z-50 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 sm:flex items-center space-x-2 transition-all duration-200 hover:shadow-xl group"
         style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.15)' }}
     >
         {/* Google logo circle with star */}

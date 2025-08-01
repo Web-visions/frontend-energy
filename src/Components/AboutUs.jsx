@@ -4,7 +4,7 @@ import isoPDF from '../assets/ENERGY_STORAGE_SYSTEM__QMS[1].pdf';
 import gstPDF from '../assets/gst-certificate.pdf';
 
 const AboutUs = () => (
-  <main className="bg-gray-50 min-h-screen py-16 mt-20">
+  <main className="bg-gray-50 min-h-screen py-16">
     <div className="container mx-auto px-4 max-w-4xl">
       <h1 className="text-4xl md:text-5xl font-bold text-[#008246] mb-6 text-center">About Energy Storage System (ESS)</h1>
       <p className="text-lg text-gray-700 mb-8 text-center">
