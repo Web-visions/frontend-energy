@@ -203,7 +203,7 @@ export default function ProductListing() {
     solar: ["Usha Shriram", "Warree", "Vikram", "Adani"],
   };
 
-  const batteryTypeMap = {gi
+  const batteryTypeMap = {
     exide: ["lead acid", "li-ion", "smf"],
     luminous: ["lead acid"],
     "bi cell": ["lead acid"],
