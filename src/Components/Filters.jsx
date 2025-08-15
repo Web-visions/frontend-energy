@@ -1,5 +1,6 @@
 import React from "react";
 import { RotateCcw, Filter, Star } from "lucide-react";
+import { BATTERY_CAPACITY_OPTIONS } from "../constants/capacity";
 
 const FilterSidebar = ({
   priceRange,
@@ -185,10 +186,9 @@ const FilterSidebar = ({
         }
       >
         <option value="">All Capacities</option>
-        <option value="0-99">&lt; 100Ah</option>
-        <option value="100-150">100Ah–150Ah</option>
-        <option value="151-200">150Ah–200Ah</option>
-        <option value="201-999">&gt; 200Ah</option>
+  {BATTERY_CAPACITY_OPTIONS.map(opt => (
+    <option key={opt.value} value={opt.value}>{opt.label}</option>
+  ))}
       </select>
       <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
         <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

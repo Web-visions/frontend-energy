@@ -33,6 +33,23 @@ const renderStars = (rating) => {
   return stars;
 };
 
+// ✅ Capacity helpers
+// "0-50" | "50-100" | "150-200" | "200+"  ->  { minAH, maxAH }
+const parseCapacityRange = (range) => {
+  if (!range) return { minAH: undefined, maxAH: undefined };
+  if (range.endsWith('+')) {
+    const min = Number(range.slice(0, -1));
+    return { minAH: Number.isFinite(min) ? min : undefined, maxAH: undefined };
+  }
+  const [minStr, maxStr] = range.split('-');
+  const min = Number(minStr);
+  const max = Number(maxStr);
+  return {
+    minAH: Number.isFinite(min) ? min : undefined,
+    maxAH: Number.isFinite(max) ? max : undefined,
+  };
+};
+
 // Enhanced Skeleton component
 const ProductCardSkeleton = () => (
   <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
@@ -156,6 +173,7 @@ export default function ProductListing() {
     category: "",
     type: "",
   });
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -184,6 +202,7 @@ export default function ProductListing() {
     const urlPage = params.page ? Number(params.page) : 1;
 
     setSelectedFilters(urlFilters);
+    setSelectedSubcategory(params.subcategory || ''); 
     setPriceRange(urlPrice);
     setCurrentPage(urlPage);
   }, [searchParams]);
@@ -239,11 +258,18 @@ export default function ProductListing() {
     const params = new URLSearchParams();
     if (selectedFilters.brand) params.set("brand", selectedFilters.brand);
     if (selectedFilters.category) params.set("category", selectedFilters.category);
+    if (selectedSubcategory) params.append('subcategory', selectedSubcategory);
     if (selectedFilters.type) params.set("type", selectedFilters.type);
     if (selectedFilters.rating) params.set("rating", selectedFilters.rating);
     if (selectedFilters.batteryType) params.set("batteryType", selectedFilters.batteryType);
-    if (selectedFilters.capacityRange) params.set("capacityRange", selectedFilters.capacityRange);
-        params.set("minPrice", 0);
+    if (selectedFilters.capacityRange) {
+      params.set("capacityRange", selectedFilters.capacityRange);
+      // ✅ Also emit minAH/maxAH for backend-ready links
+      const { minAH, maxAH } = parseCapacityRange(selectedFilters.capacityRange);
+      if (minAH !== undefined) params.set("minAH", String(minAH));
+      if (maxAH !== undefined) params.set("maxAH", String(maxAH));
+    }
+    params.set("minPrice", 0);
     params.set("maxPrice", priceRange);
     params.set("page", currentPage);
     
@@ -251,7 +277,7 @@ export default function ProductListing() {
     if (window.location.pathname + window.location.search !== newUrl) {
       navigate(newUrl, { replace: true });
     }
-  }, [selectedFilters, priceRange, currentPage, navigate]);
+  }, [selectedFilters, selectedSubcategory, priceRange, currentPage, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -259,13 +285,24 @@ export default function ProductListing() {
         setLoading(true);
 
         const params = Object.fromEntries([...searchParams]);
+
+        // Prefer explicit minAH/maxAH if present; otherwise derive from capacityRange
+        const explicitMinAH = params.minAH ? Number(params.minAH) : undefined;
+        const explicitMaxAH = params.maxAH ? Number(params.maxAH) : undefined;
+        const derived = parseCapacityRange(params.capacityRange || "");
+        const minAH = explicitMinAH ?? derived.minAH;
+        const maxAH = explicitMaxAH ?? derived.maxAH;
+
         const filtersToSend = {
           brand: params.brand || "",
           category: params.category || "",
+          subcategory : params.subcategory || "",
           type: params.type || "",
           rating: params.rating || undefined,
           batteryType: params.batteryType || undefined,
-          capacityRange: params.capacityRange || undefined,
+          capacityRange: params.capacityRange || undefined, // keep for UI, but backend will use minAH/maxAH
+          minAH, // ✅ send to backend
+          maxAH, // ✅ send to backend
           minPrice: params.minPrice ? Number(params.minPrice) : 0,
           maxPrice: params.maxPrice ? Number(params.maxPrice) : 20000,
           page: params.page ? Number(params.page) : 1,
