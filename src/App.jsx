@@ -54,6 +54,9 @@ import NotFound from './pages/NotFound';
 import BulkOrderManagement from './pages/dashboard/BulkOrderManagement';
 import BulkOrderPage from './pages/BulkOrderPage';
 import PrivacyTermsPage from './pages/TermsAndConditions';
+import ProductLineManagement from './pages/dashboard/ProductLine';
+import ManufacturerManagement from './pages/dashboard/ManufacturerManagement';
+import VehicleModelManagement from './pages/dashboard/VehicleModelManagement';
 
 export default function App() {
   return (
@@ -119,6 +122,9 @@ export default function App() {
               <Route path="categories" element={<CategoryManagement />} />
               <Route path="lead" element={<LeadManagement />} />
               <Route path="orders" element={<OrderManagement />} />
+              <Route path="product-line" element={<ProductLineManagement />} />
+              <Route path="manufacturer" element={<ManufacturerManagement />} />
+              <Route path="vehicle-model" element={<VehicleModelManagement />} />
               {/* <Route path="repair-orders" element={<div>Repair Orders Page</div>} /> */}
               <Route path="bulk-orders" element={<BulkOrderManagement />} />
             </Route>

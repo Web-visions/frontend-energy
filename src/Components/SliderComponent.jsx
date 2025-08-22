@@ -250,9 +250,8 @@ const SliderComponent = () => {
                         <button
                           key={type.id}
                           onClick={() => setSelectedProductType(type.id)}
-                          className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all duration-300 ${
-                            selectedProductType === type.id ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-green-300'
-                          }`}
+                          className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all duration-300 ${selectedProductType === type.id ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-green-300'
+                            }`}
                         >
                           <IconComponent size={20} className={selectedProductType === type.id ? 'text-green-600' : 'text-gray-400'} />
                           <span className={`mt-1 text-xs font-medium ${selectedProductType === type.id ? 'text-green-600' : 'text-gray-600'}`}>
@@ -299,8 +298,8 @@ const SliderComponent = () => {
                       {selectedProductType !== 'battery'
                         ? 'Only Available for Batteries'
                         : !selectedBrand
-                        ? 'Select Brand First'
-                        : 'Select Battery Type'}
+                          ? 'Select Brand First'
+                          : 'Select Battery Type'}
                     </option>
                     {selectedProductType === 'battery' && selectedBrand &&
                       getFilteredBatteryTypes().map((type) => (
@@ -324,10 +323,10 @@ const SliderComponent = () => {
                       {selectedProductType !== 'battery'
                         ? 'Only Available for Batteries'
                         : !selectedBrand
-                        ? 'Select Brand First'
-                        : !selectedBatteryType
-                        ? 'Select Battery Type First'
-                        : 'Select Category'}
+                          ? 'Select Brand First'
+                          : !selectedBatteryType
+                            ? 'Select Battery Type First'
+                            : 'Select Category'}
                     </option>
                     {selectedProductType === 'battery' && selectedBrand && selectedBatteryType &&
                       batterySubcategories.map((sub) => (
@@ -351,12 +350,12 @@ const SliderComponent = () => {
                       {selectedProductType !== 'battery'
                         ? 'Only Available for Batteries'
                         : !selectedBrand
-                        ? 'Select Brand First'
-                        : !selectedBatteryType
-                        ? 'Select Battery Type First'
-                        : !selectedSubcategory
-                        ? 'Select Category First'
-                        : 'Select Capacity'}
+                          ? 'Select Brand First'
+                          : !selectedBatteryType
+                            ? 'Select Battery Type First'
+                            : !selectedSubcategory
+                              ? 'Select Category First'
+                              : 'Select Capacity'}
                     </option>
                     {selectedProductType === 'battery' && selectedBrand && selectedBatteryType && selectedSubcategory &&
                       BATTERY_CAPACITY_OPTIONS.map(cap => (

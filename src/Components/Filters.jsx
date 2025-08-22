@@ -26,7 +26,7 @@ const FilterSidebar = ({
   ];
 
   // Count active filters
-  const activeFiltersCount = Object.values(selectedFilters).filter(value => 
+  const activeFiltersCount = Object.values(selectedFilters).filter(value =>
     value && value !== ""
   ).length + (priceRange !== 20000 ? 1 : 0);
 
@@ -71,7 +71,7 @@ const FilterSidebar = ({
               onChange={(e) => setPriceRange(Number(e.target.value))}
               className="w-full h-2 sm:h-3 bg-gray-200 rounded-full appearance-none cursor-pointer slider"
               style={{
-                background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${(priceRange/100000)*100}%, #E5E7EB ${(priceRange/100000)*100}%, #E5E7EB 100%)`
+                background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${(priceRange / 100000) * 100}%, #E5E7EB ${(priceRange / 100000) * 100}%, #E5E7EB 100%)`
               }}
             />
             <div className="flex justify-between items-center mt-2 sm:mt-3">
@@ -170,67 +170,67 @@ const FilterSidebar = ({
           </div>
         )}
 
-{/* Battery Capacity Filter */}
-{currentType === 'battery' && (
-  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-    <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
-      <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-      Battery Capacity
-    </h3>
-    <div className="relative">
-      <select
-        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
-        value={selectedFilters.capacityRange || ''}
-        onChange={(e) =>
-          setSelectedFilters(prev => ({ ...prev, capacityRange: e.target.value }))
-        }
-      >
-        <option value="">All Capacities</option>
-  {BATTERY_CAPACITY_OPTIONS.map(opt => (
-    <option key={opt.value} value={opt.value}>{opt.label}</option>
-  ))}
-      </select>
-      <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-    </div>
-  </div>
-)}
+        {/* Battery Capacity Filter */}
+        {currentType === 'battery' && (
+          <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+            <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
+              <span className="w-2 h-2 bg-red-600 rounded-full"></span>
+              Battery Capacity
+            </h3>
+            <div className="relative">
+              <select
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
+                value={selectedFilters.capacityRange || ''}
+                onChange={(e) =>
+                  setSelectedFilters(prev => ({ ...prev, capacityRange: e.target.value }))
+                }
+              >
+                <option value="">All Capacities</option>
+                {BATTERY_CAPACITY_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
 
 
         {/* Inverter Capacity Filter */}
-   {/* Inverter Capacity Filter */}
-   {currentType === 'inverter' && (
-  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-    <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
-      <span className="w-2 h-2 bg-indigo-600 rounded-full"></span>
-      Inverter Capacity
-    </h3>
-    <div className="relative">
-      <select
-        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
-        value={selectedFilters.capacityRange || ''}
-        onChange={(e) =>
-          setSelectedFilters(prev => ({ ...prev, capacityRange: e.target.value }))
-        }
-      >
-        <option value="">All Capacities</option>
-        <option value="0-799">&lt; 800VA</option>
-        <option value="800-1499">800VA–1.5KVA</option>
-        <option value="1500-2499">1.5KVA–2.5KVA</option>
-        <option value="2500-4999">2.5KVA–5KVA</option>
-        <option value="5000-999999">&gt; 5KVA</option>
-      </select>
-      <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-    </div>
-  </div>
-)}
+        {/* Inverter Capacity Filter */}
+        {currentType === 'inverter' && (
+          <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+            <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
+              <span className="w-2 h-2 bg-indigo-600 rounded-full"></span>
+              Inverter Capacity
+            </h3>
+            <div className="relative">
+              <select
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
+                value={selectedFilters.capacityRange || ''}
+                onChange={(e) =>
+                  setSelectedFilters(prev => ({ ...prev, capacityRange: e.target.value }))
+                }
+              >
+                <option value="">All Capacities</option>
+                <option value="0-799">&lt; 800VA</option>
+                <option value="800-1499">800VA–1.5KVA</option>
+                <option value="1500-2499">1.5KVA–2.5KVA</option>
+                <option value="2500-4999">2.5KVA–5KVA</option>
+                <option value="5000-999999">&gt; 5KVA</option>
+              </select>
+              <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
 
 
         {/* Rating Filter */}
@@ -256,20 +256,18 @@ const FilterSidebar = ({
                   onChange={(e) => handleFilterChange('rating', e.target.value)}
                   className="sr-only"
                 />
-                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center mr-2 sm:mr-3 transition-all duration-200 ${
-                  selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')
-                    ? 'bg-blue-600 border-blue-600' 
+                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center mr-2 sm:mr-3 transition-all duration-200 ${selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')
+                    ? 'bg-blue-600 border-blue-600'
                     : 'border-gray-300 bg-white'
-                }`}>
+                  }`}>
                   {(selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')) && (
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                   )}
                 </div>
-                <span className={`font-medium text-xs sm:text-sm lg:text-base flex-1 ${
-                  selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')
-                    ? 'text-blue-600' 
+                <span className={`font-medium text-xs sm:text-sm lg:text-base flex-1 ${selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')
+                    ? 'text-blue-600'
                     : 'text-gray-700'
-                }`}>
+                  }`}>
                   {option.label}
                 </span>
                 {option.value && (

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { X, LayoutDashboard, Users, ShoppingBag, Settings, FileText, BarChart3, MessageSquare, Bell, Shield, Database, Boxes, Smartphone, Headphones, Cpu, ChevronRight, Home, Building, Recycle, Phone, Wrench, Package, Hammer, LogOut, Image, Pin, MapPin, ListOrdered } from 'lucide-react';
+import { X, LayoutDashboard, Users, ShoppingBag, Settings, FileText, BarChart3, MessageSquare, Bell, Shield, Database, Boxes, Smartphone, Headphones, Cpu, ChevronRight, Home, Building, Recycle, Phone, Wrench, Package, Hammer, LogOut, Image, Pin, MapPin, ListOrdered, LineChartIcon, Settings2, Car } from 'lucide-react';
 import { logo } from '../assets/';
 import { useAuth } from '../context/AuthContext';
 import LogoutModal from '../Components/LogoutModal';
@@ -53,6 +53,10 @@ const getSidebarSections = (userRole) => {
           { title: 'Categories', path: '/dashboard/admin/categories', icon: <Database className='w-5 h-5' /> },
           { title: 'Orders', path: '/dashboard/admin/orders', icon: <ListOrdered className='w-5 h-5' /> },
           { title: 'Bulk Orders', path: '/dashboard/admin/bulk-orders', icon: <FiBox className="w-5 h-5" /> },
+          { title: 'Product Line', path: '/dashboard/admin/product-line', icon: <LineChartIcon className="w-5 h-5" /> },
+          { title: 'Manufacturer Management', path: '/dashboard/admin/manufacturer', icon: <Settings2 /> }
+          , { title: 'Vehicle Model Management', path: '/dashboard/admin/vehicle-model', icon: <Car /> }
+
         ]
       },
       commonSections[1]

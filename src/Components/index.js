@@ -8,4 +8,4 @@ import Location from "./Location";
 import Testimonial from "./Testimonial";
 import Footer from "./Footer";
 
-export{Header,SliderComponent,Companies,Batteries,InverterSect,Footer,Testimonial,AboutUs,Location}
+export { Header, SliderComponent, Companies, Batteries, InverterSect, Footer, Testimonial, AboutUs, Location }

@@ -25,7 +25,8 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  InputAdornment
+  InputAdornment,
+  Chip
 } from '@mui/material';
 import { img_url } from '../../config/api_route';
 
@@ -33,6 +34,9 @@ const BatteryManagement = () => {
   const [batteries, setBatteries] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [productLines, setProductLines] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [vehicleModels, setVehicleModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -40,7 +44,10 @@ const BatteryManagement = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [featuresInput, setFeaturesInput] = useState('');
+  const [compatibleManufacturersInput, setCompatibleManufacturersInput] = useState([]);
+  const [compatibleModelsInput, setCompatibleModelsInput] = useState([]);
   const [formData, setFormData] = useState({
+    productLine: '',
     brand: '',
     category: '',
     subcategory: '',
@@ -56,6 +63,10 @@ const BatteryManagement = () => {
     priceWithoutOldBattery: '',
     priceWithOldBattery: '',
     isFeatured: false,
+    manufacturer: '',
+    vehicleModel: '',
+    compatibleManufacturers: [],
+    compatibleModels: []
   });
   const [pagination, setPagination] = useState({
     page: 0,
@@ -69,10 +80,11 @@ const BatteryManagement = () => {
     minAH: '',
     maxAH: '',
     minPrice: '',
-    maxPrice: ''
+    maxPrice: '',
+    manufacturer: '',
+    productLine: ''
   });
 
-  // Subcategory options
   const subcategoryOptions = [
     { value: 'truck_battery', label: 'Truck Battery' },
     { value: '2_wheeler_battery', label: '2 Wheeler Battery' },
@@ -92,11 +104,13 @@ const BatteryManagement = () => {
       if (filters.maxAH) queryParams += `&maxAH=${filters.maxAH}`;
       if (filters.minPrice) queryParams += `&minPrice=${filters.minPrice}`;
       if (filters.maxPrice) queryParams += `&maxPrice=${filters.maxPrice}`;
+      if (filters.manufacturer) queryParams += `&manufacturer=${filters.manufacturer}`;
+      if (filters.productLine) queryParams += `&productLine=${filters.productLine}`;
       const response = await getData(`/batteries?${queryParams}`);
       setBatteries(response.batteries || []);
       setPagination({
         ...pagination,
-        page: response.pagination.page ? response.pagination.page - 1 : 0, // backend is 1-based, TablePagination is 0-based
+        page: response.pagination.page ? response.pagination.page - 1 : 0,
         limit: response.pagination.limit || pagination.limit,
         total: response.pagination.total || 0
       });
@@ -113,6 +127,7 @@ const BatteryManagement = () => {
       setCategories(response.data);
     } catch { }
   };
+
   const fetchBrands = async () => {
     try {
       const response = await getData('/brands');
@@ -120,19 +135,41 @@ const BatteryManagement = () => {
     } catch { }
   };
 
+  const fetchProductLines = async () => {
+    try {
+      const response = await getData('/product-lines');
+      setProductLines(response.productLines);
+    } catch { }
+  };
+
+  const fetchManufacturers = async () => {
+    try {
+      const response = await getData('/manufacturers');
+      setManufacturers(response.manufacturers || []);
+    } catch { }
+  };
+
+  const fetchVehicleModels = async () => {
+    try {
+      const response = await getData('/vehicle-models');
+      setVehicleModels(response.vehicleModels || []);
+    } catch { }
+  };
+
   useEffect(() => {
     fetchBatteries();
     fetchCategories();
     fetchBrands();
+    fetchProductLines();
+    fetchManufacturers();
+    fetchVehicleModels();
   }, [fetchBatteries]);
 
-  // Helper function to format subcategory display
   const formatSubcategoryDisplay = (subcategory) => {
     const option = subcategoryOptions.find(opt => opt.value === subcategory);
     return option ? option.label : subcategory;
   };
 
-  // Search/filter/pagination handlers
   const handleSearchChange = (e) => setSearch(e.target.value);
   const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchBatteries(); };
   const handleFilterChange = (e) => {
@@ -141,7 +178,7 @@ const BatteryManagement = () => {
   };
   const applyFilters = () => { setPagination({ ...pagination, page: 0 }); fetchBatteries(); };
   const resetFilters = () => {
-    setFilters({ batteryType: '', subcategory: '', minAH: '', maxAH: '', minPrice: '', maxPrice: '' });
+    setFilters({ batteryType: '', subcategory: '', minAH: '', maxAH: '', minPrice: '', maxPrice: '', manufacturer: '', productLine: '' });
     setSearch('');
     setPagination({ ...pagination, page: 0 });
     fetchBatteries();
@@ -149,7 +186,6 @@ const BatteryManagement = () => {
   const handlePageChange = (event, newPage) => setPagination({ ...pagination, page: newPage });
   const handleChangeRowsPerPage = (event) => setPagination({ ...pagination, limit: parseInt(event.target.value, 10), page: 0 });
 
-  // Form Input Handlers
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -157,10 +193,19 @@ const BatteryManagement = () => {
       [name]: type === 'checkbox' ? checked : value
     });
   };
-  // Features input as string
+
   const handleFeaturesInputChange = (e) => setFeaturesInput(e.target.value);
 
-  // Image handler
+  const handleCompatibleManufacturersChange = (event) => {
+    const { value } = event.target;
+    setCompatibleManufacturersInput(typeof value === 'string' ? value.split(',') : value);
+  };
+
+  const handleCompatibleModelsChange = (event) => {
+    const { value } = event.target;
+    setCompatibleModelsInput(typeof value === 'string' ? value.split(',') : value);
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -171,10 +216,10 @@ const BatteryManagement = () => {
     }
   };
 
-  // Modal open/close
   const handleOpenModal = (battery = null) => {
     if (battery) {
       setFormData({
+        productLine: battery.productLine?._id || battery.productLine || '',
         brand: battery.brand?._id || battery.brand || '',
         category: battery.category?._id || battery.category || '',
         subcategory: battery.subcategory || '',
@@ -190,14 +235,21 @@ const BatteryManagement = () => {
         priceWithoutOldBattery: battery.priceWithoutOldBattery || '',
         priceWithOldBattery: battery.priceWithOldBattery || '',
         isFeatured: !!battery.isFeatured,
+        manufacturer: battery.manufacturer?._id || battery.manufacturer || '',
+        vehicleModel: battery.vehicleModel?._id || battery.vehicleModel || '',
+        compatibleManufacturers: battery.compatibleManufacturers || [],
+        compatibleModels: battery.compatibleModels || []
       });
       setFeaturesInput((battery.features || []).join(', '));
+      setCompatibleManufacturersInput(battery.compatibleManufacturers?.map(m => m._id || m) || []);
+      setCompatibleModelsInput(battery.compatibleModels?.map(m => m._id || m) || []);
       setIsEditing(true);
       setCurrentId(battery._id);
       if (battery.image) setImagePreview(`${img_url}${battery.image}`); else setImagePreview('');
       setImageFile(null);
     } else {
       setFormData({
+        productLine: '',
         brand: '',
         category: '',
         subcategory: '',
@@ -213,8 +265,14 @@ const BatteryManagement = () => {
         priceWithoutOldBattery: '',
         priceWithOldBattery: '',
         isFeatured: false,
+        manufacturer: '',
+        vehicleModel: '',
+        compatibleManufacturers: [],
+        compatibleModels: []
       });
       setFeaturesInput('');
+      setCompatibleManufacturersInput([]);
+      setCompatibleModelsInput([]);
       setIsEditing(false);
       setCurrentId(null);
       setImagePreview('');
@@ -225,7 +283,6 @@ const BatteryManagement = () => {
 
   const handleCloseModal = () => setOpenModal(false);
 
-  // Submit Form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -235,6 +292,10 @@ const BatteryManagement = () => {
       Object.keys(formData).forEach(key => {
         if (key === 'features') {
           formDataObj.append('features', JSON.stringify(cleanedFeaturesArray));
+        } else if (key === 'compatibleManufacturers') {
+          formDataObj.append('compatibleManufacturers', JSON.stringify(compatibleManufacturersInput));
+        } else if (key === 'compatibleModels') {
+          formDataObj.append('compatibleModels', JSON.stringify(compatibleModelsInput));
         } else {
           formDataObj.append(key, formData[key]);
         }
@@ -259,7 +320,6 @@ const BatteryManagement = () => {
     }
   };
 
-  // Status and delete unchanged
   const handleToggleStatus = async (id, currentStatus) => {
     try {
       await putData(`/batteries/${id}/status`, { isActive: !currentStatus });
@@ -269,6 +329,7 @@ const BatteryManagement = () => {
       toast.error(err.response?.data?.message || 'An error occurred');
     }
   };
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this battery?')) {
       try {
@@ -286,7 +347,7 @@ const BatteryManagement = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Battery Management
       </Typography>
-      {/* Search and Filter Section */}
+
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
@@ -307,7 +368,7 @@ const BatteryManagement = () => {
           </Grid>
           <Grid item xs={12} md={8}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={2.4}>
+              <Grid item xs={12} sm={2}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Battery Type</InputLabel>
                   <Select
@@ -323,7 +384,7 @@ const BatteryManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={2.4}>
+              <Grid item xs={12} sm={2}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Subcategory</InputLabel>
                   <Select
@@ -341,16 +402,52 @@ const BatteryManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={6} sm={2.4}>
+              <Grid item xs={12} sm={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Product Line</InputLabel>
+                  <Select
+                    name="productLine"
+                    value={filters.productLine}
+                    onChange={handleFilterChange}
+                    label="Product Line"
+                  >
+                    <MenuItem value="">All Product Lines</MenuItem>
+                    {productLines?.map((productLine) => (
+                      <MenuItem key={productLine._id} value={productLine._id}>
+                        {productLine.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Manufacturer</InputLabel>
+                  <Select
+                    name="manufacturer"
+                    value={filters.manufacturer}
+                    onChange={handleFilterChange}
+                    label="Manufacturer"
+                  >
+                    <MenuItem value="">All Manufacturers</MenuItem>
+                    {manufacturers?.map((manufacturer) => (
+                      <MenuItem key={manufacturer._id} value={manufacturer._id}>
+                        {manufacturer.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6} sm={2}>
                 <TextField fullWidth label="Min AH" name="minAH" type="number" value={filters.minAH} onChange={handleFilterChange} variant="outlined" size="small" />
               </Grid>
-              <Grid item xs={6} sm={2.4}>
+              <Grid item xs={6} sm={2}>
                 <TextField fullWidth label="Max AH" name="maxAH" type="number" value={filters.maxAH} onChange={handleFilterChange} variant="outlined" size="small" />
               </Grid>
-              <Grid item xs={6} sm={2.4}>
+              <Grid item xs={6} sm={2}>
                 <TextField fullWidth label="Min Price" name="minPrice" type="number" value={filters.minPrice} onChange={handleFilterChange} variant="outlined" size="small" />
               </Grid>
-              <Grid item xs={6} sm={2.4}>
+              <Grid item xs={6} sm={2}>
                 <TextField fullWidth label="Max Price" name="maxPrice" type="number" value={filters.maxPrice} onChange={handleFilterChange} variant="outlined" size="small" />
               </Grid>
             </Grid>
@@ -366,7 +463,6 @@ const BatteryManagement = () => {
         </Grid>
       </Paper>
 
-      {/* Action Button */}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
@@ -377,16 +473,18 @@ const BatteryManagement = () => {
         </Button>
       </Box>
 
-      {/* Batteries Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
+              <TableCell>Product Line</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Subcategory</TableCell>
               <TableCell>Brand</TableCell>
+              <TableCell>Manufacturer</TableCell>
+              <TableCell>Vehicle Model</TableCell>
               <TableCell>Battery Type</TableCell>
               <TableCell>AH</TableCell>
               <TableCell>MRP</TableCell>
@@ -398,11 +496,11 @@ const BatteryManagement = () => {
           <TableBody>
             {loading && batteries.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} align="center">Loading...</TableCell>
+                <TableCell colSpan={14} align="center">Loading...</TableCell>
               </TableRow>
             ) : batteries?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} align="center">No batteries found</TableCell>
+                <TableCell colSpan={14} align="center">No batteries found</TableCell>
               </TableRow>
             ) : (
               batteries?.map((battery) => (
@@ -413,9 +511,12 @@ const BatteryManagement = () => {
                     ) : 'No image'}
                   </TableCell>
                   <TableCell>{battery?.name}</TableCell>
+                  <TableCell>{battery?.productLine?.name || 'N/A'}</TableCell>
                   <TableCell>{battery?.category?.name || 'N/A'}</TableCell>
                   <TableCell>{formatSubcategoryDisplay(battery?.subcategory || "N/A")}</TableCell>
                   <TableCell>{battery?.brand?.name || 'N/A'}</TableCell>
+                  <TableCell>{battery?.manufacturer?.name || 'N/A'}</TableCell>
+                  <TableCell>{battery?.vehicleModel?.name || 'N/A'}</TableCell>
                   <TableCell>{battery?.batteryType || 'N/A'}</TableCell>
                   <TableCell>{battery?.AH || 'N/A'}</TableCell>
                   <TableCell>₹{battery?.mrp || 'N/A'}</TableCell>
@@ -444,12 +545,27 @@ const BatteryManagement = () => {
         />
       </TableContainer>
 
-      {/* Add/Edit Modal */}
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
+      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="lg" fullWidth>
         <DialogTitle>{isEditing ? 'Edit Battery' : 'Add New Battery'}</DialogTitle>
         <DialogContent>
           <Box component="form" noValidate sx={{ mt: 2 }}>
             <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Product Line</InputLabel>
+                  <Select
+                    name="productLine"
+                    value={formData.productLine}
+                    onChange={handleInputChange}
+                    label="Product Line"
+                  >
+                    <MenuItem value="">Select Product Line</MenuItem>
+                    {productLines?.map((productLine) => (
+                      <MenuItem key={productLine._id} value={productLine._id}>{productLine.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Category</InputLabel>
@@ -493,6 +609,40 @@ const BatteryManagement = () => {
                   >
                     {brands.map((brand) => (
                       <MenuItem key={brand._id} value={brand._id}>{brand.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Manufacturer</InputLabel>
+                  <Select
+                    name="manufacturer"
+                    value={formData.manufacturer}
+                    onChange={handleInputChange}
+                    label="Manufacturer"
+                  >
+                    <MenuItem value="">Select Manufacturer</MenuItem>
+                    {manufacturers?.map((manufacturer) => (
+                      <MenuItem key={manufacturer._id} value={manufacturer._id}>{manufacturer.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Vehicle Model</InputLabel>
+                  <Select
+                    name="vehicleModel"
+                    value={formData.vehicleModel}
+                    onChange={handleInputChange}
+                    label="Vehicle Model"
+                  >
+                    <MenuItem value="">Select Vehicle Model</MenuItem>
+                    {vehicleModels?.map((model) => (
+                      <MenuItem key={model._id} value={model._id}>
+                        {model.name} ({model.manufacturer?.name})
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -556,6 +706,58 @@ const BatteryManagement = () => {
                   onChange={handleFeaturesInputChange}
                   helperText="Enter features separated by commas"
                 />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Compatible Manufacturers</InputLabel>
+                  <Select
+                    multiple
+                    name="compatibleManufacturers"
+                    value={compatibleManufacturersInput}
+                    onChange={handleCompatibleManufacturersChange}
+                    label="Compatible Manufacturers"
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => {
+                          const manufacturer = manufacturers.find(m => m._id === value);
+                          return <Chip key={value} label={manufacturer?.name || value} size="small" />;
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {manufacturers?.map((manufacturer) => (
+                      <MenuItem key={manufacturer._id} value={manufacturer._id}>
+                        {manufacturer.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Compatible Models</InputLabel>
+                  <Select
+                    multiple
+                    name="compatibleModels"
+                    value={compatibleModelsInput}
+                    onChange={handleCompatibleModelsChange}
+                    label="Compatible Models"
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => {
+                          const model = vehicleModels.find(m => m._id === value);
+                          return <Chip key={value} label={model?.name || value} size="small" />;
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {vehicleModels?.map((model) => (
+                      <MenuItem key={model._id} value={model._id}>
+                        {model.name} ({model.manufacturer?.name})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid item xs={12}>
                 <Button variant="contained" component="label">
