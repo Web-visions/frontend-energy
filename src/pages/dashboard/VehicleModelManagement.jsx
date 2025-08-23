@@ -28,6 +28,12 @@ import {
     InputAdornment
 } from '@mui/material';
 
+const CATEGORY_OPTIONS = [
+    { value: '2-wheeler', label: '2-Wheeler' },
+    { value: '4-wheeler', label: '4-Wheeler' },
+    { value: 'truck', label: 'Truck' }
+];
+
 const VehicleModelManagement = () => {
     const [vehicleModels, setVehicleModels] = useState([]);
     const [manufacturers, setManufacturers] = useState([]);
@@ -35,42 +41,48 @@ const VehicleModelManagement = () => {
     const [openModal, setOpenModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
+
     const [formData, setFormData] = useState({
         name: '',
-        manufacturer: ''
+        manufacturer: '',
+        category: ''
     });
+
     const [pagination, setPagination] = useState({
         page: 0,
         limit: 10,
         total: 0
     });
+
     const [search, setSearch] = useState('');
     const [filters, setFilters] = useState({
-        manufacturer: ''
+        manufacturer: '',
+        category: ''
     });
 
     const fetchVehicleModels = useCallback(async () => {
         setLoading(true);
         try {
             let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-            if (search) queryParams += `&search=${search}`;
+            if (search) queryParams += `&search=${encodeURIComponent(search)}`;
             if (filters.manufacturer) queryParams += `&manufacturer=${filters.manufacturer}`;
+            if (filters.category) queryParams += `&category=${filters.category}`;
 
             const response = await getData(`/vehicle-models?${queryParams}`);
             setVehicleModels(response.vehicleModels || []);
 
             if (response.pagination) {
-                setPagination({
-                    ...pagination,
+                setPagination(prev => ({
+                    ...prev,
                     page: response.pagination.page ? response.pagination.page - 1 : 0,
-                    limit: response.pagination.limit || pagination.limit,
+                    limit: response.pagination.limit || prev.limit,
                     total: response.pagination.total || 0
-                });
+                }));
             } else {
-                setPagination({
-                    ...pagination,
+                setPagination(prev => ({
+                    ...prev,
                     total: response.count || response.data?.length || 0
-                });
+                }));
             }
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to fetch vehicle models');
@@ -82,78 +94,93 @@ const VehicleModelManagement = () => {
     const fetchManufacturers = async () => {
         try {
             const response = await getData('/manufacturers');
+            console.log(response, "MAN")
             setManufacturers(response.manufacturers || []);
         } catch (err) {
             toast.error('Failed to fetch manufacturers');
         }
     };
 
+    console.log(manufacturers, "MAN F")
+
     useEffect(() => {
         fetchVehicleModels();
         fetchManufacturers();
     }, [fetchVehicleModels]);
 
-    // Search/filter handlers
     const handleSearchChange = (e) => setSearch(e.target.value);
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+        setFilters(prev => {
+            const next = { ...prev, [name]: value };
+            if (name === 'category') {
+                // If category filter changes, clear manufacturer filter to avoid mismatches
+                next.manufacturer = '';
+            }
+            return next;
+        });
     };
 
     const applySearch = () => {
-        setPagination({ ...pagination, page: 0 });
+        setPagination(prev => ({ ...prev, page: 0 }));
         fetchVehicleModels();
     };
 
     const applyFilters = () => {
-        setPagination({ ...pagination, page: 0 });
+        setPagination(prev => ({ ...prev, page: 0 }));
         fetchVehicleModels();
     };
 
     const resetFilters = () => {
         setSearch('');
-        setFilters({ manufacturer: '' });
-        setPagination({ ...pagination, page: 0 });
+        setFilters({ manufacturer: '', category: '' });
+        setPagination(prev => ({ ...prev, page: 0 }));
         fetchVehicleModels();
     };
 
-    // Pagination handlers
     const handlePageChange = (event, newPage) => {
-        setPagination({ ...pagination, page: newPage });
+        setPagination(prev => ({ ...prev, page: newPage }));
     };
 
     const handleChangeRowsPerPage = (event) => {
-        setPagination({
-            ...pagination,
+        setPagination(prev => ({
+            ...prev,
             limit: parseInt(event.target.value, 10),
             page: 0
-        });
+        }));
     };
 
-    // Form Input Handlers
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
+
+        if (name === 'category') {
+            setFormData(prev => {
+                const chosenManu = manufacturers.find(m => m._id === prev.manufacturer);
+                const isSameCategory = chosenManu && chosenManu.category === value;
+                return {
+                    ...prev,
+                    category: value,
+                    manufacturer: isSameCategory ? prev.manufacturer : ''
+                };
+            });
+            return;
+        }
+
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Modal open/close
     const handleOpenModal = (vehicleModel = null) => {
         if (vehicleModel) {
             setFormData({
                 name: vehicleModel.name || '',
-                manufacturer: vehicleModel.manufacturer?._id || vehicleModel.manufacturer || ''
+                manufacturer: vehicleModel.manufacturer?._id || vehicleModel.manufacturer || '',
+                category: vehicleModel.category || vehicleModel.manufacturer?.category || ''
             });
             setIsEditing(true);
             setCurrentId(vehicleModel._id);
         } else {
-            setFormData({
-                name: '',
-                manufacturer: ''
-            });
+            setFormData({ name: '', manufacturer: '', category: '' });
             setIsEditing(false);
             setCurrentId(null);
         }
@@ -162,21 +189,22 @@ const VehicleModelManagement = () => {
 
     const handleCloseModal = () => {
         setOpenModal(false);
-        setFormData({ name: '', manufacturer: '' });
+        setFormData({ name: '', manufacturer: '', category: '' });
         setIsEditing(false);
         setCurrentId(null);
     };
 
-    // Submit Form
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Basic validation
         if (!formData.name.trim()) {
             toast.error('Vehicle model name is required');
             return;
         }
-
+        if (!formData.category) {
+            toast.error('Category is required');
+            return;
+        }
         if (!formData.manufacturer) {
             toast.error('Manufacturer is required');
             return;
@@ -184,12 +212,11 @@ const VehicleModelManagement = () => {
 
         setLoading(true);
         try {
-            let response;
             if (isEditing) {
-                response = await putData(`/vehicle-models/${currentId}`, formData);
+                await putData(`/vehicle-models/${currentId}`, formData);
                 toast.success('Vehicle model updated successfully');
             } else {
-                response = await postData('/vehicle-models', formData);
+                await postData('/vehicle-models', formData);
                 toast.success('Vehicle model created successfully');
             }
 
@@ -202,16 +229,25 @@ const VehicleModelManagement = () => {
         }
     };
 
+    // Filter manufacturers for the table filter by selected category
+    const manufacturersForFilter = manufacturers.filter(m =>
+        !filters.category ? true : m.category === filters.category
+    );
+
+    // Filter manufacturers for the modal by selected form category
+    const manufacturersForForm = manufacturers.filter(m =>
+        !formData.category ? true : m.category === formData.category
+    );
+
     return (
         <Box sx={{ p: 3 }}>
             <Typography variant="h4" component="h1" gutterBottom>
                 Vehicle Model Management
             </Typography>
 
-            {/* Search and Filter Section */}
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <TextField
                             fullWidth
                             label="Search Vehicle Models"
@@ -229,7 +265,25 @@ const VehicleModelManagement = () => {
                             }}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+
+                    <Grid item xs={12} md={3}>
+                        <FormControl fullWidth>
+                            <InputLabel>Filter by Category</InputLabel>
+                            <Select
+                                name="category"
+                                value={filters.category}
+                                onChange={handleFilterChange}
+                                label="Filter by Category"
+                            >
+                                <MenuItem value="">All Categories</MenuItem>
+                                {CATEGORY_OPTIONS.map(opt => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} md={3}>
                         <FormControl fullWidth>
                             <InputLabel>Filter by Manufacturer</InputLabel>
                             <Select
@@ -239,7 +293,7 @@ const VehicleModelManagement = () => {
                                 label="Filter by Manufacturer"
                             >
                                 <MenuItem value="">All Manufacturers</MenuItem>
-                                {manufacturers.map((manufacturer) => (
+                                {manufacturersForFilter?.map((manufacturer) => (
                                     <MenuItem key={manufacturer._id} value={manufacturer._id}>
                                         {manufacturer.name}
                                     </MenuItem>
@@ -247,6 +301,7 @@ const VehicleModelManagement = () => {
                             </Select>
                         </FormControl>
                     </Grid>
+
                     <Grid item xs={12} md={2} container justifyContent="flex-end" spacing={1}>
                         <Grid item>
                             <Button variant="outlined" onClick={resetFilters}>
@@ -262,7 +317,6 @@ const VehicleModelManagement = () => {
                 </Grid>
             </Paper>
 
-            {/* Action Button */}
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
                     variant="contained"
@@ -273,12 +327,12 @@ const VehicleModelManagement = () => {
                 </Button>
             </Box>
 
-            {/* Vehicle Models Table */}
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
                         <TableRow>
                             <TableCell>Model Name</TableCell>
+                            <TableCell>Category</TableCell>
                             <TableCell>Manufacturer</TableCell>
                             <TableCell>Created Date</TableCell>
                             <TableCell>Updated Date</TableCell>
@@ -288,13 +342,13 @@ const VehicleModelManagement = () => {
                     <TableBody>
                         {loading && vehicleModels.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} align="center">
+                                <TableCell colSpan={6} align="center">
                                     Loading...
                                 </TableCell>
                             </TableRow>
                         ) : vehicleModels?.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} align="center">
+                                <TableCell colSpan={6} align="center">
                                     No vehicle models found
                                 </TableCell>
                             </TableRow>
@@ -304,6 +358,11 @@ const VehicleModelManagement = () => {
                                     <TableCell>
                                         <Typography variant="subtitle1" fontWeight="medium">
                                             {vehicleModel?.name}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2">
+                                            {vehicleModel?.category || vehicleModel?.manufacturer?.category || 'N/A'}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
@@ -348,7 +407,6 @@ const VehicleModelManagement = () => {
                 />
             </TableContainer>
 
-            {/* Add/Edit Modal */}
             <Dialog
                 open={openModal}
                 onClose={handleCloseModal}
@@ -363,6 +421,24 @@ const VehicleModelManagement = () => {
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
                                 <FormControl fullWidth required>
+                                    <InputLabel>Category</InputLabel>
+                                    <Select
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleInputChange}
+                                        label="Category"
+                                    >
+                                        {CATEGORY_OPTIONS.map(opt => (
+                                            <MenuItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <FormControl fullWidth required disabled={!formData.category}>
                                     <InputLabel>Manufacturer</InputLabel>
                                     <Select
                                         name="manufacturer"
@@ -378,6 +454,7 @@ const VehicleModelManagement = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
+
                             <Grid item xs={12}>
                                 <TextField
                                     required

@@ -36,4 +36,6 @@ export const productService = {
         const response = await axios.get(`${API_URL}/products/filters`);
         return response.data;
     }
-}; 
+};
+
+

@@ -10,6 +10,10 @@ import {
     DialogContent,
     DialogTitle,
     TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
     Grid,
     Typography,
     IconButton,
@@ -24,6 +28,13 @@ import {
     InputAdornment
 } from '@mui/material';
 
+// Enum options for category
+const CATEGORY_OPTIONS = [
+    { value: '2-wheeler', label: '2-Wheeler' },
+    { value: '4-wheeler', label: '4-Wheeler' },
+    { value: 'truck', label: 'Truck' }
+];
+
 const ManufacturerManagement = () => {
     const [manufacturers, setManufacturers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -31,7 +42,8 @@ const ManufacturerManagement = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
     const [formData, setFormData] = useState({
-        name: ''
+        name: '',
+        category: ''
     });
     const [pagination, setPagination] = useState({
         page: 0,
@@ -39,122 +51,109 @@ const ManufacturerManagement = () => {
         total: 0
     });
     const [search, setSearch] = useState('');
+    const [filters, setFilters] = useState({ category: '' });
 
     const fetchManufacturers = useCallback(async () => {
         setLoading(true);
         try {
             let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-            if (search) queryParams += `&search=${search}`;
+            if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+            if (filters.category) queryParams += `&category=${filters.category}`;
 
             const response = await getData(`/manufacturers?${queryParams}`);
             setManufacturers(response.manufacturers || []);
 
             if (response.pagination) {
-                setPagination({
-                    ...pagination,
+                setPagination(prev => ({
+                    ...prev,
                     page: response.pagination.page ? response.pagination.page - 1 : 0,
-                    limit: response.pagination.limit || pagination.limit,
+                    limit: response.pagination.limit || prev.limit,
                     total: response.pagination.total || 0
-                });
+                }));
             } else {
-                setPagination({
-                    ...pagination,
+                setPagination(prev => ({
+                    ...prev,
                     total: response.count || response.data?.length || 0
-                });
+                }));
             }
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to fetch manufacturers');
         } finally {
             setLoading(false);
         }
-    }, [pagination.page, pagination.limit, search]);
+    }, [pagination.page, pagination.limit, search, filters]);
 
     useEffect(() => {
         fetchManufacturers();
     }, [fetchManufacturers]);
 
-    // Search handlers
+    // Handlers
     const handleSearchChange = (e) => setSearch(e.target.value);
-
-    const applySearch = () => {
-        setPagination({ ...pagination, page: 0 });
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
+    const applyFilters = () => {
+        setPagination(prev => ({ ...prev, page: 0 }));
         fetchManufacturers();
     };
-
     const resetFilters = () => {
         setSearch('');
-        setPagination({ ...pagination, page: 0 });
+        setFilters({ category: '' });
+        setPagination(prev => ({ ...prev, page: 0 }));
         fetchManufacturers();
     };
-
-    // Pagination handlers
-    const handlePageChange = (event, newPage) => {
-        setPagination({ ...pagination, page: newPage });
-    };
-
-    const handleChangeRowsPerPage = (event) => {
-        setPagination({
-            ...pagination,
-            limit: parseInt(event.target.value, 10),
-            page: 0
-        });
-    };
-
-    // Form Input Handlers
+    const handlePageChange = (event, newPage) => setPagination(prev => ({ ...prev, page: newPage }));
+    const handleChangeRowsPerPage = (event) => setPagination(prev => ({
+        ...prev,
+        limit: parseInt(event.target.value, 10),
+        page: 0
+    }));
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
-
-    // Modal open/close
     const handleOpenModal = (manufacturer = null) => {
         if (manufacturer) {
             setFormData({
-                name: manufacturer.name || ''
+                name: manufacturer.name || '',
+                category: manufacturer.category || ''
             });
             setIsEditing(true);
             setCurrentId(manufacturer._id);
         } else {
-            setFormData({
-                name: ''
-            });
+            setFormData({ name: '', category: '' });
             setIsEditing(false);
             setCurrentId(null);
         }
         setOpenModal(true);
     };
-
     const handleCloseModal = () => {
         setOpenModal(false);
-        setFormData({ name: '' });
+        setFormData({ name: '', category: '' });
         setIsEditing(false);
         setCurrentId(null);
     };
-
-    // Submit Form
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Basic validation
         if (!formData.name.trim()) {
             toast.error('Manufacturer name is required');
+            return;
+        }
+        if (!formData.category) {
+            toast.error('Category is required');
             return;
         }
 
         setLoading(true);
         try {
-            let response;
             if (isEditing) {
-                response = await putData(`/manufacturers/${currentId}`, formData);
+                await putData(`/manufacturers/${currentId}`, formData);
                 toast.success('Manufacturer updated successfully');
             } else {
-                response = await postData('/manufacturers', formData);
+                await postData('/manufacturers', formData);
                 toast.success('Manufacturer created successfully');
             }
-
             handleCloseModal();
             fetchManufacturers();
         } catch (err) {
@@ -170,10 +169,10 @@ const ManufacturerManagement = () => {
                 Manufacturer Management
             </Typography>
 
-            {/* Search Section */}
+            {/* Search & Filter Section */}
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <TextField
                             fullWidth
                             label="Search Manufacturers"
@@ -183,7 +182,7 @@ const ManufacturerManagement = () => {
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton onClick={applySearch}>
+                                        <IconButton onClick={applyFilters}>
                                             <FiSearch />
                                         </IconButton>
                                     </InputAdornment>
@@ -191,15 +190,33 @@ const ManufacturerManagement = () => {
                             }}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6} container justifyContent="flex-end" spacing={1}>
+
+                    <Grid item xs={12} md={4}>
+                        <FormControl fullWidth>
+                            <InputLabel id="category-filter-label">Filter by Category</InputLabel>
+                            <Select
+                                labelId="category-filter-label"
+                                name="category"
+                                value={filters.category}
+                                onChange={handleFilterChange}
+                            >
+                                <MenuItem value="">All Categories</MenuItem>
+                                {CATEGORY_OPTIONS.map(opt => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} md={4} container justifyContent="flex-end" spacing={1}>
                         <Grid item>
                             <Button variant="outlined" onClick={resetFilters}>
                                 Reset
                             </Button>
                         </Grid>
                         <Grid item>
-                            <Button variant="contained" onClick={applySearch}>
-                                Search
+                            <Button variant="contained" onClick={applyFilters}>
+                                Apply
                             </Button>
                         </Grid>
                     </Grid>
@@ -223,6 +240,7 @@ const ManufacturerManagement = () => {
                     <TableHead>
                         <TableRow>
                             <TableCell>Name</TableCell>
+                            <TableCell>Category</TableCell>
                             <TableCell>Created Date</TableCell>
                             <TableCell>Updated Date</TableCell>
                             <TableCell>Actions</TableCell>
@@ -231,35 +249,30 @@ const ManufacturerManagement = () => {
                     <TableBody>
                         {loading && manufacturers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} align="center">
+                                <TableCell colSpan={5} align="center">
                                     Loading...
                                 </TableCell>
                             </TableRow>
                         ) : manufacturers?.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} align="center">
+                                <TableCell colSpan={5} align="center">
                                     No manufacturers found
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            manufacturers?.map((manufacturer) => (
-                                <TableRow key={manufacturer?._id}>
+                            manufacturers.map(manufacturer => (
+                                <TableRow key={manufacturer._id}>
+                                    <TableCell>{manufacturer.name}</TableCell>
+                                    <TableCell>{manufacturer.category || 'N/A'}</TableCell>
                                     <TableCell>
-                                        <Typography variant="subtitle1" fontWeight="medium">
-                                            {manufacturer?.name}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        {manufacturer?.createdAt
+                                        {manufacturer.createdAt
                                             ? new Date(manufacturer.createdAt).toLocaleDateString()
-                                            : 'N/A'
-                                        }
+                                            : 'N/A'}
                                     </TableCell>
                                     <TableCell>
-                                        {manufacturer?.updatedAt
+                                        {manufacturer.updatedAt
                                             ? new Date(manufacturer.updatedAt).toLocaleDateString()
-                                            : 'N/A'
-                                        }
+                                            : 'N/A'}
                                     </TableCell>
                                     <TableCell>
                                         <IconButton
@@ -287,15 +300,8 @@ const ManufacturerManagement = () => {
             </TableContainer>
 
             {/* Add/Edit Modal */}
-            <Dialog
-                open={openModal}
-                onClose={handleCloseModal}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>
-                    {isEditing ? 'Edit Manufacturer' : 'Add New Manufacturer'}
-                </DialogTitle>
+            <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+                <DialogTitle>{isEditing ? 'Edit Manufacturer' : 'Add New Manufacturer'}</DialogTitle>
                 <DialogContent>
                     <Box component="form" noValidate sx={{ mt: 2 }}>
                         <Grid container spacing={3}>
@@ -311,18 +317,28 @@ const ManufacturerManagement = () => {
                                     helperText="Enter a unique name for the manufacturer"
                                 />
                             </Grid>
+                            <Grid item xs={12}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="category-label">Category</InputLabel>
+                                    <Select
+                                        labelId="category-label"
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleInputChange}
+                                        required
+                                    >
+                                        {CATEGORY_OPTIONS.map(opt => (
+                                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
                         </Grid>
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseModal}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        variant="contained"
-                        disabled={loading}
-                    >
+                    <Button onClick={handleCloseModal}>Cancel</Button>
+                    <Button onClick={handleSubmit} variant="contained" disabled={loading}>
                         {isEditing ? 'Update' : 'Create'}
                     </Button>
                 </DialogActions>
