@@ -26,5 +26,9 @@ import coin2 from '../assets/coin2.jpeg'
 import coin3 from '../assets/coin3.webp'
 import logo from './logo.png'
 import no_image from './no_img_found.png'
+import slider_1 from '../assets/slider_1.png'
+import slider_2 from '../assets/slider_2.png'
+import slider_3 from '../assets/slider_3.png'
+import slider_4 from '../assets/slider_4.png'
 
-export { no_image, logo, about, slide1, slide2, slide3, waree, vikram, adani, sf, coin1, coin2, coin3, suvastik, livfast, dynax, amaron, excide, luminous, cb1, cb2, cb3, cb4, apc, ib1, ib2, ib3 }
+export { no_image, logo, about, slide1, slide2, slide3, waree, vikram, adani, sf, coin1, coin2, coin3, suvastik, livfast, dynax, amaron, excide, luminous, cb1, cb2, cb3, cb4, apc, ib1, ib2, ib3, slider_1, slider_2, slider_3, slider_4 }

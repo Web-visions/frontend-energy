@@ -25,7 +25,7 @@ const AboutUs = () => (
             <li><b>Inverters & Batteries (Home & Commercial Use):</b> Reliable and efficient systems designed to provide backup power during outages and ensure continuous operation of essential appliances.</li>
             <li><b>UPS Systems (Online/Offline):</b> Uninterruptible Power Supply systems that protect sensitive equipment from power fluctuations, surges, and outages.</li>
             <li><b>Solar Rooftop Systems (On-grid, Off-grid, Hybrid):</b> Customized solar energy solutions tailored for residential, commercial, and industrial use, ensuring maximum efficiency and return on investment.</li>
-            <li><b>Solar Street Lights & Solar Car Batteries:</b> Environmentally friendly and cost-effective lighting and energy solutions for outdoor and automotive applications.</li>
+            <li><b>Solar Street Lights & Car Batteries:</b> Environmentally friendly and cost-effective lighting and energy solutions for outdoor and automotive applications.</li>
             <li><b>Advanced Lithium Batteries for EVs & Backup:</b> High-performance, lightweight, and long-lasting lithium battery systems built for electric vehicles and power storage.</li>
             <li><b>Installation, Maintenance & After-Sales Support:</b> End-to-end project execution with ongoing support and maintenance to keep your systems running smoothly and efficiently.</li>
           </ul>
@@ -73,10 +73,10 @@ const AboutUs = () => (
             <embed src={gstPDF} type="application/pdf" className="w-full h-48 rounded mb-3 border" />
             <a href={gstPDF} target="_blank" rel="noopener noreferrer" className="text-sm text-[#008246] font-semibold hover:underline">View Full PDF</a>
           </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
   </main>
-  );
+);
 
 export default AboutUs;

@@ -9,7 +9,7 @@ const FilterSidebar = ({
   setSelectedFilters,
   onReset,
   filterOptions,
-  currentType // pass from ProductPage.jsx, e.g. 'battery', 'ups', etc. or ''
+  currentType
 }) => {
   const handleFilterChange = (key, value) => {
     setSelectedFilters(prev => ({
@@ -18,7 +18,6 @@ const FilterSidebar = ({
     }));
   };
 
-  // Battery type options: dynamic from filterOptions, fallback to enum
   const batteryTypeOptions = filterOptions.batteryTypes || [
     { value: 'lead acid', label: 'Lead Acid' },
     { value: 'li ion', label: 'Li-ion' },
@@ -257,16 +256,16 @@ const FilterSidebar = ({
                   className="sr-only"
                 />
                 <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center mr-2 sm:mr-3 transition-all duration-200 ${selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')
-                    ? 'bg-blue-600 border-blue-600'
-                    : 'border-gray-300 bg-white'
+                  ? 'bg-blue-600 border-blue-600'
+                  : 'border-gray-300 bg-white'
                   }`}>
                   {(selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')) && (
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                   )}
                 </div>
                 <span className={`font-medium text-xs sm:text-sm lg:text-base flex-1 ${selectedFilters.rating === option.value || (!selectedFilters.rating && option.value === '')
-                    ? 'text-blue-600'
-                    : 'text-gray-700'
+                  ? 'text-blue-600'
+                  : 'text-gray-700'
                   }`}>
                   {option.label}
                 </span>

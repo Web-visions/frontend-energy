@@ -4,7 +4,7 @@ import {
   FormControl, InputLabel, Select, MenuItem, Grid, Typography, IconButton, Paper,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, InputAdornment
 } from "@mui/material";
-import { FiSearch, FiEdit, FiTrash2, FiPlus, FiPhoneCall, FiSend } from "react-icons/fi";
+import { FiSearch, FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
 import { getData, postData, putData, deleteData } from "../../utils/http";
 import { img_url } from "../../config/api_route";
 import { toast } from "react-hot-toast";
@@ -13,6 +13,7 @@ const SolarPCUManagement = () => {
   const [pcus, setPcus] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [productLines, setProductLines] = useState([]); // <-- NEW
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -24,6 +25,7 @@ const SolarPCUManagement = () => {
   const [formData, setFormData] = useState({
     category: "",
     brand: "",
+    productLine: "", // <-- NEW
     name: "",
     description: "",
     features: [],
@@ -46,14 +48,14 @@ const SolarPCUManagement = () => {
     setLoading(true);
     try {
       let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-      if (search) queryParams += `&search=${search}`;
+      if (search) queryParams += `&search=${encodeURIComponent(search)}`;
       if (filters.minWattage) queryParams += `&minWattage=${filters.minWattage}`;
       if (filters.maxWattage) queryParams += `&maxWattage=${filters.maxWattage}`;
       const res = await getData(`/solar-pcus?${queryParams}`);
       setPcus(res.data || []);
       setPagination((prev) => ({
         ...prev,
-        page: res.pagination?.page ? res.pagination.page - 1 : 0, // backend is 1-based, TablePagination is 0-based
+        page: res.pagination?.page ? res.pagination.page - 1 : 0, // backend is 1-based
         limit: res.pagination?.limit || prev.limit,
         total: res.total || 0
       }));
@@ -64,16 +66,22 @@ const SolarPCUManagement = () => {
     }
   }, [pagination.page, pagination.limit, search, filters]);
 
-  // Fetch Categories/Brands
+  // Fetch Categories/Brands/ProductLines
   const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch { } };
   const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch { } };
+  const fetchProductLines = async () => { // <-- NEW
+    try {
+      const response = await getData("/product-lines"); // adjust if your route differs
+      setProductLines(response.ProductLines || []);
+    } catch { }
+  };
 
-  useEffect(() => { fetchPCUs(); fetchCategories(); fetchBrands(); }, [fetchPCUs]);
+  useEffect(() => { fetchPCUs(); fetchCategories(); fetchBrands(); fetchProductLines(); }, [fetchPCUs]);
 
   // Table handlers
-  const handleSearchChange = (e) => setSearch(e.target.value);
+  const handleSearchChange = (event) => setSearch(event.target.value);
   const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchPCUs(); };
-  const handleFilterChange = (e) => setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleFilterChange = (event) => setFilters((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   const applyFilters = () => { setPagination({ ...pagination, page: 0 }); fetchPCUs(); };
   const resetFilters = () => {
     setFilters({ minWattage: "", maxWattage: "" });
@@ -82,14 +90,18 @@ const SolarPCUManagement = () => {
     fetchPCUs();
   };
   const handlePageChange = (_, newPage) => setPagination((p) => ({ ...p, page: newPage }));
-  const handleChangeRowsPerPage = (e) => setPagination((p) => ({ ...p, limit: parseInt(e.target.value, 10), page: 0 }));
+  const handleChangeRowsPerPage = (event) => setPagination((p) => ({ ...p, limit: parseInt(event.target.value, 10), page: 0 }));
 
   // Modal Form handlers
-  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
-  const handleFeaturesInputChange = (e) => setFeaturesInput(e.target.value);
-  const handleTagsInputChange = (e) => setTagsInput(e.target.value);
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleInputChange = (event) =>
+    setFormData((draft) => ({
+      ...draft,
+      [event.target.name]: event.target.type === "checkbox" ? event.target.checked : event.target.value
+    }));
+  const handleFeaturesInputChange = (event) => setFeaturesInput(event.target.value);
+  const handleTagsInputChange = (event) => setTagsInput(event.target.value);
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
     if (file) {
       setImageFile(file);
       const reader = new FileReader();
@@ -103,6 +115,7 @@ const SolarPCUManagement = () => {
       setFormData({
         category: item.category?._id || item.category || "",
         brand: item.brand?._id || item.brand || "",
+        productLine: item.productLine?._id || item.productLine || "", // <-- NEW
         name: item.name || "",
         description: item.description || "",
         features: item.features || [],
@@ -124,7 +137,7 @@ const SolarPCUManagement = () => {
       setImageFile(null);
     } else {
       setFormData({
-        category: "", brand: "", name: "", description: "", features: [], type: "", wattage: "",
+        category: "", brand: "", productLine: "", name: "", description: "", features: [], type: "", wattage: "",
         modelName: "", staticTags: [], warranty: "", dimension: "", weight: "", price: "", isFeatured: false,
       });
       setFeaturesInput("");
@@ -140,30 +153,30 @@ const SolarPCUManagement = () => {
   const handleCloseModal = () => setOpenModal(false);
 
   // Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
       const cleanedFeaturesArray = featuresInput.split(",").map((f) => f.trim()).filter(Boolean);
       const cleanedTagsArray = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-      const formDataObj = new FormData();
+
+      const multipartFormData = new FormData();
       Object.keys(formData).forEach((key) => {
         if (key === "features") {
-          formDataObj.append("features", JSON.stringify(cleanedFeaturesArray));
+          multipartFormData.append("features", JSON.stringify(cleanedFeaturesArray));
         } else if (key === "staticTags") {
-          formDataObj.append("staticTags", JSON.stringify(cleanedTagsArray));
+          multipartFormData.append("staticTags", JSON.stringify(cleanedTagsArray));
         } else {
-          formDataObj.append(key, formData[key]);
+          multipartFormData.append(key, formData[key]);
         }
       });
-      if (imageFile) formDataObj.append("image", imageFile);
+      if (imageFile) multipartFormData.append("image", imageFile);
 
-      let response;
       if (isEditing) {
-        response = await putData(`/solar-pcus/${currentId}`, formDataObj);
+        await putData(`/solar-pcus/${currentId}`, multipartFormData);
         toast.success("Updated successfully");
       } else {
-        response = await postData("/solar-pcus", formDataObj);
+        await postData("/solar-pcus", multipartFormData);
         toast.success("Created successfully");
       }
       handleCloseModal();
@@ -193,6 +206,7 @@ const SolarPCUManagement = () => {
       <Typography variant="h4" gutterBottom>
         Solar PCU Management
       </Typography>
+
       {/* Search + Filter */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -229,12 +243,14 @@ const SolarPCUManagement = () => {
           </Grid>
         </Grid>
       </Paper>
+
       {/* Add Button */}
       <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
         <Button variant="contained" startIcon={<FiPlus />} onClick={() => handleOpenModal()}>
           Add New Solar PCU
         </Button>
       </Box>
+
       {/* Table */}
       <TableContainer component={Paper}>
         <Table>
@@ -244,6 +260,7 @@ const SolarPCUManagement = () => {
               <TableCell>Name</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Brand</TableCell>
+              <TableCell>Product Line</TableCell> {/* <-- NEW */}
               <TableCell>Model</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Wattage</TableCell>
@@ -259,11 +276,11 @@ const SolarPCUManagement = () => {
           <TableBody>
             {loading && pcus.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={14} align="center">Loading...</TableCell>
+                <TableCell colSpan={15} align="center">Loading...</TableCell>
               </TableRow>
             ) : pcus.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={14} align="center">No PCUs found</TableCell>
+                <TableCell colSpan={15} align="center">No PCUs found</TableCell>
               </TableRow>
             ) : (
               pcus.map((item) => (
@@ -276,6 +293,7 @@ const SolarPCUManagement = () => {
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.category?.name || "N/A"}</TableCell>
                   <TableCell>{item.brand?.name || "N/A"}</TableCell>
+                  <TableCell>{item.productLine?.name || "N/A"}</TableCell> {/* <-- NEW */}
                   <TableCell>{item.modelName || "N/A"}</TableCell>
                   <TableCell>{item.type || "N/A"}</TableCell>
                   <TableCell>{item.wattage || "N/A"}</TableCell>
@@ -284,9 +302,7 @@ const SolarPCUManagement = () => {
                   <TableCell>{item.dimension || "N/A"}</TableCell>
                   <TableCell>{item.weight || "N/A"}</TableCell>
                   <TableCell>{item.isFeatured ? '✔️' : '❌'}</TableCell>
-                  <TableCell>
-                    {Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}
-                  </TableCell>
+                  <TableCell>{Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(item)} color="primary"><FiEdit /></IconButton>
                     <IconButton onClick={() => handleDelete(item._id)} color="error"><FiTrash2 /></IconButton>
@@ -306,6 +322,7 @@ const SolarPCUManagement = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </TableContainer>
+
       {/* Add/Edit Modal */}
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
         <DialogTitle>{isEditing ? "Edit Solar PCU" : "Add New Solar PCU"}</DialogTitle>
@@ -322,6 +339,7 @@ const SolarPCUManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Brand</InputLabel>
@@ -332,6 +350,19 @@ const SolarPCUManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* NEW: Product Line */}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Product Line</InputLabel>
+                  <Select name="productLine" value={formData.productLine} onChange={handleInputChange} label="Product Line">
+                    {productLines.map((line) => (
+                      <MenuItem key={line._id} value={line._id}>{line.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField required fullWidth label="Name" name="name" value={formData.name} onChange={handleInputChange} />
               </Grid>

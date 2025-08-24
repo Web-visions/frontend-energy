@@ -247,7 +247,7 @@ const ProductFinder = () => {
         if (shouldShowManufacturerAndModel && selectedManufacturerId) params.append('manufacturer', selectedManufacturerId);
         if (shouldShowManufacturerAndModel && selectedVehicleModelId) params.append('vehicleModel', selectedVehicleModelId);
         if (selectedBrandId) params.append('brand', selectedBrandId);
-        if (shouldShowCapacity && selectedCapacity) params.append('capacity', selectedCapacity);
+        if (shouldShowCapacity && selectedCapacity) params.append('capacityRange', selectedCapacity);
         if (selectedState) params.append('state', selectedState);
         if (selectedCity) params.append('city', selectedCity);
 

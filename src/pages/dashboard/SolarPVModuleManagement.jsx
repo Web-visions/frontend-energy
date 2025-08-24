@@ -4,7 +4,7 @@ import {
   FormControl, InputLabel, Select, MenuItem, Grid, Typography, IconButton, Paper,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, InputAdornment, Chip
 } from "@mui/material";
-import { FiSearch, FiEdit, FiTrash2, FiPlus, FiPhoneCall, FiSend } from "react-icons/fi";
+import { FiSearch, FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
 import { getData, postData, putData, deleteData } from "../../utils/http";
 import { img_url } from "../../config/api_route";
 import { toast } from "react-hot-toast";
@@ -13,6 +13,7 @@ const SolarPVModuleManagement = () => {
   const [modules, setModules] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [productLines, setProductLines] = useState([]); // <-- NEW
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -23,6 +24,7 @@ const SolarPVModuleManagement = () => {
   const [formData, setFormData] = useState({
     category: "",
     brand: "",
+    productLine: "", // <-- NEW
     name: "",
     description: "",
     modelName: "",
@@ -40,57 +42,59 @@ const SolarPVModuleManagement = () => {
   });
   const [pagination, setPagination] = useState({ page: 0, limit: 10, total: 0 });
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({});
 
   // Fetch List
   const fetchModules = useCallback(async () => {
     setLoading(true);
     try {
       let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-      if (search) queryParams += `&search=${search}`;
-      // No filter for now, but you can add by weight etc.
-      const res = await getData(`/solar-pv-modules?${queryParams}`);
-      setModules(res.data || []);
+      if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+      const response = await getData(`/solar-pv-modules?${queryParams}`);
+      setModules(response.data || []);
       setPagination((prev) => ({
         ...prev,
-        page: res.pagination?.page ? res.pagination.page - 1 : 0, // backend is 1-based, TablePagination is 0-based
-        limit: res.pagination?.limit || prev.limit,
-        total: res.total || 0
+        page: response.pagination?.page ? response.pagination.page - 1 : 0, // backend is 1-based, TablePagination is 0-based
+        limit: response.pagination?.limit || prev.limit,
+        total: response.total || 0
       }));
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to fetch PV Modules");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to fetch PV Modules");
     } finally {
       setLoading(false);
     }
   }, [pagination.page, pagination.limit, search]);
 
-  // Fetch Categories/Brands
+  // Fetch Categories/Brands/ProductLines
   const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch { } };
   const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch { } };
+  const fetchProductLines = async () => { // <-- NEW
+    try {
+      const response = await getData("/product-lines"); // change path if your API differs
+      setProductLines(response.data || []);
+    } catch { }
+  };
 
-  useEffect(() => { fetchModules(); fetchCategories(); fetchBrands(); }, [fetchModules]);
+  useEffect(() => { fetchModules(); fetchCategories(); fetchBrands(); fetchProductLines(); }, [fetchModules]);
 
   // Table handlers
-  const handleSearchChange = (e) => setSearch(e.target.value);
+  const handleSearchChange = (event) => setSearch(event.target.value);
   const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchModules(); };
-  const resetFilters = () => {
-    setSearch("");
-    setPagination({ ...pagination, page: 0 });
-    fetchModules();
-  };
+  const resetFilters = () => { setSearch(""); setPagination({ ...pagination, page: 0 }); fetchModules(); };
   const handlePageChange = (_, newPage) => setPagination((p) => ({ ...p, page: newPage }));
-  const handleChangeRowsPerPage = (e) => setPagination((p) => ({ ...p, limit: parseInt(e.target.value, 10), page: 0 }));
+  const handleChangeRowsPerPage = (event) => setPagination((p) => ({ ...p, limit: parseInt(event.target.value, 10), page: 0 }));
 
   // Modal Form handlers
-  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
-  const handleTagsInputChange = (e) => setTagsInput(e.target.value);
+  const handleInputChange = (event) =>
+    setFormData((draft) => ({
+      ...draft,
+      [event.target.name]: event.target.type === "checkbox" ? event.target.checked : event.target.value
+    }));
+  const handleTagsInputChange = (event) => setTagsInput(event.target.value);
 
   // Multiple Images Upload
-  const handleImagesChange = (e) => {
-    const files = Array.from(e.target.files);
+  const handleImagesChange = (event) => {
+    const files = Array.from(event.target.files);
     setImageFiles(files);
-
-    // Preview images
     const previews = files.map(file => URL.createObjectURL(file));
     setImagePreviews(previews);
   };
@@ -100,6 +104,7 @@ const SolarPVModuleManagement = () => {
       setFormData({
         category: item.category?._id || item.category || "",
         brand: item.brand?._id || item.brand || "",
+        productLine: item.productLine?._id || item.productLine || "", // <-- NEW
         name: item.name || "",
         description: item.description || "",
         modelName: item.modelName || "",
@@ -119,16 +124,13 @@ const SolarPVModuleManagement = () => {
       setIsEditing(true);
       setCurrentId(item._id);
       setImageFiles([]);
-      if (item.images && item.images.length > 0) {
-        setImagePreviews(item.images.map(img => `${img_url}${img}`));
-      } else {
-        setImagePreviews([]);
-      }
+      setImagePreviews(item.images?.length ? item.images.map(img => `${img_url}${img}`) : []);
     } else {
       setFormData({
-        category: "", brand: "", name: "", description: "", modelName: "", sku: "", type: "",
-        weight: "", dimension: "", manufacturer: "", packer: "", importer: "",
-        replacementPolicy: "", staticTags: [], price: "", isFeatured: false,
+        category: "", brand: "", productLine: "", name: "", description: "",
+        modelName: "", sku: "", type: "", weight: "", dimension: "",
+        manufacturer: "", packer: "", importer: "", replacementPolicy: "",
+        staticTags: [], price: "", isFeatured: false,
       });
       setTagsInput("");
       setIsEditing(false);
@@ -142,34 +144,34 @@ const SolarPVModuleManagement = () => {
   const handleCloseModal = () => setOpenModal(false);
 
   // Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
-      const cleanedTagsArray = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-      const formDataObj = new FormData();
+      const cleanedTagsArray = tagsInput.split(",").map((tag) => tag.trim()).filter(Boolean);
+      const multipartFormData = new FormData();
       Object.keys(formData).forEach((key) => {
         if (key === "staticTags") {
-          formDataObj.append("staticTags", JSON.stringify(cleanedTagsArray));
+          multipartFormData.append("staticTags", JSON.stringify(cleanedTagsArray));
         } else {
-          formDataObj.append(key, formData[key]);
+          multipartFormData.append(key, formData[key]);
         }
       });
       if (imageFiles.length > 0) {
-        imageFiles.forEach(file => formDataObj.append("images", file));
+        imageFiles.forEach(file => multipartFormData.append("images", file));
       }
-      let response;
+
       if (isEditing) {
-        response = await putData(`/solar-pv-modules/${currentId}`, formDataObj);
+        await putData(`/solar-pv-modules/${currentId}`, multipartFormData);
         toast.success("Updated successfully");
       } else {
-        response = await postData("/solar-pv-modules", formDataObj);
+        await postData("/solar-pv-modules", multipartFormData);
         toast.success("Created successfully");
       }
       handleCloseModal();
       fetchModules();
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "An error occurred");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -182,8 +184,8 @@ const SolarPVModuleManagement = () => {
         await deleteData(`/solar-pv-modules/${id}`);
         toast.success("Deleted successfully");
         fetchModules();
-      } catch (err) {
-        toast.error(err?.response?.data?.message || "An error occurred");
+      } catch (error) {
+        toast.error(error?.response?.data?.message || "An error occurred");
       }
     }
   };
@@ -193,6 +195,7 @@ const SolarPVModuleManagement = () => {
       <Typography variant="h4" gutterBottom>
         Solar PV Module Management
       </Typography>
+
       {/* Search */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -216,12 +219,14 @@ const SolarPVModuleManagement = () => {
           </Grid>
         </Grid>
       </Paper>
+
       {/* Add Button */}
       <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
         <Button variant="contained" startIcon={<FiPlus />} onClick={() => handleOpenModal()}>
           Add New Solar PV Module
         </Button>
       </Box>
+
       {/* Table */}
       <TableContainer component={Paper}>
         <Table>
@@ -231,6 +236,7 @@ const SolarPVModuleManagement = () => {
               <TableCell>Name</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Brand</TableCell>
+              <TableCell>Product Line</TableCell> {/* <-- NEW */}
               <TableCell>Model</TableCell>
               <TableCell>SKU</TableCell>
               <TableCell>Type</TableCell>
@@ -249,18 +255,18 @@ const SolarPVModuleManagement = () => {
           <TableBody>
             {loading && modules.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={16} align="center">Loading...</TableCell>
+                <TableCell colSpan={17} align="center">Loading...</TableCell>
               </TableRow>
             ) : modules.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={16} align="center">No PV Modules found</TableCell>
+                <TableCell colSpan={17} align="center">No PV Modules found</TableCell>
               </TableRow>
             ) : (
               modules.map((item) => (
                 <TableRow key={item._id}>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                      {item.images && item.images.length > 0
+                      {item.images?.length
                         ? item.images.map((img, idx) => (
                           <img key={idx} src={`${img_url}${img}`} alt={item.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
                         ))
@@ -270,6 +276,7 @@ const SolarPVModuleManagement = () => {
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.category?.name || "N/A"}</TableCell>
                   <TableCell>{item.brand?.name || "N/A"}</TableCell>
+                  <TableCell>{item.productLine?.name || "N/A"}</TableCell> {/* <-- NEW */}
                   <TableCell>{item.modelName || "N/A"}</TableCell>
                   <TableCell>{item.sku || "N/A"}</TableCell>
                   <TableCell>{item.type || "N/A"}</TableCell>
@@ -281,9 +288,9 @@ const SolarPVModuleManagement = () => {
                   <TableCell>{item.importer || "N/A"}</TableCell>
                   <TableCell>{item.replacementPolicy || "N/A"}</TableCell>
                   <TableCell>
-                    {Array.isArray(item.staticTags) ? (
-                      item.staticTags.map((tag, idx) => <Chip size="small" label={tag} key={idx} sx={{ m: 0.25 }} />)
-                    ) : ""}
+                    {Array.isArray(item.staticTags) ? item.staticTags.map((tag, idx) => (
+                      <Chip size="small" label={tag} key={idx} sx={{ m: 0.25 }} />
+                    )) : ""}
                   </TableCell>
                   <TableCell>{item.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
@@ -305,6 +312,7 @@ const SolarPVModuleManagement = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </TableContainer>
+
       {/* Add/Edit Modal */}
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
         <DialogTitle>{isEditing ? "Edit Solar PV Module" : "Add New Solar PV Module"}</DialogTitle>
@@ -315,12 +323,13 @@ const SolarPVModuleManagement = () => {
                 <FormControl fullWidth required>
                   <InputLabel>Category</InputLabel>
                   <Select name="category" value={formData.category} onChange={handleInputChange} label="Category">
-                    {categories.map((cat) => (
-                      <MenuItem key={cat._id} value={cat._id}>{cat.name}</MenuItem>
+                    {categories.map((category) => (
+                      <MenuItem key={category._id} value={category._id}>{category.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Brand</InputLabel>
@@ -331,6 +340,19 @@ const SolarPVModuleManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* NEW: Product Line */}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Product Line</InputLabel>
+                  <Select name="productLine" value={formData.productLine} onChange={handleInputChange} label="Product Line">
+                    {productLines.map((line) => (
+                      <MenuItem key={line._id} value={line._id}>{line.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField required fullWidth label="Name" name="name" value={formData.name} onChange={handleInputChange} />
               </Grid>

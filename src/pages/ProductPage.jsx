@@ -138,11 +138,10 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
           return (
             <button
               key={pageNum}
-              className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                pageNum === currentPage
-                  ? "bg-green-600 text-white shadow-lg transform scale-105"
-                  : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${pageNum === currentPage
+                ? "bg-green-600 text-white shadow-lg transform scale-105"
+                : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+                }`}
               onClick={() => onPageChange(pageNum)}
               disabled={pageNum === currentPage}
             >
@@ -172,7 +171,16 @@ export default function ProductListing() {
     brand: "",
     category: "",
     type: "",
+    rating: undefined,
+    batteryType: undefined,
+    capacityRange: "",
+    productLine: "",
+    manufacturer: "",
+    vehicleModel: "",
+    state: "",
+    city: "",
   });
+
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -184,28 +192,33 @@ export default function ProductListing() {
   const [searchParams] = useSearchParams();
   const { addToCart } = useCart();
 
-  // Track initial mount to avoid double-setting state
   const isFirstLoad = useRef(true);
 
-  // Parse URL params and update state only if changed
   useEffect(() => {
-    const params = Object.fromEntries([...searchParams]);
+    const paramsObj = Object.fromEntries([...searchParams]);
     const urlFilters = {
-      brand: params.brand || "",
-      category: params.category || "",
-      type: params.type || "",
-      rating: params.rating || undefined,
-      batteryType: params.batteryType || undefined,
-      capacityRange: params.capacityRange || "",
+      brand: paramsObj.brand || "",
+      category: paramsObj.category || "",
+      type: paramsObj.type || "",
+      rating: paramsObj.rating || undefined,
+      batteryType: paramsObj.batteryType || undefined,
+      capacityRange: paramsObj.capacityRange || "",
+      productLine: paramsObj.productLine || "",
+      manufacturer: paramsObj.manufacturer || "",
+      vehicleModel: paramsObj.vehicleModel || "",
+      state: paramsObj.state || "",
+      city: paramsObj.city || "",
     };
-    const urlPrice = params.maxPrice ? Number(params.maxPrice) : 20000;
-    const urlPage = params.page ? Number(params.page) : 1;
+
+    const urlPriceMax = paramsObj.maxPrice ? Number(paramsObj.maxPrice) : 20000;
+    const urlPage = paramsObj.page ? Number(paramsObj.page) : 1;
 
     setSelectedFilters(urlFilters);
-    setSelectedSubcategory(params.subcategory || ''); 
-    setPriceRange(urlPrice);
+    setSelectedSubcategory(paramsObj.subcategory || "");
+    setPriceRange(urlPriceMax);
     setCurrentPage(urlPage);
   }, [searchParams]);
+
 
   const typeBrandMap = {
     inverter: ["Su-vastika", "Luminous", "Microtek"],
@@ -233,20 +246,20 @@ export default function ProductListing() {
 
   const normalizedType = selectedFilters.type?.toLowerCase().trim() || "";
   let allowedBrandNames = [];
-  
+
   if (normalizedType.split("-")[0] === "solar") {
     allowedBrandNames = typeBrandMap["solar"];
   } else {
     allowedBrandNames = typeBrandMap[normalizedType] || [];
   }
-  
+
   const filteredBrandList =
     allowedBrandNames.length > 0
       ? filters.brands.filter((brand) =>
-          allowedBrandNames
-            .map((name) => name.toLowerCase().trim())
-            .includes(brand.name.toLowerCase().trim())
-        )
+        allowedBrandNames
+          .map((name) => name.toLowerCase().trim())
+          .includes(brand.name.toLowerCase().trim())
+      )
       : filters.brands;
 
   useEffect(() => {
@@ -262,9 +275,15 @@ export default function ProductListing() {
     if (selectedFilters.type) params.set("type", selectedFilters.type);
     if (selectedFilters.rating) params.set("rating", selectedFilters.rating);
     if (selectedFilters.batteryType) params.set("batteryType", selectedFilters.batteryType);
+    if (selectedFilters.productLine) params.set("productLine", selectedFilters.productLine);
+    if (selectedFilters.manufacturer) params.set("manufacturer", selectedFilters.manufacturer);
+    if (selectedFilters.vehicleModel) params.set("vehicleModel", selectedFilters.vehicleModel);
+    if (selectedFilters.state) params.set("state", selectedFilters.state);
+    if (selectedFilters.city) params.set("city", selectedFilters.city);
+
     if (selectedFilters.capacityRange) {
       params.set("capacityRange", selectedFilters.capacityRange);
-      // ✅ Also emit minAH/maxAH for backend-ready links
+
       const { minAH, maxAH } = parseCapacityRange(selectedFilters.capacityRange);
       if (minAH !== undefined) params.set("minAH", String(minAH));
       if (maxAH !== undefined) params.set("maxAH", String(maxAH));
@@ -272,7 +291,7 @@ export default function ProductListing() {
     params.set("minPrice", 0);
     params.set("maxPrice", priceRange);
     params.set("page", currentPage);
-    
+
     const newUrl = `/products?${params.toString()}`;
     if (window.location.pathname + window.location.search !== newUrl) {
       navigate(newUrl, { replace: true });
@@ -280,64 +299,70 @@ export default function ProductListing() {
   }, [selectedFilters, selectedSubcategory, priceRange, currentPage, navigate]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProductsAndFilters = async () => {
       try {
         setLoading(true);
 
-        const params = Object.fromEntries([...searchParams]);
+        const paramsObj = Object.fromEntries([...searchParams]);
 
-        // Prefer explicit minAH/maxAH if present; otherwise derive from capacityRange
-        const explicitMinAH = params.minAH ? Number(params.minAH) : undefined;
-        const explicitMaxAH = params.maxAH ? Number(params.maxAH) : undefined;
-        const derived = parseCapacityRange(params.capacityRange || "");
-        const minAH = explicitMinAH ?? derived.minAH;
-        const maxAH = explicitMaxAH ?? derived.maxAH;
+        // capacity handling
+        const explicitMinAH = paramsObj.minAH ? Number(paramsObj.minAH) : undefined;
+        const explicitMaxAH = paramsObj.maxAH ? Number(paramsObj.maxAH) : undefined;
+        const derivedRange = parseCapacityRange(paramsObj.capacityRange || "");
+        const minAH = explicitMinAH ?? derivedRange.minAH;
+        const maxAH = explicitMaxAH ?? derivedRange.maxAH;
 
-        const filtersToSend = {
-          brand: params.brand || "",
-          category: params.category || "",
-          subcategory : params.subcategory || "",
-          type: params.type || "",
-          rating: params.rating || undefined,
-          batteryType: params.batteryType || undefined,
-          capacityRange: params.capacityRange || undefined, // keep for UI, but backend will use minAH/maxAH
-          minAH, // ✅ send to backend
-          maxAH, // ✅ send to backend
-          minPrice: params.minPrice ? Number(params.minPrice) : 0,
-          maxPrice: params.maxPrice ? Number(params.maxPrice) : 20000,
-          page: params.page ? Number(params.page) : 1,
+        const requestFilters = {
+          brand: paramsObj.brand || "",
+          category: paramsObj.category || "",
+          subcategory: paramsObj.subcategory || "",
+          type: paramsObj.type || "",
+          rating: paramsObj.rating || undefined,
+          batteryType: paramsObj.batteryType || undefined,
+          capacityRange: paramsObj.capacityRange || undefined,
+          minAH,
+          maxAH,
+          minPrice: paramsObj.minPrice ? Number(paramsObj.minPrice) : 0,
+          maxPrice: paramsObj.maxPrice ? Number(paramsObj.maxPrice) : 20000,
+          page: paramsObj.page ? Number(paramsObj.page) : 1,
           limit: 8,
+
+          // NEW: from Product Finder
+          productLine: paramsObj.productLine || "",
+          manufacturer: paramsObj.manufacturer || "",
+          vehicleModel: paramsObj.vehicleModel || "",
+          state: paramsObj.state || "",
+          city: paramsObj.city || "",
         };
 
-        Object.keys(filtersToSend).forEach((key) => {
-          if (filtersToSend[key] === "" || filtersToSend[key] === undefined) {
-            delete filtersToSend[key];
+        // strip empties
+        Object.keys(requestFilters).forEach((key) => {
+          if (requestFilters[key] === "" || requestFilters[key] === undefined) {
+            delete requestFilters[key];
           }
         });
 
-        const [productsData, filterOptions] = await Promise.all([
-          productService.getAllProducts(filtersToSend),
+        const [productsResponse, filterOptionsResponse] = await Promise.all([
+          productService.getAllProducts(requestFilters),
           productService.getFilterOptions(),
         ]);
 
-        setProducts(productsData.data);
-        setFilters(filterOptions);
+        setProducts(productsResponse.data);
+        setFilters(filterOptionsResponse);
 
-        if (productsData.pagination) {
-          setTotalPages(productsData.pagination.totalPages || 1);
-        } else {
-          setTotalPages(1);
-        }
-        setTotalCount(productsData.total || 0);
+        setTotalPages(productsResponse.pagination?.totalPages || 1);
+        setTotalCount(productsResponse.total || 0);
       } catch (err) {
         setError(err.message);
       } finally {
         setTimeout(() => setLoading(false), 300);
       }
     };
-    fetchData();
+
+    fetchProductsAndFilters();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [searchParams, selectedFilters.capacityRange]);
+
 
   let filteredProducts = products;
   if (selectedFilters.rating) {
@@ -352,7 +377,7 @@ export default function ProductListing() {
       brand: "",
       category: "",
       type: selectedFilters.type,
-      capacityRange: "", 
+      capacityRange: "",
     });
     setCurrentPage(1);
   };
@@ -372,9 +397,9 @@ export default function ProductListing() {
   const selectedBrandObj = filters.brands.find(
     (b) => b._id === selectedFilters.brand
   );
-  
+
   const selectedBrandName = selectedBrandObj ? selectedBrandObj.name.trim().toLowerCase() : '';
-  
+
   const allowedBatteryTypes =
     selectedFilters.type === "battery" && selectedBrandName
       ? batteryTypeMap[selectedBrandName] || []
@@ -389,8 +414,8 @@ export default function ProductListing() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Something Went Wrong</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
           >
             Try Again
@@ -427,14 +452,15 @@ export default function ProductListing() {
                   ...filters,
                   brands: filteredBrandList,
                   batteryTypes: allowedBatteryTypes.length
-                  ? allowedBatteryTypes.map(bt => ({
+                    ? allowedBatteryTypes.map(bt => ({
                       value: bt,
-                      label: bt.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                      label: bt.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
                     }))
-                  : filters.batteryTypes,
+                    : filters.batteryTypes,
                 }}
                 currentType={searchParams.get("type") || ""}
               />
+
             </div>
           </div>
 
@@ -464,11 +490,11 @@ export default function ProductListing() {
                       ...filters,
                       brands: filteredBrandList,
                       batteryTypes: allowedBatteryTypes.length
-                      ? allowedBatteryTypes.map(bt => ({
+                        ? allowedBatteryTypes.map(bt => ({
                           value: bt,
                           label: bt.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
                         }))
-                      : filters.batteryTypes,
+                        : filters.batteryTypes,
                     }}
                     currentType={searchParams.get("type") || ""}
                   />
@@ -489,11 +515,11 @@ export default function ProductListing() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
                   {filteredProducts.map((prod, index) => {
-const displayPrice = prod.category?.name?.toLowerCase() === 'battery' 
-? (prod?.priceWithoutOldBattery || prod?.sellingPrice || prod?.price || prod?.mrp)
-: (prod?.price || prod?.sellingPrice || prod?.mrp);
-const hasDiscount = prod.mrp && displayPrice && prod.mrp > displayPrice;
-                    const discountPercentage = hasDiscount 
+                    const displayPrice = prod.category?.name?.toLowerCase() === 'battery'
+                      ? (prod?.priceWithoutOldBattery || prod?.sellingPrice || prod?.price || prod?.mrp)
+                      : (prod?.price || prod?.sellingPrice || prod?.mrp);
+                    const hasDiscount = prod.mrp && displayPrice && prod.mrp > displayPrice;
+                    const discountPercentage = hasDiscount
                       ? Math.round(((prod.mrp - displayPrice) / prod.mrp) * 100)
                       : 0;
 
@@ -504,17 +530,17 @@ const hasDiscount = prod.mrp && displayPrice && prod.mrp > displayPrice;
                       >
                         {/* Badges */}
                         <div className="absolute top-4 left-4 z-10 flex flex-row justify-between w-[95%] sm:w-[90%] gap-2">
-                         
+
                           {hasDiscount && (
                             <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
                               -{discountPercentage}% OFF
                             </div>
                           )}
-                           {index < 3 && (
+                          {index < 3 && (
                             <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
                               ⭐ Bestseller
                             </div>
-                          )}  
+                          )}
                         </div>
 
                         {/* Product Image */}
@@ -538,7 +564,7 @@ const hasDiscount = prod.mrp && displayPrice && prod.mrp > displayPrice;
                               {prod.category?.name || "Product"}
                             </p>
                           </div>
-                          
+
                           <h3 className="text-lg font-bold text-gray-900 line-clamp-3 leading-tight mb-3 min-h-[3.5rem]">
                             {prod.name}
                           </h3>
@@ -562,50 +588,50 @@ const hasDiscount = prod.mrp && displayPrice && prod.mrp > displayPrice;
                             </span>
                           </div>
 
-                      {/* Price */}
-<div className="mt-auto">
-  {displayPrice ? (
-    <div className="mb-4">
-      <div className="flex items-baseline gap-2">
-        <p className="text-2xl font-bold text-gray-900">
-          ₹{displayPrice.toLocaleString()}
-        </p>
-        {/* Show strikethrough for ALL products that have discount */}
-        {hasDiscount && (
-          <p className="text-lg text-gray-400 line-through">
-            ₹{prod.mrp.toLocaleString()}
-          </p>
-        )}
-      </div>
-      
-      {/* Battery Exchange Options - Show if any exchange price exists */}
-      {prod.category?.name?.toLowerCase() === 'battery' && 
-       (prod.priceWithOldBattery || prod.priceWithoutOldBattery) && (
-        <div className="mt-3 bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
-          {prod.priceWithoutOldBattery && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Without Exchange:</span>
-              <span className="font-semibold text-gray-900">
-                ₹{prod.priceWithoutOldBattery.toLocaleString()}
-              </span>
-            </div>
-          )}
-          {prod.priceWithOldBattery && (
-            <div className="flex justify-between items-center border-t pt-2">
-              <span className="text-green-600 font-medium">With Old Battery:</span>
-              <span className="font-bold text-green-600">
-                ₹{prod.priceWithOldBattery.toLocaleString()}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  ) : (
-    <p className="text-lg font-semibold text-blue-600 mb-4">
-      Contact for Price
-    </p>
-  )}
+                          {/* Price */}
+                          <div className="mt-auto">
+                            {displayPrice ? (
+                              <div className="mb-4">
+                                <div className="flex items-baseline gap-2">
+                                  <p className="text-2xl font-bold text-gray-900">
+                                    ₹{displayPrice.toLocaleString()}
+                                  </p>
+                                  {/* Show strikethrough for ALL products that have discount */}
+                                  {hasDiscount && (
+                                    <p className="text-lg text-gray-400 line-through">
+                                      ₹{prod.mrp.toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* Battery Exchange Options - Show if any exchange price exists */}
+                                {prod.category?.name?.toLowerCase() === 'battery' &&
+                                  (prod.priceWithOldBattery || prod.priceWithoutOldBattery) && (
+                                    <div className="mt-3 bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
+                                      {prod.priceWithoutOldBattery && (
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-gray-600">Without Exchange:</span>
+                                          <span className="font-semibold text-gray-900">
+                                            ₹{prod.priceWithoutOldBattery.toLocaleString()}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {prod.priceWithOldBattery && (
+                                        <div className="flex justify-between items-center border-t pt-2">
+                                          <span className="text-green-600 font-medium">With Old Battery:</span>
+                                          <span className="font-bold text-green-600">
+                                            ₹{prod.priceWithOldBattery.toLocaleString()}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                              </div>
+                            ) : (
+                              <p className="text-lg font-semibold text-blue-600 mb-4">
+                                Contact for Price
+                              </p>
+                            )}
 
 
 

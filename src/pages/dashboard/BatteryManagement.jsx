@@ -50,7 +50,6 @@ const BatteryManagement = () => {
     productLine: '',
     brand: '',
     category: '',
-    subcategory: '',
     name: '',
     description: '',
     features: [],
@@ -76,7 +75,6 @@ const BatteryManagement = () => {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
     batteryType: '',
-    subcategory: '',
     minAH: '',
     maxAH: '',
     minPrice: '',
@@ -84,22 +82,12 @@ const BatteryManagement = () => {
     manufacturer: '',
     productLine: ''
   });
-
-  const subcategoryOptions = [
-    { value: 'truck_battery', label: 'Truck Battery' },
-    { value: '2_wheeler_battery', label: '2 Wheeler Battery' },
-    { value: 'solar_battery', label: 'Solar Battery' },
-    { value: 'genset_battery', label: 'Genset Battery' },
-    { value: 'four_wheeler_battery', label: 'Four Wheeler Battery' }
-  ];
-
   const fetchBatteries = useCallback(async () => {
     setLoading(true);
     try {
       let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
       if (search) queryParams += `&search=${search}`;
       if (filters.batteryType) queryParams += `&batteryType=${filters.batteryType}`;
-      if (filters.subcategory) queryParams += `&subcategory=${filters.subcategory}`;
       if (filters.minAH) queryParams += `&minAH=${filters.minAH}`;
       if (filters.maxAH) queryParams += `&maxAH=${filters.maxAH}`;
       if (filters.minPrice) queryParams += `&minPrice=${filters.minPrice}`;
@@ -165,10 +153,7 @@ const BatteryManagement = () => {
     fetchVehicleModels();
   }, [fetchBatteries]);
 
-  const formatSubcategoryDisplay = (subcategory) => {
-    const option = subcategoryOptions.find(opt => opt.value === subcategory);
-    return option ? option.label : subcategory;
-  };
+
 
   const handleSearchChange = (e) => setSearch(e.target.value);
   const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchBatteries(); };
@@ -178,7 +163,7 @@ const BatteryManagement = () => {
   };
   const applyFilters = () => { setPagination({ ...pagination, page: 0 }); fetchBatteries(); };
   const resetFilters = () => {
-    setFilters({ batteryType: '', subcategory: '', minAH: '', maxAH: '', minPrice: '', maxPrice: '', manufacturer: '', productLine: '' });
+    setFilters({ batteryType: '', minAH: '', maxAH: '', minPrice: '', maxPrice: '', manufacturer: '', productLine: '' });
     setSearch('');
     setPagination({ ...pagination, page: 0 });
     fetchBatteries();
@@ -222,7 +207,6 @@ const BatteryManagement = () => {
         productLine: battery.productLine?._id || battery.productLine || '',
         brand: battery.brand?._id || battery.brand || '',
         category: battery.category?._id || battery.category || '',
-        subcategory: battery.subcategory || '',
         name: battery.name,
         description: battery.description || '',
         features: battery.features || [],
@@ -252,7 +236,6 @@ const BatteryManagement = () => {
         productLine: '',
         brand: '',
         category: '',
-        subcategory: '',
         name: '',
         description: '',
         features: [],
@@ -386,24 +369,6 @@ const BatteryManagement = () => {
               </Grid>
               <Grid item xs={12} sm={2}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Subcategory</InputLabel>
-                  <Select
-                    name="subcategory"
-                    value={filters.subcategory}
-                    onChange={handleFilterChange}
-                    label="Subcategory"
-                  >
-                    <MenuItem value="">All Subcategories</MenuItem>
-                    {subcategoryOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <FormControl fullWidth size="small">
                   <InputLabel>Product Line</InputLabel>
                   <Select
                     name="productLine"
@@ -481,7 +446,6 @@ const BatteryManagement = () => {
               <TableCell>Name</TableCell>
               <TableCell>Product Line</TableCell>
               <TableCell>Category</TableCell>
-              <TableCell>Subcategory</TableCell>
               <TableCell>Brand</TableCell>
               <TableCell>Manufacturer</TableCell>
               <TableCell>Vehicle Model</TableCell>
@@ -513,7 +477,6 @@ const BatteryManagement = () => {
                   <TableCell>{battery?.name}</TableCell>
                   <TableCell>{battery?.productLine?.name || 'N/A'}</TableCell>
                   <TableCell>{battery?.category?.name || 'N/A'}</TableCell>
-                  <TableCell>{formatSubcategoryDisplay(battery?.subcategory || "N/A")}</TableCell>
                   <TableCell>{battery?.brand?.name || 'N/A'}</TableCell>
                   <TableCell>{battery?.manufacturer?.name || 'N/A'}</TableCell>
                   <TableCell>{battery?.vehicleModel?.name || 'N/A'}</TableCell>
@@ -577,23 +540,6 @@ const BatteryManagement = () => {
                   >
                     {categories.map((category) => (
                       <MenuItem key={category._id} value={category._id}>{category.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel>Subcategory</InputLabel>
-                  <Select
-                    name="subcategory"
-                    value={formData.subcategory}
-                    onChange={handleInputChange}
-                    label="Subcategory"
-                  >
-                    {subcategoryOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>

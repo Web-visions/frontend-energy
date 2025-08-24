@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { gsap } from 'gsap';
-import { slide1, slide2, slide3 } from '../assets';
+import { slider_1, slider_2, slider_3, slider_4 } from '../assets';
 import { useNavigate } from 'react-router-dom';
 
 const SliderComponent = () => {
@@ -10,9 +10,10 @@ const SliderComponent = () => {
   const navigate = useNavigate();
 
   const slides = [
-    { id: 1, image: slide1, title: "Premium Battery Solutions", subtitle: "Reliable Power for Every Need", description: "High-performance batteries for automotive, industrial, and home applications with extended warranty coverage." },
-    { id: 2, image: slide2, title: "Inverter & UPS Systems", subtitle: "Uninterrupted Power Supply", description: "Advanced power backup solutions for homes and offices with efficient energy management." },
-    { id: 3, image: slide3, title: "Solar Power Solutions", subtitle: "Clean Energy for Tomorrow", description: "Complete solar systems with panels, inverters, and batteries for sustainable power generation." },
+    { id: 1, image: slider_4, title: "Premium Battery Solutions", subtitle: "Reliable Power for Every Need", description: "High-performance batteries for automotive, industrial, and home applications with extended warranty coverage." },
+    { id: 2, image: slider_2, title: "Inverter & UPS Systems", subtitle: "Uninterrupted Power Supply", description: "Advanced power backup solutions for homes and offices with efficient energy management." },
+    { id: 3, image: slider_1, title: "Solar Power Solutions", subtitle: "Clean Energy for Tomorrow", description: "Complete solar systems with panels, inverters, and batteries for sustainable power generation." },
+    { id: 4, image: slider_3, title: "Smart Energy Management", subtitle: "Efficiency Meets Innovation", description: "Intelligent energy monitoring and management solutions to optimize usage, reduce costs, and ensure sustainable power consumption." },
   ];
 
   // Auto-slide
@@ -41,7 +42,7 @@ const SliderComponent = () => {
                   key={slide.id}
                   className={`absolute inset-0 transition-opacity duration-700 ${currentSlide === index ? 'opacity-100' : 'opacity-0'}`}
                 >
-                  <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+                  <img src={slide.image} alt={slide.title} className="w-full h-full object-cover brightness-[0.9]" />
                   <div className="absolute inset-0 bg-black bg-opacity-40" />
                   <div className="absolute bottom-8 left-8 right-8 text-white">
                     <h2 className="text-4xl md:text-6xl font-bold mb-4">{slide.title}</h2>

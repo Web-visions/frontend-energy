@@ -33,6 +33,7 @@ const UPSManagement = () => {
   const [upsList, setUpsList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [productLines, setProductLines] = useState([]); // <-- NEW
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -43,6 +44,7 @@ const UPSManagement = () => {
   const [formData, setFormData] = useState({
     brand: "",
     category: '',
+    productLine: '', // <-- NEW
     name: '',
     description: '',
     features: [],
@@ -75,7 +77,7 @@ const UPSManagement = () => {
     setLoading(true);
     try {
       let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-      if (search) queryParams += `&search=${search}`;
+      if (search) queryParams += `&search=${encodeURIComponent(search)}`;
       if (filters.minWattage) queryParams += `&minWattage=${filters.minWattage}`;
       if (filters.maxWattage) queryParams += `&maxWattage=${filters.maxWattage}`;
       if (filters.minPrice) queryParams += `&minPrice=${filters.minPrice}`;
@@ -88,8 +90,8 @@ const UPSManagement = () => {
         limit: response.pagination.limit,
         total: response.total
       });
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to fetch UPS');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to fetch UPS');
     } finally {
       setLoading(false);
     }
@@ -99,25 +101,35 @@ const UPSManagement = () => {
     try {
       const response = await getData('/categories');
       setCategories(response.data);
-    } catch { }
+    } catch { /* no-op */ }
   };
+
   const fetchBrands = async () => {
     try {
       const response = await getData('/brands');
       setBrands(response.data);
-    } catch { }
+    } catch { /* no-op */ }
+  };
+
+  const fetchProductLines = async () => { // <-- NEW
+    try {
+      // Adjust endpoint name if yours differs (e.g., '/productlines')
+      const response = await getData('/product-lines');
+      setProductLines(response.productLines || []);
+    } catch { /* no-op */ }
   };
 
   useEffect(() => {
     fetchUps();
     fetchCategories();
     fetchBrands();
+    fetchProductLines(); // <-- NEW
   }, [fetchUps]);
 
-  const handleSearchChange = (e) => setSearch(e.target.value);
+  const handleSearchChange = (event) => setSearch(event.target.value);
   const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchUps(); };
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
   const applyFilters = () => { setPagination({ ...pagination, page: 0 }); fetchUps(); };
@@ -131,17 +143,17 @@ const UPSManagement = () => {
   const handleChangeRowsPerPage = (event) => setPagination({ ...pagination, limit: parseInt(event.target.value, 10), page: 0 });
 
   // Form Input Handlers
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
   };
-  const handleFeaturesInputChange = (e) => setFeaturesInput(e.target.value);
+  const handleFeaturesInputChange = (event) => setFeaturesInput(event.target.value);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
     if (file) {
       setImageFile(file);
       const reader = new FileReader();
@@ -155,6 +167,7 @@ const UPSManagement = () => {
       setFormData({
         brand: ups.brand?._id || ups.brand || "",
         category: ups.category?._id || ups.category || "",
+        productLine: ups.productLine?._id || ups.productLine || "", // <-- NEW
         name: ups.name,
         description: ups.description || '',
         features: ups.features || [],
@@ -179,6 +192,7 @@ const UPSManagement = () => {
       setFormData({
         brand: "",
         category: '',
+        productLine: '', // <-- NEW
         name: '',
         description: '',
         features: [],
@@ -205,51 +219,50 @@ const UPSManagement = () => {
 
   const handleCloseModal = () => setOpenModal(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
       const cleanedFeaturesArray = featuresInput
         .split(',')
-        .map(f => f.trim())
+        .map(feature => feature.trim())
         .filter(Boolean);
 
-      const formDataObj = new FormData();
+      const multipartFormData = new FormData();
       Object.keys(formData).forEach(key => {
         if (key === 'features') {
-          formDataObj.append('features', JSON.stringify(cleanedFeaturesArray));
+          multipartFormData.append('features', JSON.stringify(cleanedFeaturesArray));
         } else {
-          formDataObj.append(key, formData[key]);
+          multipartFormData.append(key, formData[key]);
         }
       });
-      if (imageFile) formDataObj.append('image', imageFile);
+      if (imageFile) multipartFormData.append('image', imageFile);
 
-      let response;
       if (isEditing) {
-        response = await putData(`/ups/${currentId}`, formDataObj);
+        await putData(`/ups/${currentId}`, multipartFormData);
         toast.success('UPS updated successfully');
       } else {
-        response = await postData('/ups', formDataObj);
+        await postData('/ups', multipartFormData);
         toast.success('UPS created successfully');
       }
 
       handleCloseModal();
       fetchUps();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'An error occurred');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  // Status and delete (assuming isActive status exists in your model, else remove toggle button)
+  // Status and delete (assuming isActive exists; otherwise remove this)
   const handleToggleStatus = async (id, currentStatus) => {
     try {
       await putData(`/ups/${id}/status`, { isActive: !currentStatus });
       toast.success(`UPS ${currentStatus ? 'deactivated' : 'activated'} successfully`);
       fetchUps();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'An error occurred');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'An error occurred');
     }
   };
   const handleDelete = async (id) => {
@@ -258,8 +271,8 @@ const UPSManagement = () => {
         await deleteData(`/ups/${id}`);
         toast.success('UPS deleted successfully');
         fetchUps();
-      } catch (err) {
-        toast.error(err.response?.data?.message || 'An error occurred');
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'An error occurred');
       }
     }
   };
@@ -269,6 +282,7 @@ const UPSManagement = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         UPS Management
       </Typography>
+
       {/* Search and Filter Section */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -335,6 +349,7 @@ const UPSManagement = () => {
               <TableCell>Name</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Brand</TableCell>
+              <TableCell>Product Line</TableCell> {/* <-- NEW */}
               <TableCell>Wattage</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>MRP</TableCell>
@@ -347,35 +362,40 @@ const UPSManagement = () => {
           <TableBody>
             {loading && upsList.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center">Loading...</TableCell>
+                <TableCell colSpan={12} align="center">Loading...</TableCell>
               </TableRow>
             ) : upsList.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center">No UPS found</TableCell>
+                <TableCell colSpan={12} align="center">No UPS found</TableCell>
               </TableRow>
             ) : (
-              upsList.map((ups) => (
-                <TableRow key={ups._id}>
+              upsList.map((upsItem) => (
+                <TableRow key={upsItem._id}>
                   <TableCell>
-                    {ups.image ? (
-                      <img src={`${img_url}${ups.image}`} alt={ups.name} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }} />
+                    {upsItem.image ? (
+                      <img
+                        src={`${img_url}${upsItem.image}`}
+                        alt={upsItem.name}
+                        style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                      />
                     ) : 'No image'}
                   </TableCell>
-                  <TableCell>{ups.name}</TableCell>
-                  <TableCell>{ups.category?.name || 'N/A'}</TableCell>
-                  <TableCell>{ups.brand?.name || 'N/A'}</TableCell>
-                  <TableCell>{ups.outputPowerWattage || 'N/A'} W</TableCell>
-                  <TableCell>{ups.type || 'N/A'}</TableCell>
-                  <TableCell>₹{ups.mrp || 'N/A'}</TableCell>
-                  <TableCell>₹{ups.sellingPrice || 'N/A'}</TableCell>
-                  <TableCell>{ups.warranty || 'N/A'}</TableCell>
-                  <TableCell>{ups.isFeatured ? '✔️' : '❌'}</TableCell>
+                  <TableCell>{upsItem.name}</TableCell>
+                  <TableCell>{upsItem.category?.name || 'N/A'}</TableCell>
+                  <TableCell>{upsItem.brand?.name || 'N/A'}</TableCell>
+                  <TableCell>{upsItem.productLine?.name || 'N/A'}</TableCell> {/* <-- NEW */}
+                  <TableCell>{upsItem.outputPowerWattage || 'N/A'} W</TableCell>
+                  <TableCell>{upsItem.type || 'N/A'}</TableCell>
+                  <TableCell>₹{upsItem.mrp || 'N/A'}</TableCell>
+                  <TableCell>₹{upsItem.sellingPrice || 'N/A'}</TableCell>
+                  <TableCell>{upsItem.warranty || 'N/A'}</TableCell>
+                  <TableCell>{upsItem.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
-                    <IconButton onClick={() => handleOpenModal(ups)} color="primary"><FiEdit /></IconButton>
-                    <IconButton onClick={() => handleDelete(ups._id)} color="error"><FiTrash2 /></IconButton>
+                    <IconButton onClick={() => handleOpenModal(upsItem)} color="primary"><FiEdit /></IconButton>
+                    <IconButton onClick={() => handleDelete(upsItem._id)} color="error"><FiTrash2 /></IconButton>
                     {/* If you have isActive in your model */}
-                    {/* <IconButton onClick={() => handleToggleStatus(ups._id, ups.isActive)} color={ups.isActive ? "success" : "default"}>
-                      {ups.isActive ? <FiToggleRight /> : <FiToggleLeft />}
+                    {/* <IconButton onClick={() => handleToggleStatus(upsItem._id, upsItem.isActive)} color={upsItem.isActive ? "success" : "default"}>
+                      {upsItem.isActive ? <FiToggleRight /> : <FiToggleLeft />}
                     </IconButton> */}
                   </TableCell>
                 </TableRow>
@@ -415,6 +435,7 @@ const UPSManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Brand</InputLabel>
@@ -430,6 +451,24 @@ const UPSManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* NEW: Product Line */}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Product Line</InputLabel>
+                  <Select
+                    name="productLine"
+                    value={formData.productLine}
+                    onChange={handleInputChange}
+                    label="Product Line"
+                  >
+                    {productLines.map((line) => (
+                      <MenuItem key={line._id} value={line._id}>{line.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField required fullWidth label="Name" name="name" value={formData.name} onChange={handleInputChange} />
               </Grid>

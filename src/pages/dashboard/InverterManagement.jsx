@@ -34,6 +34,7 @@ const InverterManagement = () => {
   const [inverters, setInverters] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [productLines, setProductLines] = useState([]); // <-- NEW
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -44,6 +45,7 @@ const InverterManagement = () => {
   const [formData, setFormData] = useState({
     brand: "",
     category: '',
+    productLine: '', // <-- NEW
     name: '',
     description: '',
     features: [],
@@ -65,25 +67,29 @@ const InverterManagement = () => {
     maxCapacity: '',
     minPrice: '',
     maxPrice: ''
+    // you can add productLine filter later if needed
   });
 
   const fetchInverters = useCallback(async () => {
     setLoading(true);
     try {
       let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-      if (search) queryParams += `&search=${search}`;
+      if (search) queryParams += `&search=${encodeURIComponent(search)}`;
       if (filters.minCapacity) queryParams += `&minCapacity=${filters.minCapacity}`;
       if (filters.maxCapacity) queryParams += `&maxCapacity=${filters.maxCapacity}`;
       if (filters.minPrice) queryParams += `&minPrice=${filters.minPrice}`;
       if (filters.maxPrice) queryParams += `&maxPrice=${filters.maxPrice}`;
+      // if you later add a productLine filter UI, do:
+      // if (filters.productLine) queryParams += `&productLine=${filters.productLine}`;
+
       const response = await getData(`/inverters?${queryParams}`);
       setInverters(response.data);
-      setPagination({
-        ...pagination,
+      setPagination(prev => ({
+        ...prev,
         page: response.pagination.page - 1, // backend is 1-based, TablePagination is 0-based
         limit: response.pagination.limit,
         total: response.total
-      });
+      }));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to fetch inverters');
     } finally {
@@ -95,27 +101,38 @@ const InverterManagement = () => {
     try {
       const response = await getData('/categories');
       setCategories(response.data);
-    } catch { }
+    } catch { /* no-op */ }
   };
+
   const fetchBrands = async () => {
     try {
       const response = await getData('/brands');
       setBrands(response.data);
-    } catch { }
+    } catch { /* no-op */ }
+  };
+
+  const fetchProductLines = async () => { // <-- NEW
+    try {
+      // adjust endpoint if yours differs, e.g., '/product-lines' or '/productlines'
+      const response = await getData('/product-lines');
+      setProductLines(response.productLines || []);
+    } catch {
+      // do not block UI on failure; keep going
+    }
   };
 
   useEffect(() => {
     fetchInverters();
     fetchCategories();
     fetchBrands();
+    fetchProductLines(); // <-- NEW
   }, [fetchInverters]);
 
-  // Search/filter/pagination handlers unchanged...
-
-  const handleSearchChange = (e) => setSearch(e.target.value);
+  // Search / filter / pagination handlers
+  const handleSearchChange = (event) => setSearch(event.target.value);
   const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchInverters(); };
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
   const applyFilters = () => { setPagination({ ...pagination, page: 0 }); fetchInverters(); };
@@ -129,19 +146,18 @@ const InverterManagement = () => {
   const handleChangeRowsPerPage = (event) => setPagination({ ...pagination, limit: parseInt(event.target.value, 10), page: 0 });
 
   // Form Input Handlers
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+  const handleInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData(prev => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value
-    });
+    }));
   };
-  // Use a separate input for features as string
-  const handleFeaturesInputChange = (e) => setFeaturesInput(e.target.value);
+  const handleFeaturesInputChange = (event) => setFeaturesInput(event.target.value);
 
   // Image handler
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
     if (file) {
       setImageFile(file);
       const reader = new FileReader();
@@ -156,6 +172,7 @@ const InverterManagement = () => {
       setFormData({
         brand: inverter.brand?._id || inverter.brand || "",
         category: inverter.category?._id || inverter.category || "",
+        productLine: inverter.productLine?._id || inverter.productLine || "", // <-- NEW
         name: inverter.name,
         description: inverter.description || '',
         features: inverter.features || [],
@@ -175,6 +192,7 @@ const InverterManagement = () => {
       setFormData({
         brand: "",
         category: '',
+        productLine: '', // <-- NEW
         name: '',
         description: '',
         features: [],
@@ -197,32 +215,30 @@ const InverterManagement = () => {
   const handleCloseModal = () => setOpenModal(false);
 
   // Submit Form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
-      // always trim and split features
       const cleanedFeaturesArray = featuresInput
         .split(',')
-        .map(f => f.trim())
+        .map(feature => feature.trim())
         .filter(Boolean);
 
-      const formDataObj = new FormData();
+      const multipartFormData = new FormData();
       Object.keys(formData).forEach(key => {
         if (key === 'features') {
-          formDataObj.append('features', JSON.stringify(cleanedFeaturesArray));
+          multipartFormData.append('features', JSON.stringify(cleanedFeaturesArray));
         } else {
-          formDataObj.append(key, formData[key]);
+          multipartFormData.append(key, formData[key]);
         }
       });
-      if (imageFile) formDataObj.append('image', imageFile);
+      if (imageFile) multipartFormData.append('image', imageFile);
 
-      let response;
       if (isEditing) {
-        response = await putData(`/inverters/${currentId}`, formDataObj);
+        await putData(`/inverters/${currentId}`, multipartFormData);
         toast.success('Inverter updated successfully');
       } else {
-        response = await postData('/inverters', formDataObj);
+        await postData('/inverters', multipartFormData);
         toast.success('Inverter created successfully');
       }
 
@@ -235,7 +251,7 @@ const InverterManagement = () => {
     }
   };
 
-  // Status and delete unchanged
+  // Status and delete
   const handleToggleStatus = async (id, currentStatus) => {
     try {
       await putData(`/inverters/${id}/status`, { isActive: !currentStatus });
@@ -245,6 +261,7 @@ const InverterManagement = () => {
       toast.error(err.response?.data?.message || 'An error occurred');
     }
   };
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this inverter?')) {
       try {
@@ -262,6 +279,7 @@ const InverterManagement = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Inverter Management
       </Typography>
+
       {/* Search and Filter Section */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -327,6 +345,8 @@ const InverterManagement = () => {
               <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Category</TableCell>
+              <TableCell>Brand</TableCell>
+              <TableCell>Product Line</TableCell> {/* <-- NEW */}
               <TableCell>Capacity</TableCell>
               <TableCell>MRP</TableCell>
               <TableCell>Warranty</TableCell>
@@ -337,28 +357,31 @@ const InverterManagement = () => {
           <TableBody>
             {loading && inverters.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">Loading...</TableCell>
+                <TableCell colSpan={10} align="center">Loading...</TableCell>
               </TableRow>
             ) : inverters.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">No inverters found</TableCell>
+                <TableCell colSpan={10} align="center">No inverters found</TableCell>
               </TableRow>
             ) : (
-              inverters.map((inverter) => {
-                console.log(img_url + inverter.image, "INV")
-                return <TableRow key={inverter._id}>
+              inverters.map((inverter) => (
+                <TableRow key={inverter._id}>
                   <TableCell>
-                    {inverter ? (
+                    {inverter?.image ? (
                       <img
                         src={`${img_url}${inverter.image}`}
                         alt={inverter.name}
                         style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }}
-                        onError={e => { e.target.onerror = null; e.target.src = no_image; }}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = no_image; }}
                       />
-                    ) : <img src={no_image} alt='no image found' />}
+                    ) : (
+                      <img src={no_image} alt="no image found" style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }} />
+                    )}
                   </TableCell>
                   <TableCell>{inverter.name}</TableCell>
                   <TableCell>{inverter.category?.name || 'N/A'}</TableCell>
+                  <TableCell>{inverter.brand?.name || 'N/A'}</TableCell>
+                  <TableCell>{inverter.productLine?.name || 'N/A'}</TableCell> {/* <-- NEW */}
                   <TableCell>{inverter.capacity || 'N/A'}</TableCell>
                   <TableCell>₹{inverter.mrp || 'N/A'}</TableCell>
                   <TableCell>{inverter.warranty || 'N/A'}</TableCell>
@@ -371,7 +394,7 @@ const InverterManagement = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              })
+              ))
             )}
           </TableBody>
         </Table>
@@ -407,6 +430,7 @@ const InverterManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Brand</InputLabel>
@@ -422,6 +446,24 @@ const InverterManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* NEW: Product Line */}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Product Line</InputLabel>
+                  <Select
+                    name="productLine"
+                    value={formData.productLine}
+                    onChange={handleInputChange}
+                    label="Product Line"
+                  >
+                    {productLines.map((line) => (
+                      <MenuItem key={line._id} value={line._id}>{line.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField required fullWidth label="Name" name="name" value={formData.name} onChange={handleInputChange} />
               </Grid>

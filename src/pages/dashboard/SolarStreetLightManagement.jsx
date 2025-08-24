@@ -4,7 +4,7 @@ import {
   FormControl, InputLabel, Select, MenuItem, Grid, Typography, IconButton, Paper,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, InputAdornment
 } from "@mui/material";
-import { FiSearch, FiEdit, FiTrash2, FiPlus, FiPhoneCall, FiSend } from "react-icons/fi";
+import { FiSearch, FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
 import { getData, postData, putData, deleteData } from "../../utils/http";
 import { img_url } from "../../config/api_route";
 import { toast } from "react-hot-toast";
@@ -13,6 +13,7 @@ const SolarStreetLightManagement = () => {
   const [lights, setLights] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [productLines, setProductLines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -23,6 +24,7 @@ const SolarStreetLightManagement = () => {
   const [formData, setFormData] = useState({
     category: "",
     brand: "",
+    productLine: "",
     name: "",
     modelName: "",
     power: "",
@@ -36,39 +38,46 @@ const SolarStreetLightManagement = () => {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({ minPower: "", maxPower: "" });
 
-  // Fetch List
+  // Fetch list
   const fetchLights = useCallback(async () => {
     setLoading(true);
     try {
       let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-      if (search) queryParams += `&search=${search}`;
+      if (search) queryParams += `&search=${encodeURIComponent(search)}`;
       if (filters.minPower) queryParams += `&minPower=${filters.minPower}`;
       if (filters.maxPower) queryParams += `&maxPower=${filters.maxPower}`;
-      const res = await getData(`/solar-street-lights?${queryParams}`);
-      setLights(res.data || []);
-      setPagination((prev) => ({
+
+      const response = await getData(`/solar-street-lights?${queryParams}`);
+      setLights(response.data || []);
+      setPagination(prev => ({
         ...prev,
-        page: res.pagination?.page ? res.pagination.page - 1 : 0, // backend is 1-based, TablePagination is 0-based
-        limit: res.pagination?.limit || prev.limit,
-        total: res.total || 0
+        page: response.pagination?.page ? response.pagination.page - 1 : 0,
+        limit: response.pagination?.limit || prev.limit,
+        total: response.total || 0
       }));
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to fetch lights");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to fetch lights");
     } finally {
       setLoading(false);
     }
   }, [pagination.page, pagination.limit, search, filters]);
 
-  // Fetch Categories/Brands
+  // Fetch masters
   const fetchCategories = async () => { try { setCategories((await getData("/categories")).data); } catch { } };
   const fetchBrands = async () => { try { setBrands((await getData("/brands")).data); } catch { } };
+  const fetchProductLines = async () => {
+    try {
+      const response = await getData("/product-lines"); // adjust if your API differs
+      setProductLines(response.data || []);
+    } catch { }
+  };
 
-  useEffect(() => { fetchLights(); fetchCategories(); fetchBrands(); }, [fetchLights]);
+  useEffect(() => { fetchLights(); fetchCategories(); fetchBrands(); fetchProductLines(); }, [fetchLights]);
 
   // Table handlers
-  const handleSearchChange = (e) => setSearch(e.target.value);
+  const handleSearchChange = (event) => setSearch(event.target.value);
   const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchLights(); };
-  const handleFilterChange = (e) => setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleFilterChange = (event) => setFilters(prev => ({ ...prev, [event.target.name]: event.target.value }));
   const applyFilters = () => { setPagination({ ...pagination, page: 0 }); fetchLights(); };
   const resetFilters = () => {
     setFilters({ minPower: "", maxPower: "" });
@@ -76,19 +85,23 @@ const SolarStreetLightManagement = () => {
     setPagination({ ...pagination, page: 0 });
     fetchLights();
   };
-  const handlePageChange = (_, newPage) => setPagination((p) => ({ ...p, page: newPage }));
-  const handleChangeRowsPerPage = (e) => setPagination((p) => ({ ...p, limit: parseInt(e.target.value, 10), page: 0 }));
+  const handlePageChange = (_, newPage) => setPagination(prev => ({ ...prev, page: newPage }));
+  const handleChangeRowsPerPage = (event) => setPagination(prev => ({ ...prev, limit: parseInt(event.target.value, 10), page: 0 }));
 
-  // Modal Form handlers
-  const handleInputChange = (e) => setFormData((d) => ({ ...d, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
-  const handleTagsInputChange = (e) => setTagsInput(e.target.value);
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
+  // Modal handlers
+  const handleInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData(draft => ({ ...draft, [name]: type === "checkbox" ? checked : value }));
+  };
+  const handleTagsInputChange = (event) => setTagsInput(event.target.value);
+
+  const handleImageChange = (event) => {
+    const selected = event.target.files[0];
+    if (selected) {
+      setImageFile(selected);
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result);
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selected);
     }
   };
 
@@ -97,6 +110,7 @@ const SolarStreetLightManagement = () => {
       setFormData({
         category: item.category?._id || item.category || "",
         brand: item.brand?._id || item.brand || "",
+        productLine: item.productLine?._id || item.productLine || "",
         name: item.name || "",
         modelName: item.modelName || "",
         power: item.power || "",
@@ -113,7 +127,17 @@ const SolarStreetLightManagement = () => {
       setImageFile(null);
     } else {
       setFormData({
-        category: "", brand: "", name: "", modelName: "", power: "", description: "", replacementPolicy: "", staticTags: [], price: "", isFeatured: false,
+        category: "",
+        brand: "",
+        productLine: "",
+        name: "",
+        modelName: "",
+        power: "",
+        description: "",
+        replacementPolicy: "",
+        staticTags: [],
+        price: "",
+        isFeatured: false,
       });
       setTagsInput("");
       setIsEditing(false);
@@ -127,33 +151,34 @@ const SolarStreetLightManagement = () => {
   const handleCloseModal = () => setOpenModal(false);
 
   // Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
-      const cleanedTagsArray = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-      const formDataObj = new FormData();
+      const cleanedTagsArray = tagsInput.split(",").map(tag => tag.trim()).filter(Boolean);
+
+      const multipartFormData = new FormData();
       Object.keys(formData).forEach((key) => {
         if (key === "staticTags") {
-          formDataObj.append("staticTags", JSON.stringify(cleanedTagsArray));
+          multipartFormData.append("staticTags", JSON.stringify(cleanedTagsArray));
         } else {
-          formDataObj.append(key, formData[key]);
+          multipartFormData.append(key, formData[key]);
         }
       });
-      if (imageFile) formDataObj.append("image", imageFile);
+      if (imageFile) multipartFormData.append("image", imageFile);
 
-      let response;
       if (isEditing) {
-        response = await putData(`/solar-street-lights/${currentId}`, formDataObj);
+        await putData(`/solar-street-lights/${currentId}`, multipartFormData);
         toast.success("Updated successfully");
       } else {
-        response = await postData("/solar-street-lights", formDataObj);
+        await postData("/solar-street-lights", multipartFormData);
         toast.success("Created successfully");
       }
+
       handleCloseModal();
       fetchLights();
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "An error occurred");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -166,8 +191,8 @@ const SolarStreetLightManagement = () => {
         await deleteData(`/solar-street-lights/${id}`);
         toast.success("Deleted successfully");
         fetchLights();
-      } catch (err) {
-        toast.error(err?.response?.data?.message || "An error occurred");
+      } catch (error) {
+        toast.error(error?.response?.data?.message || "An error occurred");
       }
     }
   };
@@ -177,12 +202,16 @@ const SolarStreetLightManagement = () => {
       <Typography variant="h4" gutterBottom>
         Solar Street Light Management
       </Typography>
+
       {/* Search + Filter */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
             <TextField
-              fullWidth label="Search Lights" variant="outlined" value={search}
+              fullWidth
+              label="Search Lights"
+              variant="outlined"
+              value={search}
               onChange={handleSearchChange}
               InputProps={{
                 endAdornment: (
@@ -195,11 +224,29 @@ const SolarStreetLightManagement = () => {
           </Grid>
           <Grid item xs={12} md={8}>
             <Grid container spacing={2}>
-              <Grid item xs={6} sm={6}>
-                <TextField fullWidth label="Min Power (W)" name="minPower" type="number" value={filters.minPower} onChange={handleFilterChange} variant="outlined" size="small" />
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Min Power (W)"
+                  name="minPower"
+                  type="number"
+                  value={filters.minPower}
+                  onChange={handleFilterChange}
+                  variant="outlined"
+                  size="small"
+                />
               </Grid>
-              <Grid item xs={6} sm={6}>
-                <TextField fullWidth label="Max Power (W)" name="maxPower" type="number" value={filters.maxPower} onChange={handleFilterChange} variant="outlined" size="small" />
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Max Power (W)"
+                  name="maxPower"
+                  type="number"
+                  value={filters.maxPower}
+                  onChange={handleFilterChange}
+                  variant="outlined"
+                  size="small"
+                />
               </Grid>
             </Grid>
           </Grid>
@@ -213,12 +260,14 @@ const SolarStreetLightManagement = () => {
           </Grid>
         </Grid>
       </Paper>
+
       {/* Add Button */}
       <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
         <Button variant="contained" startIcon={<FiPlus />} onClick={() => handleOpenModal()}>
           Add New Solar Street Light
         </Button>
       </Box>
+
       {/* Table */}
       <TableContainer component={Paper}>
         <Table>
@@ -228,6 +277,7 @@ const SolarStreetLightManagement = () => {
               <TableCell>Name</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Brand</TableCell>
+              <TableCell>Product Line</TableCell>
               <TableCell>Model</TableCell>
               <TableCell>Power (W)</TableCell>
               <TableCell>Price</TableCell>
@@ -240,30 +290,33 @@ const SolarStreetLightManagement = () => {
           <TableBody>
             {loading && lights.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center">Loading...</TableCell>
+                <TableCell colSpan={12} align="center">Loading...</TableCell>
               </TableRow>
             ) : lights.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center">No lights found</TableCell>
+                <TableCell colSpan={12} align="center">No lights found</TableCell>
               </TableRow>
             ) : (
               lights.map((item) => (
                 <TableRow key={item._id}>
                   <TableCell>
                     {item.image ? (
-                      <img src={`${img_url}${item.image}`} alt={item.name} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }} />
+                      <img
+                        src={`${img_url}${item.image}`}
+                        alt={item.name}
+                        style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                      />
                     ) : "No image"}
                   </TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.category?.name || "N/A"}</TableCell>
                   <TableCell>{item.brand?.name || "N/A"}</TableCell>
+                  <TableCell>{item.productLine?.name || "N/A"}</TableCell>
                   <TableCell>{item.modelName || "N/A"}</TableCell>
                   <TableCell>{item.power || "N/A"}</TableCell>
                   <TableCell>₹{item.price || "N/A"}</TableCell>
                   <TableCell>{item.replacementPolicy || "N/A"}</TableCell>
-                  <TableCell>
-                    {Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}
-                  </TableCell>
+                  <TableCell>{Array.isArray(item.staticTags) ? item.staticTags.join(", ") : ""}</TableCell>
                   <TableCell>{item.isFeatured ? '✔️' : '❌'}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(item)} color="primary"><FiEdit /></IconButton>
@@ -284,6 +337,7 @@ const SolarStreetLightManagement = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </TableContainer>
+
       {/* Add/Edit Modal */}
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
         <DialogTitle>{isEditing ? "Edit Solar Street Light" : "Add New Solar Street Light"}</DialogTitle>
@@ -294,12 +348,13 @@ const SolarStreetLightManagement = () => {
                 <FormControl fullWidth required>
                   <InputLabel>Category</InputLabel>
                   <Select name="category" value={formData.category} onChange={handleInputChange} label="Category">
-                    {categories.map((cat) => (
-                      <MenuItem key={cat._id} value={cat._id}>{cat.name}</MenuItem>
+                    {categories.map((category) => (
+                      <MenuItem key={category._id} value={category._id}>{category.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Brand</InputLabel>
@@ -310,6 +365,19 @@ const SolarStreetLightManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Product Line */}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Product Line</InputLabel>
+                  <Select name="productLine" value={formData.productLine} onChange={handleInputChange} label="Product Line">
+                    {productLines.map((line) => (
+                      <MenuItem key={line._id} value={line._id}>{line.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField required fullWidth label="Name" name="name" value={formData.name} onChange={handleInputChange} />
               </Grid>
@@ -330,8 +398,11 @@ const SolarStreetLightManagement = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  fullWidth label="Tags (comma-separated)" name="staticTags"
-                  value={tagsInput} onChange={handleTagsInputChange}
+                  fullWidth
+                  label="Tags (comma-separated)"
+                  name="staticTags"
+                  value={tagsInput}
+                  onChange={handleTagsInputChange}
                   helperText="Enter tags separated by commas"
                 />
               </Grid>
@@ -357,7 +428,16 @@ const SolarStreetLightManagement = () => {
                 </Button>
                 {imagePreview && (
                   <Box mt={2} textAlign="center">
-                    <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 6, border: "1px solid #eee" }} />
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: 200,
+                        borderRadius: 6,
+                        border: "1px solid #eee"
+                      }}
+                    />
                   </Box>
                 )}
               </Grid>
