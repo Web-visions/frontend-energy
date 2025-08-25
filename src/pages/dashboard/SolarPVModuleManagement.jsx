@@ -70,7 +70,7 @@ const SolarPVModuleManagement = () => {
   const fetchProductLines = async () => { // <-- NEW
     try {
       const response = await getData("/product-lines"); // change path if your API differs
-      setProductLines(response.data || []);
+      setProductLines(response.productLines || []);
     } catch { }
   };
 

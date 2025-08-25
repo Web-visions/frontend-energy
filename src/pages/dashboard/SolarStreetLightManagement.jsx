@@ -68,7 +68,7 @@ const SolarStreetLightManagement = () => {
   const fetchProductLines = async () => {
     try {
       const response = await getData("/product-lines"); // adjust if your API differs
-      setProductLines(response.data || []);
+      setProductLines(response.productLines || []);
     } catch { }
   };
 
