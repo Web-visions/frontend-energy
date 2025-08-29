@@ -1,91 +1,145 @@
-import React, { useEffect, useState } from 'react';
-import { getData } from '../utils/http';
-import { useNavigate } from 'react-router-dom';
-import { img_url } from '../config/api_route';
+import React, { useEffect, useState } from "react";
+import { getData } from "../utils/http";
+import { useNavigate } from "react-router-dom";
+import { img_url } from "../config/api_route";
 
 const InverterSect = () => {
-  const [products, setProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch 6 latest featured products
-    getData('/products/featured', { limit: 8 })
-      .then(data => setProducts(data.data || []))
-      .catch(() => setProducts([]));
+    getData("/products/featured", { limit: 8 })
+      .then((response) => setFeaturedProducts(response.data || []))
+      .catch(() => setFeaturedProducts([]));
   }, []);
 
-  const handleViewDetails = (prodType, id) => {
-    navigate(`/product/${prodType}/${id}`);
+  const handleViewDetails = (productType, productId) => {
+    navigate(`/product/${productType}/${productId}`);
   };
 
   return (
-    <div className="container mx-auto px-4 py-20 bg-gradient-to-b from-white via-[#f7fafd] to-[#eafaf2]">
-      {/* Featured Products Section */}
-      <section>
-        <h1 className="text-3xl md:text-4xl font-black mb-10 text-center md:text-left text-[#008246] relative">
-          Featured Products
-          <span className="absolute left-1/2 md:left-0 -bottom-2 w-28 h-1 bg-[#E4C73F] rounded-full -translate-x-1/2 md:translate-x-0 transition-all duration-300"></span>
-        </h1>
-        <div className="flex justify-start">
-          <div className="flex flex-wrap gap-8 justify-center">
-            {products.map((product) => {
-              const displayPrice = product.sellingPrice || product.price || product.mrp;
-              const hasDiscount = product.mrp > displayPrice;
-              let imagePath = '';
-              if (Array.isArray(product.images) && product.images.length > 0) {
-                imagePath = product.images[0];
-              } else if (product.image) {
-                imagePath = product.image;
-              } else {
-                imagePath = '/default-image.png'; // fallback image
-              }
+    <div className="bg-gradient-to-b from-white via-[#f7fafd] to-[#eafaf2]">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        {/* Section header */}
+        <div className="text-center md:text-left mb-8 sm:mb-10 lg:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#008246] relative inline-block md:block">
+            Featured Products
+            <span className="absolute left-1/2 md:left-0 -bottom-2 w-24 sm:w-28 h-1 bg-[#E4C73F] rounded-full -translate-x-1/2 md:translate-x-0" />
+          </h1>
+        </div>
 
-              const fullImageUrl = `${img_url}/${imagePath}`;
+        {/* Responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 lg:gap-8">
+          {featuredProducts.map((product, index) => {
+            const displayPrice =
+              product.sellingPrice || product.price || product.mrp;
+            const hasDiscount =
+              product.mrp && displayPrice && product.mrp > displayPrice;
 
-              return (
-                <div
-                  key={product._id}
-                  className="w-full sm:w-[320px] bg-white rounded-2xl shadow-md group hover:shadow-2xl overflow-hidden transition-all duration-300 flex flex-col"
-                >
-                  <div className="relative w-full h-48 bg-gray-100 flex items-center justify-center">
+            // image selection
+            const imagePath =
+              Array.isArray(product.images) && product.images.length > 0
+                ? product.images[0]
+                : product.image || "/default-image.png";
+            const fullImageUrl = `${img_url}/${imagePath}`;
+
+            return (
+              <article
+                key={product._id}
+                className="group bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-300"
+              >
+                {/* Media with stable aspect ratio */}
+                <div className="relative bg-gray-50">
+                  <div className="w-full aspect-[4/3] flex items-center justify-center">
                     <img
                       src={fullImageUrl}
                       alt={product.name}
-                      className="w-full h-full object-contain object-center"
+                      loading="lazy"
+                      className="h-full w-full object-contain p-4 sm:p-5"
                     />
-                    {product.featured && (
-                      <span className="absolute top-2 left-2 bg-yellow-400 text-white px-2 py-1 rounded z-10 text-xs font-bold shadow">
-                        Featured
-                      </span>
+                  </div>
+
+                  {product.featured && (
+                    <span className="absolute top-3 left-3 bg-yellow-400 text-white px-2 py-1 rounded text-[10px] sm:text-xs font-bold shadow">
+                      Featured
+                    </span>
+                  )}
+
+                  {index < 3 && (
+                    <span className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded text-[10px] sm:text-xs font-bold shadow">
+                      Bestseller
+                    </span>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-4 sm:p-5 flex flex-col flex-1">
+                  {/* Brand and category */}
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    {product.brand?.logo ? (
+                      <img
+                        src={img_url + product.brand.logo}
+                        alt={product.brand?.name}
+                        className="h-6 w-6 sm:h-7 sm:w-7 object-contain rounded-full border bg-white"
+                        loading="lazy"
+                      />
+                    ) : null}
+                    <span className="text-xs sm:text-sm font-semibold text-[#008246]">
+                      {product.brand?.name}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] sm:text-xs text-gray-500 text-center mb-1">
+                    {product.category?.name}
+                  </p>
+
+                  {/* Title */}
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 text-center line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem]">
+                    {product.name}
+                  </h3>
+
+                  {/* Description */}
+                  {product.description ? (
+                    <p className="text-xs sm:text-sm text-gray-600 mt-2 mb-3 text-center line-clamp-3 min-h-[3.5rem]">
+                      {product.description}
+                    </p>
+                  ) : (
+                    <div className="mb-3" />
+                  )}
+
+                  {/* Price */}
+                  <div className="mt-auto mb-4 sm:mb-5">
+                    {displayPrice ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900">
+                          ₹{displayPrice.toLocaleString()}
+                        </p>
+                        {hasDiscount && (
+                          <p className="text-sm sm:text-base text-gray-400 line-through">
+                            ₹{product.mrp.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-base sm:text-lg font-semibold text-blue-600 text-center">
+                        Contact for Price
+                      </p>
                     )}
                   </div>
-                  <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="text-lg font-semibold text-gray-900 text-center mb-1">{product.name}</h3>
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      {product.brand?.logo && (
-                        <img src={img_url + product.brand.logo} alt={product.brand.name} className="w-7 h-7 object-contain rounded-full border" />
-                      )}
-                      <span className="text-sm font-bold text-[#008246]">{product.brand?.name}</span>
-                    </div>
-                    <div className="text-xs text-gray-500 text-center mb-2">{product.category?.name}</div>
-                    <p className="text-gray-600 text-sm my-2 text-center line-clamp-3 min-h-[60px]">{product.description}</p>
-                    <div className="flex items-center justify-center gap-2 mt-2 mb-4">
-                      <span className="text-2xl font-bold text-gray-800">₹{displayPrice?.toLocaleString()}</span>
-                      {hasDiscount && (
-                        <span className="text-lg text-gray-400 line-through">₹{product.mrp?.toLocaleString()}</span>
-                      )}
-                    </div>
-                    <button
-                      className="w-full mt-auto py-2 bg-gradient-to-r from-[#E4C73F] to-[#ffe477] text-black font-bold rounded-lg shadow hover:bg-[#d4b82f] hover:scale-[1.02] transition-all"
-                      onClick={() => handleViewDetails(product.prodType, product._id)}
-                    >
-                      View Details
-                    </button>
-                  </div>
+
+                  {/* CTA */}
+                  <button
+                    onClick={() =>
+                      handleViewDetails(product.prodType, product._id)
+                    }
+                    className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-[#E4C73F] to-[#ffe477] text-black font-bold rounded-lg shadow transition-all duration-200 hover:brightness-95 active:translate-y-[1px]"
+                  >
+                    View Details
+                  </button>
                 </div>
-              );
-            })}
-          </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </div>

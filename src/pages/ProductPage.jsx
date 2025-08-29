@@ -5,7 +5,14 @@ import { productService } from "../services/product.service";
 import { useCart } from "../context/CartContext";
 import { img_url } from "../config/api_route";
 import { no_image } from "../assets";
-import { Filter, X, ChevronLeft, ChevronRight, Star, StarHalf } from "lucide-react";
+import {
+  Filter,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  StarHalf,
+} from "lucide-react";
 
 // Helper function to render rating stars with better design
 const renderStars = (rating) => {
@@ -15,20 +22,24 @@ const renderStars = (rating) => {
 
   for (let i = 0; i < fullStars; i++) {
     stars.push(
-      <Star key={`full_${i}`} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+      <Star
+        key={`full_${i}`}
+        className="w-4 h-4 fill-yellow-400 text-yellow-400"
+      />
     );
   }
 
   if (hasHalfStar) {
     stars.push(
-      <StarHalf key="half" className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+      <StarHalf
+        key="half"
+        className="w-4 h-4 fill-yellow-400 text-yellow-400"
+      />
     );
   }
 
   for (let i = stars.length; i < 5; i++) {
-    stars.push(
-      <Star key={`empty_${i}`} className="w-4 h-4 text-gray-300" />
-    );
+    stars.push(<Star key={`empty_${i}`} className="w-4 h-4 text-gray-300" />);
   }
   return stars;
 };
@@ -37,11 +48,11 @@ const renderStars = (rating) => {
 // "0-50" | "50-100" | "150-200" | "200+"  ->  { minAH, maxAH }
 const parseCapacityRange = (range) => {
   if (!range) return { minAH: undefined, maxAH: undefined };
-  if (range.endsWith('+')) {
+  if (range.endsWith("+")) {
     const min = Number(range.slice(0, -1));
     return { minAH: Number.isFinite(min) ? min : undefined, maxAH: undefined };
   }
-  const [minStr, maxStr] = range.split('-');
+  const [minStr, maxStr] = range.split("-");
   const min = Number(minStr);
   const max = Number(maxStr);
   return {
@@ -88,7 +99,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
     // Add dots after first page if needed
     if (start > 2) {
-      rangeWithDots.push(1, '...');
+      rangeWithDots.push(1, "...");
     } else {
       rangeWithDots.push(1);
     }
@@ -102,7 +113,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
     // Add dots before last page if needed
     if (end < totalPages - 1) {
-      rangeWithDots.push('...', totalPages);
+      rangeWithDots.push("...", totalPages);
     } else if (totalPages > 1) {
       if (!rangeWithDots.includes(totalPages)) {
         rangeWithDots.push(totalPages);
@@ -127,7 +138,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
       <div className="flex items-center gap-1">
         {pageNumbers.map((pageNum, index) => {
-          if (pageNum === '...') {
+          if (pageNum === "...") {
             return (
               <span key={`dots-${index}`} className="px-3 py-2 text-gray-500">
                 ...
@@ -138,10 +149,11 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
           return (
             <button
               key={pageNum}
-              className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${pageNum === currentPage
-                ? "bg-green-600 text-white shadow-lg transform scale-105"
-                : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900"
-                }`}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                pageNum === currentPage
+                  ? "bg-green-600 text-white shadow-lg transform scale-105"
+                  : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+              }`}
               onClick={() => onPageChange(pageNum)}
               disabled={pageNum === currentPage}
             >
@@ -181,7 +193,7 @@ export default function ProductListing() {
     city: "",
   });
 
-  const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -219,7 +231,6 @@ export default function ProductListing() {
     setCurrentPage(urlPage);
   }, [searchParams]);
 
-
   const typeBrandMap = {
     inverter: ["Su-vastika", "Luminous", "Microtek"],
     battery: [
@@ -232,7 +243,10 @@ export default function ProductListing() {
       "Livfast",
     ],
     ups: ["APC", "Su-vastika", "Luminous", "Microtek"],
-    solar: ["Usha Shriram", "Warree", "Vikram", "Adani"],
+    solar: ["Usha Shriram", "Waree", "Vikram", "Adani"],
+    "solar-pcu": ["Su-vastika", "Luminous", "Microtek"],
+    "solar-pv": ["Usha Shriram", "Vikram", "Waree", "Adani", "Luminous"],
+    "solar-street-light": ["Bi Cell", "Energy Storage System"],
   };
 
   const batteryTypeMap = {
@@ -243,11 +257,12 @@ export default function ProductListing() {
     amaron: ["lead acid", "smf"],
     livfast: ["lead acid"],
   };
-
   const normalizedType = selectedFilters.type?.toLowerCase().trim() || "";
   let allowedBrandNames = [];
 
-  if (normalizedType.split("-")[0] === "solar") {
+  if (typeBrandMap[normalizedType]) {
+    allowedBrandNames = typeBrandMap[normalizedType];
+  } else if (normalizedType.startsWith("solar")) {
     allowedBrandNames = typeBrandMap["solar"];
   } else {
     allowedBrandNames = typeBrandMap[normalizedType] || [];
@@ -256,10 +271,10 @@ export default function ProductListing() {
   const filteredBrandList =
     allowedBrandNames.length > 0
       ? filters.brands.filter((brand) =>
-        allowedBrandNames
-          .map((name) => name.toLowerCase().trim())
-          .includes(brand.name.toLowerCase().trim())
-      )
+          allowedBrandNames
+            .map((name) => name.toLowerCase().trim())
+            .includes(brand.name.toLowerCase().trim())
+        )
       : filters.brands;
 
   useEffect(() => {
@@ -270,21 +285,26 @@ export default function ProductListing() {
 
     const params = new URLSearchParams();
     if (selectedFilters.brand) params.set("brand", selectedFilters.brand);
-    if (selectedFilters.category) params.set("category", selectedFilters.category);
-    if (selectedSubcategory) params.append('subcategory', selectedSubcategory);
+    if (selectedFilters.category)
+      params.set("category", selectedFilters.category);
+    if (selectedSubcategory) params.append("subcategory", selectedSubcategory);
     if (selectedFilters.type) params.set("type", selectedFilters.type);
     if (selectedFilters.rating) params.set("rating", selectedFilters.rating);
-    if (selectedFilters.batteryType) params.set("batteryType", selectedFilters.batteryType);
-    if (selectedFilters.productLine) params.set("productLine", selectedFilters.productLine);
-    if (selectedFilters.manufacturer) params.set("manufacturer", selectedFilters.manufacturer);
-    if (selectedFilters.vehicleModel) params.set("vehicleModel", selectedFilters.vehicleModel);
-    if (selectedFilters.state) params.set("state", selectedFilters.state);
-    if (selectedFilters.city) params.set("city", selectedFilters.city);
+    if (selectedFilters.batteryType)
+      params.set("batteryType", selectedFilters.batteryType);
+    if (selectedFilters.productLine)
+      params.set("productLine", selectedFilters.productLine);
+    if (selectedFilters.manufacturer)
+      params.set("manufacturer", selectedFilters.manufacturer);
+    if (selectedFilters.vehicleModel)
+      params.set("vehicleModel", selectedFilters.vehicleModel);
 
     if (selectedFilters.capacityRange) {
       params.set("capacityRange", selectedFilters.capacityRange);
 
-      const { minAH, maxAH } = parseCapacityRange(selectedFilters.capacityRange);
+      const { minAH, maxAH } = parseCapacityRange(
+        selectedFilters.capacityRange
+      );
       if (minAH !== undefined) params.set("minAH", String(minAH));
       if (maxAH !== undefined) params.set("maxAH", String(maxAH));
     }
@@ -306,8 +326,12 @@ export default function ProductListing() {
         const paramsObj = Object.fromEntries([...searchParams]);
 
         // capacity handling
-        const explicitMinAH = paramsObj.minAH ? Number(paramsObj.minAH) : undefined;
-        const explicitMaxAH = paramsObj.maxAH ? Number(paramsObj.maxAH) : undefined;
+        const explicitMinAH = paramsObj.minAH
+          ? Number(paramsObj.minAH)
+          : undefined;
+        const explicitMaxAH = paramsObj.maxAH
+          ? Number(paramsObj.maxAH)
+          : undefined;
         const derivedRange = parseCapacityRange(paramsObj.capacityRange || "");
         const minAH = explicitMinAH ?? derivedRange.minAH;
         const maxAH = explicitMaxAH ?? derivedRange.maxAH;
@@ -331,8 +355,6 @@ export default function ProductListing() {
           productLine: paramsObj.productLine || "",
           manufacturer: paramsObj.manufacturer || "",
           vehicleModel: paramsObj.vehicleModel || "",
-          state: paramsObj.state || "",
-          city: paramsObj.city || "",
         };
 
         // strip empties
@@ -360,9 +382,8 @@ export default function ProductListing() {
     };
 
     fetchProductsAndFilters();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [searchParams, selectedFilters.capacityRange]);
-
 
   let filteredProducts = products;
   if (selectedFilters.rating) {
@@ -398,7 +419,9 @@ export default function ProductListing() {
     (b) => b._id === selectedFilters.brand
   );
 
-  const selectedBrandName = selectedBrandObj ? selectedBrandObj.name.trim().toLowerCase() : '';
+  const selectedBrandName = selectedBrandObj
+    ? selectedBrandObj.name.trim().toLowerCase()
+    : "";
 
   const allowedBatteryTypes =
     selectedFilters.type === "battery" && selectedBrandName
@@ -412,7 +435,9 @@ export default function ProductListing() {
           <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
             <X className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Something Went Wrong</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Something Went Wrong
+          </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -434,7 +459,9 @@ export default function ProductListing() {
             Our Products
           </h1>
           <p className="text-gray-600">
-            {totalCount > 0 ? `Showing ${totalCount} products` : 'Discover our range of products'}
+            {totalCount > 0
+              ? `Showing ${totalCount} products`
+              : "Discover our range of products"}
           </p>
         </div>
 
@@ -452,15 +479,17 @@ export default function ProductListing() {
                   ...filters,
                   brands: filteredBrandList,
                   batteryTypes: allowedBatteryTypes.length
-                    ? allowedBatteryTypes.map(bt => ({
-                      value: bt,
-                      label: bt.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
-                    }))
+                    ? allowedBatteryTypes.map((bt) => ({
+                        value: bt,
+                        label: bt
+                          .split(" ")
+                          .map((w) => w[0].toUpperCase() + w.slice(1))
+                          .join(" "),
+                      }))
                     : filters.batteryTypes,
                 }}
                 currentType={searchParams.get("type") || ""}
               />
-
             </div>
           </div>
 
@@ -490,10 +519,15 @@ export default function ProductListing() {
                       ...filters,
                       brands: filteredBrandList,
                       batteryTypes: allowedBatteryTypes.length
-                        ? allowedBatteryTypes.map(bt => ({
-                          value: bt,
-                          label: bt.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-                        }))
+                        ? allowedBatteryTypes.map((bt) => ({
+                            value: bt,
+                            label: bt
+                              .split(" ")
+                              .map(
+                                (w) => w.charAt(0).toUpperCase() + w.slice(1)
+                              )
+                              .join(" "),
+                          }))
                         : filters.batteryTypes,
                     }}
                     currentType={searchParams.get("type") || ""}
@@ -515,10 +549,15 @@ export default function ProductListing() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
                   {filteredProducts.map((prod, index) => {
-                    const displayPrice = prod.category?.name?.toLowerCase() === 'battery'
-                      ? (prod?.priceWithoutOldBattery || prod?.sellingPrice || prod?.price || prod?.mrp)
-                      : (prod?.price || prod?.sellingPrice || prod?.mrp);
-                    const hasDiscount = prod.mrp && displayPrice && prod.mrp > displayPrice;
+                    const displayPrice =
+                      prod.category?.name?.toLowerCase() === "battery"
+                        ? prod?.priceWithoutOldBattery ||
+                          prod?.sellingPrice ||
+                          prod?.price ||
+                          prod?.mrp
+                        : prod?.price || prod?.sellingPrice || prod?.mrp;
+                    const hasDiscount =
+                      prod.mrp && displayPrice && prod.mrp > displayPrice;
                     const discountPercentage = hasDiscount
                       ? Math.round(((prod.mrp - displayPrice) / prod.mrp) * 100)
                       : 0;
@@ -530,7 +569,6 @@ export default function ProductListing() {
                       >
                         {/* Badges */}
                         <div className="absolute top-4 left-4 z-10 flex flex-row justify-between w-[95%] sm:w-[90%] gap-2">
-
                           {hasDiscount && (
                             <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
                               -{discountPercentage}% OFF
@@ -551,7 +589,7 @@ export default function ProductListing() {
                                 ? img_url + prod.images[0]
                                 : img_url + prod.image || no_image
                             }
-                            alt={prod.name || 'Product image'}
+                            alt={prod.name || "Product image"}
                             className="max-w-full max-h-full object-contain transition-transform duration-500"
                             loading="lazy"
                           />
@@ -605,22 +643,30 @@ export default function ProductListing() {
                                 </div>
 
                                 {/* Battery Exchange Options - Show if any exchange price exists */}
-                                {prod.category?.name?.toLowerCase() === 'battery' &&
-                                  (prod.priceWithOldBattery || prod.priceWithoutOldBattery) && (
+                                {prod.category?.name?.toLowerCase() ===
+                                  "battery" &&
+                                  (prod.priceWithOldBattery ||
+                                    prod.priceWithoutOldBattery) && (
                                     <div className="mt-3 bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
                                       {prod.priceWithoutOldBattery && (
                                         <div className="flex justify-between items-center">
-                                          <span className="text-gray-600">Without Exchange:</span>
+                                          <span className="text-gray-600">
+                                            Without Exchange:
+                                          </span>
                                           <span className="font-semibold text-gray-900">
-                                            ₹{prod.priceWithoutOldBattery.toLocaleString()}
+                                            ₹
+                                            {prod.priceWithoutOldBattery.toLocaleString()}
                                           </span>
                                         </div>
                                       )}
                                       {prod.priceWithOldBattery && (
                                         <div className="flex justify-between items-center border-t pt-2">
-                                          <span className="text-green-600 font-medium">With Old Battery:</span>
+                                          <span className="text-green-600 font-medium">
+                                            With Old Battery:
+                                          </span>
                                           <span className="font-bold text-green-600">
-                                            ₹{prod.priceWithOldBattery.toLocaleString()}
+                                            ₹
+                                            {prod.priceWithOldBattery.toLocaleString()}
                                           </span>
                                         </div>
                                       )}
@@ -632,8 +678,6 @@ export default function ProductListing() {
                                 Contact for Price
                               </p>
                             )}
-
-
 
                             <button
                               className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:from-green-700 hover:to-green-800 hover:shadow-xl transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -665,7 +709,8 @@ export default function ProductListing() {
                     No Products Found
                   </h3>
                   <p className="text-gray-600 mb-8">
-                    We couldn't find any products matching your criteria. Try adjusting your filters or search terms.
+                    We couldn't find any products matching your criteria. Try
+                    adjusting your filters or search terms.
                   </p>
                   <button
                     onClick={handleReset}
@@ -688,7 +733,7 @@ export default function ProductListing() {
         >
           <Filter size={24} />
           Filters
-          {Object.values(selectedFilters).some(v => v) && (
+          {Object.values(selectedFilters).some((v) => v) && (
             <span className="bg-white text-green-700 text-sm px-2 py-1 rounded-full font-bold">
               Active
             </span>
