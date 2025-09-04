@@ -38,7 +38,7 @@ const UserProfile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await putData('/users/profile', formData);
+      const response = await putData('/users/user-profile', formData);
       setCurrentUser(prev => ({ ...prev, ...formData }));
       setIsEditing(false);
       toast.success('Profile updated successfully!');
@@ -136,7 +136,6 @@ const UserProfile = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
                   />
                 </div>
 
@@ -166,7 +165,6 @@ const UserProfile = () => {
                     value={formData.phone}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
                   />
                 </div>
 
@@ -256,7 +254,6 @@ const UserProfile = () => {
                   name="currentPassword"
                   type="password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
                 />
               </div>
 
@@ -269,7 +266,6 @@ const UserProfile = () => {
                   name="newPassword"
                   type="password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
                   minLength="6"
                 />
                 <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>

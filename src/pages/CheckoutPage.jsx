@@ -27,6 +27,8 @@ const CheckoutPage = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
+
+
     const [paymentMethod, setPaymentMethod] = useState('razorpay');
     const [cities, setCities] = useState([]);
     const [selectedCity, setSelectedCity] = useState(null);
@@ -40,7 +42,9 @@ const CheckoutPage = () => {
         landmark: ''
     });
     const [isProcessing, setIsProcessing] = useState(false);
-
+ useEffect(()=>{
+                window.scrollTo(0,0)
+            },[])
     useEffect(() => {
         if (!currentUser) {
             navigate('/login?redirect=checkout');

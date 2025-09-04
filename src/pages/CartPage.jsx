@@ -14,7 +14,6 @@ const CartPage = () => {
     const [updatingItems, setUpdatingItems] = useState(new Set());
     const [removingItems, setRemovingItems] = useState(new Set());
 
-
     useEffect(() => {
         if (!isAuthenticated()) {
             navigate('/login');
@@ -55,64 +54,85 @@ const CartPage = () => {
         }
     };
 
-    const cartCalculations = useMemo(() => {
-        if (!cart?.items) return { totalMRP: 0, subtotal: 0, discountOnMRP: 0, exchangeDiscount: 0 };
 
-        let totalMRP = 0;
-        let subtotal = 0;
-        let finalTotal = 0;
+ const cartCalculations = useMemo(() => {
+  if (!cart?.items) return { totalMRP: 0, subtotal: 0, discountOnMRP: 0, exchangeDiscount: 0 };
 
-        cart.items.forEach(item => {
-            const product = item.productId;
-            if (!product) return;
+  let totalMRP = 0;
+  let subtotal = 0;
+  let finalTotal = 0;
 
-            const priceWithoutExchange = product.priceWithoutOldBattery || product.sellingPrice || product.price || 0;
-            const priceWithExchange = product.priceWithOldBattery || priceWithoutExchange;
-            const mrp = product.mrp || priceWithoutExchange;
+  for (const cartItem of cart.items) {
+    const product = cartItem.productId;
+    if (!product) continue;
 
-            totalMRP += mrp * item.quantity;
-            subtotal += priceWithoutExchange * item.quantity;
-            finalTotal += (item.withOldBattery ? priceWithExchange : priceWithoutExchange) * item.quantity;
-        });
+    const isBattery = cartItem.productType === 'battery';
+    const isSolar = cartItem.productType?.startsWith('solar-');
 
-        const discountOnMRP = totalMRP - subtotal;
-        const exchangeDiscount = subtotal - finalTotal;
+    if (isBattery) {
+      const withoutExchange = Number(product.priceWithoutOldBattery) || 0;
+      const withExchange = Number(product.priceWithOldBattery) || withoutExchange;
+      const mrp = Number(product.mrp) || withoutExchange;
 
-        return { totalMRP, subtotal, discountOnMRP, exchangeDiscount };
-    }, [cart]);
+      totalMRP += mrp * cartItem.quantity;
+      subtotal += withoutExchange * cartItem.quantity;
+      finalTotal += (cartItem.withOldBattery ? withExchange : withoutExchange) * cartItem.quantity;
+      continue;
+    }
 
-    const getItemDisplayPrice = (item) => {
-        const product = item.productId;
-        if (!product) return { current: 0, original: null };
+    if (isSolar) {
+      const price = Number(product.price) || 0;
+      totalMRP += price * cartItem.quantity;     // no MRP concept → treat price as MRP
+      subtotal += price * cartItem.quantity;
+      finalTotal += price * cartItem.quantity;
+      continue;
+    }
 
-        if (item.productType === 'battery' || item.productType === 'inverter') {
-            const original = product.priceWithoutOldBattery || 0;
-            const current = item.withOldBattery ? (product.priceWithOldBattery || original) : original;
-            return { current, original: current < original ? original : null };
-        }
+    // Inverter / UPS / others
+    const selling = Number(product.sellingPrice);
+    const mrp = Number(product.mrp);
+    const base = Number(product.price);
 
-        if (item.productType.startsWith('solar-')) {
-            return { current: product.price || 0, original: null };
-        }
+    const unit = [selling, mrp, base].find(Number.isFinite) || 0;
+    const unitMrp = Number.isFinite(mrp) ? mrp : unit;
 
-        const current = product.sellingPrice || product.mrp || 0;
-        const original = product.mrp > current ? product.mrp : null;
-        return { current, original };
-    };
+    totalMRP += unitMrp * cartItem.quantity;
+    subtotal += unit * cartItem.quantity;
+    finalTotal += unit * cartItem.quantity;
+  }
 
-    const getProductPrice = (product, productType) => {
-        if (productType.startsWith('solar-')) {
-            return product?.price || 0;
-        }
-        return product.sellingPrice || product.mrp || 0;
-    };
+  const discountOnMRP = Math.max(0, totalMRP - subtotal);
+  const exchangeDiscount = Math.max(0, subtotal - finalTotal);
 
-    const getProductMRP = (product, productType) => {
-        if (productType.startsWith('solar-')) {
-            return null; // Solar products don't have MRP
-        }
-        return product.mrp || null;
-    };
+  return { totalMRP, subtotal, discountOnMRP, exchangeDiscount };
+}, [cart]);
+
+
+    const getItemDisplayPrice = (cartItem) => {
+  const product = cartItem.productId;
+  if (!product) return { current: 0, original: null };
+
+  if (cartItem.productType === 'battery') {
+    const baseWithout = Number(product.priceWithoutOldBattery) || 0;
+    const baseWith = Number(product.priceWithOldBattery) || baseWithout;
+    const current = cartItem.withOldBattery ? baseWith : baseWithout;
+    const original = current < baseWithout ? baseWithout : (product.mrp && product.mrp > current ? product.mrp : null);
+    return { current, original };
+  }
+
+  if (cartItem.productType.startsWith('solar-')) {
+    const current = Number(product.price) || 0;
+    return { current, original: null };
+  }
+
+  const selling = Number(product.sellingPrice);
+  const mrp = Number(product.mrp);
+  const base = Number(product.price);
+  const current = [selling, mrp, base].find(Number.isFinite) || 0;
+  const original = Number.isFinite(mrp) && mrp > current ? mrp : null;
+
+  return { current, original };
+};
 
     const getProductImage = (product) => {
         if (product?.images && product?.images?.length > 0) {

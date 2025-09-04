@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import { getData, postData } from '../utils/http';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
+import { getData, postData } from "../utils/http";
 
 const AuthContext = createContext();
 
@@ -15,22 +15,18 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
-
+        const token = localStorage.getItem("token");
 
         if (token) {
-
-          const response = await getData('/auth/me');
+          const response = await getData("/auth/me");
 
           if (response) {
             setCurrentUser(response.data);
           } else {
-           
           }
         }
       } catch (error) {
-        console.error('Auth check error:', error);
-   
+        console.error("Auth check error:", error);
       } finally {
         setLoading(false);
       }
@@ -44,25 +40,30 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await postData('/auth/register', userData);
+      const response = await postData("/auth/register", userData);
 
       if (response) {
-        localStorage.setItem('token', response.token);
+        localStorage.setItem("token", response.token);
 
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.token}`;
 
         setCurrentUser(response.user);
 
         return {
           success: true,
           needsVerification: !response.user.isEmailVerified,
-          otp: response.otp // This will be undefined in production
+          otp: response.otp, // This will be undefined in production
         };
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      setError(error.response?.message || 'Registration failed');
-      return { success: false, error: error.response?.message || 'Registration failed' };
+      console.error("Registration error:", error);
+      setError(error.response?.data?.message || "Registration failed");
+      return {
+        success: false,
+        error: error.response?.data?.message || "Registration failed",
+      };
     } finally {
       setLoading(false);
     }
@@ -73,21 +74,25 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await postData('/auth/login', { email, password });
+      const response = await postData("/auth/login", { email, password });
 
       if (response) {
-        localStorage.setItem('token', response.token);
+        localStorage.setItem("token", response.token);
 
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.token}`;
 
         setCurrentUser(response.user);
 
         return { success: true };
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error.response?.message || 'Login failed');
-      return { success: false, error: error.response?.message || 'Login failed' };
+      setError(error.response?.data?.message || "Login failed");
+      return {
+        success: false,
+        error: error.response?.data?.message || "Login failed",
+      };
     } finally {
       setLoading(false);
     }
@@ -98,17 +103,18 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await axios.post('/auth/verify-email', { otp }, {
-      });
+      const response = await postData("/auth/verify-email", { otp }, {});
 
       if (response) {
-        setCurrentUser(prev => ({ ...prev, isEmailVerified: true }));
+        setCurrentUser((prev) => ({ ...prev, isEmailVerified: true }));
         return { success: true };
       }
     } catch (error) {
-      console.error('Email verification error:', error);
-      setError(error.response?.message || 'Verification failed');
-      return { success: false, error: error.response?.message || 'Verification failed' };
+      setError(error.response?.data?.message || "Verification failed");
+      return {
+        success: false,
+        error: error.response?.data?.message || "Verification failed",
+      };
     } finally {
       setLoading(false);
     }
@@ -119,13 +125,16 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await axios.post('/auth/resend-otp');
+      const response = await postData("/auth/resend-otp");
 
       return { success: response.success, message: response.message };
     } catch (error) {
-      console.error('Resend OTP error:', error);
-      setError(error.response?.message || 'Failed to resend OTP');
-      return { success: false, error: error.response?.message || 'Failed to resend OTP' };
+      console.error("Resend OTP error:", error);
+      setError(error.response?.data?.message || "Failed to resend OTP");
+      return {
+        success: false,
+        error: error.response?.data?.message || "Failed to resend OTP",
+      };
     } finally {
       setLoading(false);
     }
@@ -135,13 +144,9 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
 
-
-
-      localStorage.removeItem('token');
-      window.location.href = "/login"
-
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     } catch (error) {
-
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -176,12 +181,8 @@ export const AuthProvider = ({ children }) => {
     resendOTP,
     hasRole,
     isAuthenticated,
-    isEmailVerified
+    isEmailVerified,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

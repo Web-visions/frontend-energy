@@ -90,7 +90,7 @@ export default function App() {
             {/* Auth-related */}
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+            <Route path="/reset-password/:resettoken" element={<ResetPassword />} />
 
             {/* ========== DASHBOARD LAYOUT & NESTED ROUTES ========== */}
             <Route

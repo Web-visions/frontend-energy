@@ -90,18 +90,21 @@ const RegularProductDetail = () => {
         }
     };
 
-    const handleAddToCart = async () => {
-        try {
-            const success = await addToCart(type, product._id, quantity, hasOldBattery);
-            if (success) {
-                toast.success('Product added to cart successfully!');
-            } else {
-                toast.error('Failed to add product to cart');
-            }
-        } catch (error) {
-            toast.error('Error adding product to cart');
-        }
-    };
+  const handleAddToCart = async () => {
+  try {
+    const success = await addToCart(type, product._id, quantity, hasOldBattery);
+    if (success) {
+      toast.success('Product added to cart successfully!', { duration: 10000 });
+      setTimeout(() => {
+        window.location.reload();
+      }, 500); 
+    } else {
+      toast.error('Failed to add product to cart');
+    }
+  } catch (error) {
+    toast.error('Error adding product to cart');
+  }
+};
 
     const calculateAverageRating = (reviews) => {
         if (!reviews || reviews.length === 0) return 0;

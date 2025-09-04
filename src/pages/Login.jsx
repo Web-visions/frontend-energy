@@ -34,9 +34,9 @@ const Login = () => {
       if (currentUser.role === 'admin') {
         navigate('/dashboard/admin', { replace: true });
       } else if (currentUser.role === 'staff') {
-        navigate('/dashboard/staff', { replace: true });
+        navigate('/', { replace: true });
       } else {
-        navigate('/dashboard/user', { replace: true });
+        navigate('/', { replace: true });
       }
     }
   }, [isAuthenticated, isEmailVerified, currentUser, navigate]);

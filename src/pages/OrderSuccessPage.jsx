@@ -8,6 +8,10 @@ const OrderSuccessPage = () => {
     const navigate = useNavigate();
     const order = location.state;
 
+    useEffect(()=>{
+        window.scrollTo(0,0)
+    },[])
+
     useEffect(() => {
         if (!order) {
             navigate('/');
