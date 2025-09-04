@@ -39,10 +39,10 @@ const PRODUCT_LINE_TO_BRANDS = {
     "Livfast",
     "SF Batteries",
   ],
-  "Truck Batteries": ["Amaron", "Dynex", "Exide"],
-  "Genset Batteries": ["Exide"],
-  "Inverter & Battery Combo": ["Amaron", "Exide", "Luminous", "Microtek"],
-  "Inverter & UPS System": ["Amaron", "Exide", "Luminous", "Microtek"],
+  "Truck Batteries": ["Amaron", "Dynex", "Exide", "Bi Cell"],
+  "Genset Batteries": ["Exide","Bi Cell"],
+  "Inverter & Battery Combo": ["Amaron", "Exide", "Luminous", "Microtek","Bi Cell"],
+  "Inverter & UPS System": ["Exide", "Luminous", "Microtek"],
   "Inverter Batteries": [
     "Amaron",
     "Exide",
@@ -50,13 +50,16 @@ const PRODUCT_LINE_TO_BRANDS = {
     "Luminous",
     "Microtek",
     "SF Batteries",
+    "Bi Cell"
   ],
-  "SMF/VRLA Batteries": ["Amaron", "Exide"],
-  "Solar Batteries": ["Exide", "Luminous"],
+  "SMF/VRLA Batteries": ["Amaron", "Exide","Bi Cell"],
+  "Solar Batteries": ["Exide", "Luminous","Bi Cell"],
   "Solar Energy Solutions": ["Luminous", "Microtek"],
   "Solar Inverters": ["Luminous", "Microtek"],
   "Computer UPS": ["Microtek", "APC"],
-  "Voltage Stabilizer": ["Microtek"],
+  // "Voltage Stabilizer": ["Microtek"],
+    "Inverter": ["Amaron", "Exide", "Luminous", "Microtek"],
+
 };
 
 const CAPACITY_OPTIONS_AH = [
@@ -312,6 +315,7 @@ const ProductFinder = () => {
   };
 
   const USE_VA_PRODUCT_LINES = new Set([
+    "Inverter",
     "Inverter & UPS System",
     "Inverter & Battery Combo",
     "Solar Inverters",
