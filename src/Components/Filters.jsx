@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { RotateCcw, Filter, Star } from "lucide-react";
 import debounce from "lodash/debounce";
-import { BATTERY_CAPACITY_OPTIONS } from "../constants/capacity";
+import {
+  BATTERY_CAPACITY_OPTIONS,
+  VA_CAPACITY_OPTIONS,
+} from "../constants/capacity";
 
 const FilterSidebar = ({
   priceRange,
@@ -53,7 +56,7 @@ const FilterSidebar = ({
 
   const activeFiltersCount =
     Object.values(selectedFilters).filter((value) => value && value !== "")
-      .length + (displayedPrice !== 20000 ? 1 : 0);
+      .length + (displayedPrice !== 100000 ? 1 : 0);
 
   const urlParams = new URLSearchParams(window.location.search);
   const hasManufacturer =
@@ -158,44 +161,6 @@ const FilterSidebar = ({
           </div>
         </div>
 
-        {(!currentType || currentType === "") && (
-          <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-            <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
-              <span className="w-2 h-2 bg-purple-600 rounded-full"></span>
-              Category
-            </h3>
-            <div className="relative">
-              <select
-                value={selectedFilters.category}
-                onChange={(e) => handleFilterChange("category", e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
-              >
-                <option value="">All Categories</option>
-                {filterOptions.categories?.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        )}
-
         {currentType === "battery" && (
           <div className="space-y-2 sm:space-y-3 lg:space-y-4">
             <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
@@ -253,8 +218,13 @@ const FilterSidebar = ({
                   }))
                 }
               >
-                <option value="">All Capacities</option>
-                {BATTERY_CAPACITY_OPTIONS.map((opt) => (
+                {
+                (currentType === "inverter" ||
+                currentType === "solar-pcu" ||
+                currentType === "online-ups"
+                  ? VA_CAPACITY_OPTIONS
+                  : BATTERY_CAPACITY_OPTIONS
+                ).map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -321,74 +291,6 @@ const FilterSidebar = ({
             </div>
           </div>
         )}
-
-        <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-          <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
-            <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-500" />
-            Rating
-          </h3>
-          <div className="space-y-2 sm:space-y-3">
-            {[
-              { value: "", label: "All Ratings" },
-              { value: "4", label: "4★ & above" },
-              { value: "3", label: "3★ & above" },
-              { value: "2", label: "2★ & above" },
-              { value: "1", label: "1★ & above" },
-            ].map((option) => (
-              <label
-                key={option.value}
-                className="flex items-center cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="rating"
-                  value={option.value}
-                  checked={
-                    selectedFilters.rating === option.value ||
-                    (!selectedFilters.rating && option.value === "")
-                  }
-                  onChange={(e) => handleFilterChange("rating", e.target.value)}
-                  className="sr-only"
-                />
-                <div
-                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center mr-2 sm:mr-3 transition-all duration-200 ${
-                    selectedFilters.rating === option.value ||
-                    (!selectedFilters.rating && option.value === "")
-                      ? "bg-blue-600 border-blue-600"
-                      : "border-gray-300 bg-white"
-                  }`}
-                >
-                  {(selectedFilters.rating === option.value ||
-                    (!selectedFilters.rating && option.value === "")) && (
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-                <span
-                  className={`font-medium text-xs sm:text-sm lg:text-base flex-1 ${
-                    selectedFilters.rating === option.value ||
-                    (!selectedFilters.rating && option.value === "")
-                      ? "text-blue-600"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {option.label}
-                </span>
-                {option.value && (
-                  <div className="ml-auto flex">
-                    {Array.from({ length: parseInt(option.value) }).map(
-                      (_, i) => (
-                        <Star
-                          key={i}
-                          className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-yellow-400"
-                        />
-                      )
-                    )}
-                  </div>
-                )}
-              </label>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="bg-gray-50 border-t border-gray-200 p-3 sm:p-4 lg:p-6">

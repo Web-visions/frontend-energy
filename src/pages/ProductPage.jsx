@@ -13,6 +13,7 @@ import {
   Star,
   StarHalf,
 } from "lucide-react";
+import ProductFinder from "../Components/ProductFinder";
 
 // Helper function to render rating stars with better design
 const renderStars = (rating) => {
@@ -178,7 +179,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 export default function ProductListing() {
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({ brands: [], categories: [] });
-  const [priceRange, setPriceRange] = useState(10000);
+  const [priceRange, setPriceRange] = useState(100000);
   const [selectedFilters, setSelectedFilters] = useState({
     brand: "",
     category: "",
@@ -222,7 +223,7 @@ export default function ProductListing() {
       city: paramsObj.city || "",
     };
 
-    const urlPriceMax = paramsObj.maxPrice ? Number(paramsObj.maxPrice) : 20000;
+    const urlPriceMax = paramsObj.maxPrice ? Number(paramsObj.maxPrice) : 100000;
     const urlPage = paramsObj.page ? Number(paramsObj.page) : 1;
 
     setSelectedFilters(urlFilters);
@@ -347,7 +348,7 @@ export default function ProductListing() {
           minAH,
           maxAH,
           minPrice: paramsObj.minPrice ? Number(paramsObj.minPrice) : 0,
-          maxPrice: paramsObj.maxPrice ? Number(paramsObj.maxPrice) : 20000,
+          maxPrice: paramsObj.maxPrice ? Number(paramsObj.maxPrice) : 100000,
           page: paramsObj.page ? Number(paramsObj.page) : 1,
           limit: 8,
 
@@ -393,7 +394,7 @@ export default function ProductListing() {
   }
 
   const handleReset = () => {
-    setPriceRange(20000);
+    setPriceRange(100000);
     setSelectedFilters({
       brand: "",
       category: "",
@@ -452,10 +453,14 @@ export default function ProductListing() {
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-white min-h-screen">
+     
       <div className="max-w-7xl mx-auto p-4 md:p-8">
+         <div className="my-2">
+        <ProductFinder compact/>
+      </div>
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl md:text-2xl font-bold text-gray-900 mb-2">
             Our Products
           </h1>
           <p className="text-gray-600">
