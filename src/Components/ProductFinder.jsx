@@ -35,18 +35,18 @@ const BRAND_ALIAS_MAP = {
 
 const PRODUCT_LINE_TO_BRANDS = {
   "2 Wheeler Batteries": ["Amaron", "Exide", "SF Batteries"],
-  "Four Wheeler Batteries": ["Amaron", "Dynex", "Exide", "Livfast", "SF Batteries"],
-  "Truck Batteries": ["Amaron", "Dynex", "Exide", "Bi Cell"],
-  "Genset Batteries": ["Exide", "Bi Cell"],
+  "Four Wheeler Batteries": ["Amaron", "Exide", "SF Batteries"],
+  "Truck Batteries": ["Amaron", "SF Batteries", "Exide", "Bi Cell"],
+  "Genset Batteries": ["Exide", "Bi Cell","Amron"],
   "Inverter & Battery Combo": ["Amaron", "Exide", "Luminous", "Microtek", "Bi Cell"],
   "Inverter & UPS System": ["Exide", "Luminous", "Microtek"],
-  "Inverter Batteries": ["Amaron","Exide","Livfast","Luminous","Microtek","SF Batteries","Bi Cell"],
-  "SMF/VRLA Batteries": ["Amaron","Exide","Bi Cell"],
+  "Inverter Batteries": ["Amaron","Exide","Livfast","Luminous","Microtek","SF Batteries","Bi Cell","Okaya","Amaze"],
+  "SMF/VRLA Batteries": ["Amaron","Exide"],
   "Solar Batteries": ["Exide","Luminous","Bi Cell"],
   "Solar Energy Solutions": ["Luminous","Microtek"],
-  "Solar Inverters": ["Luminous","Microtek"],
-  "Online UPS": ["Microtek","APC"],
-  Inverter: ["Amaron", "Exide", "Luminous", "Microtek"],
+  "Solar Inverters": ["Luminous","Microtek","Su-vastika"],
+  "Online UPS": ["Microtek","APC","Su-vastika","Luminous"],
+  Inverter: ["Su-vastika", "Livguard", "Luminous", "Microtek"],
 };
 
 const CAPACITY_OPTIONS_AH = [
