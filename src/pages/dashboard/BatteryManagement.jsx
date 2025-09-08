@@ -26,7 +26,8 @@ import {
   TableRow,
   TablePagination,
   InputAdornment,
-  Chip
+  Chip,
+  Tooltip
 } from '@mui/material';
 import { img_url } from '../../config/api_route';
 
@@ -44,8 +45,6 @@ const BatteryManagement = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [featuresInput, setFeaturesInput] = useState('');
-  const [compatibleManufacturersInput, setCompatibleManufacturersInput] = useState([]);
-  const [compatibleModelsInput, setCompatibleModelsInput] = useState([]);
   const [formData, setFormData] = useState({
     productLine: '',
     brand: '',
@@ -62,10 +61,9 @@ const BatteryManagement = () => {
     priceWithoutOldBattery: '',
     priceWithOldBattery: '',
     isFeatured: false,
-    manufacturer: '',
-    vehicleModel: '',
-    compatibleManufacturers: [],
-    compatibleModels: []
+    // multi-select fields are arrays
+    manufacturer: [],
+    vehicleModel: [],
   });
   const [pagination, setPagination] = useState({
     page: 0,
@@ -82,11 +80,12 @@ const BatteryManagement = () => {
     manufacturer: '',
     productLine: ''
   });
+
   const fetchBatteries = useCallback(async () => {
     setLoading(true);
     try {
       let queryParams = `page=${pagination.page + 1}&limit=${pagination.limit}`;
-      if (search) queryParams += `&search=${search}`;
+      if (search) queryParams += `&search=${encodeURIComponent(search)}`;
       if (filters.batteryType) queryParams += `&batteryType=${filters.batteryType}`;
       if (filters.minAH) queryParams += `&minAH=${filters.minAH}`;
       if (filters.maxAH) queryParams += `&maxAH=${filters.maxAH}`;
@@ -96,12 +95,12 @@ const BatteryManagement = () => {
       if (filters.productLine) queryParams += `&productLine=${filters.productLine}`;
       const response = await getData(`/batteries?${queryParams}`);
       setBatteries(response.batteries || []);
-      setPagination({
-        ...pagination,
-        page: response.pagination.page ? response.pagination.page - 1 : 0,
-        limit: response.pagination.limit || pagination.limit,
-        total: response.pagination.total || 0
-      });
+      setPagination(prev => ({
+        ...prev,
+        page: response.pagination?.page ? response.pagination.page - 1 : prev.page,
+        limit: response.pagination?.limit || prev.limit,
+        total: response.pagination?.total || prev.total
+      }));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to fetch batteries');
     } finally {
@@ -112,36 +111,36 @@ const BatteryManagement = () => {
   const fetchCategories = async () => {
     try {
       const response = await getData('/categories');
-      setCategories(response.data);
-    } catch { }
+      setCategories(response.data || []);
+    } catch { /* ignore */ }
   };
 
   const fetchBrands = async () => {
     try {
       const response = await getData('/brands');
-      setBrands(response.data);
-    } catch { }
+      setBrands(response.data || []);
+    } catch { /* ignore */ }
   };
 
   const fetchProductLines = async () => {
     try {
       const response = await getData('/product-lines');
-      setProductLines(response.productLines);
-    } catch { }
+      setProductLines(response.productLines || []);
+    } catch { /* ignore */ }
   };
 
   const fetchManufacturers = async () => {
     try {
       const response = await getData('/manufacturers');
       setManufacturers(response.manufacturers || []);
-    } catch { }
+    } catch { /* ignore */ }
   };
 
   const fetchVehicleModels = async () => {
     try {
       const response = await getData('/vehicle-models');
       setVehicleModels(response.vehicleModels || []);
-    } catch { }
+    } catch { /* ignore */ }
   };
 
   useEffect(() => {
@@ -151,45 +150,45 @@ const BatteryManagement = () => {
     fetchProductLines();
     fetchManufacturers();
     fetchVehicleModels();
-  }, [fetchBatteries]);
-
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearchChange = (e) => setSearch(e.target.value);
-  const applySearch = () => { setPagination({ ...pagination, page: 0 }); fetchBatteries(); };
+  const applySearch = () => { setPagination(prev => ({ ...prev, page: 0 })); fetchBatteries(); };
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
-  const applyFilters = () => { setPagination({ ...pagination, page: 0 }); fetchBatteries(); };
+  const applyFilters = () => { setPagination(prev => ({ ...prev, page: 0 })); fetchBatteries(); };
   const resetFilters = () => {
     setFilters({ batteryType: '', minAH: '', maxAH: '', minPrice: '', maxPrice: '', manufacturer: '', productLine: '' });
     setSearch('');
-    setPagination({ ...pagination, page: 0 });
+    setPagination(prev => ({ ...prev, page: 0 }));
     fetchBatteries();
   };
-  const handlePageChange = (event, newPage) => setPagination({ ...pagination, page: newPage });
-  const handleChangeRowsPerPage = (event) => setPagination({ ...pagination, limit: parseInt(event.target.value, 10), page: 0 });
+  const handlePageChange = (event, newPage) => setPagination(prev => ({ ...prev, page: newPage }));
+  const handleChangeRowsPerPage = (event) => setPagination(prev => ({ ...prev, limit: parseInt(event.target.value, 10), page: 0 }));
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value
-    });
+    }));
+  };
+
+  // multi-select handlers
+  const handleManufacturerChange = (event) => {
+    const { value } = event.target;
+    setFormData(prev => ({ ...prev, manufacturer: typeof value === 'string' ? value.split(',') : value }));
+  };
+
+  const handleVehicleModelChange = (event) => {
+    const { value } = event.target;
+    setFormData(prev => ({ ...prev, vehicleModel: typeof value === 'string' ? value.split(',') : value }));
   };
 
   const handleFeaturesInputChange = (e) => setFeaturesInput(e.target.value);
-
-  const handleCompatibleManufacturersChange = (event) => {
-    const { value } = event.target;
-    setCompatibleManufacturersInput(typeof value === 'string' ? value.split(',') : value);
-  };
-
-  const handleCompatibleModelsChange = (event) => {
-    const { value } = event.target;
-    setCompatibleModelsInput(typeof value === 'string' ? value.split(',') : value);
-  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -207,7 +206,7 @@ const BatteryManagement = () => {
         productLine: battery.productLine?._id || battery.productLine || '',
         brand: battery.brand?._id || battery.brand || '',
         category: battery.category?._id || battery.category || '',
-        name: battery.name,
+        name: battery.name || '',
         description: battery.description || '',
         features: battery.features || [],
         nominalFilledWeight: battery.nominalFilledWeight || '',
@@ -219,14 +218,11 @@ const BatteryManagement = () => {
         priceWithoutOldBattery: battery.priceWithoutOldBattery || '',
         priceWithOldBattery: battery.priceWithOldBattery || '',
         isFeatured: !!battery.isFeatured,
-        manufacturer: battery.manufacturer?._id || battery.manufacturer || '',
-        vehicleModel: battery.vehicleModel?._id || battery.vehicleModel || '',
-        compatibleManufacturers: battery.compatibleManufacturers || [],
-        compatibleModels: battery.compatibleModels || []
+        // ensure arrays of ids for multi-selects
+        manufacturer: (battery.manufacturer || []).map(m => m._id || m),
+        vehicleModel: (battery.vehicleModel || []).map(v => v._id || v),
       });
       setFeaturesInput((battery.features || []).join(', '));
-      setCompatibleManufacturersInput(battery.compatibleManufacturers?.map(m => m._id || m) || []);
-      setCompatibleModelsInput(battery.compatibleModels?.map(m => m._id || m) || []);
       setIsEditing(true);
       setCurrentId(battery._id);
       if (battery.image) setImagePreview(`${img_url}${battery.image}`); else setImagePreview('');
@@ -248,14 +244,10 @@ const BatteryManagement = () => {
         priceWithoutOldBattery: '',
         priceWithOldBattery: '',
         isFeatured: false,
-        manufacturer: '',
-        vehicleModel: '',
-        compatibleManufacturers: [],
-        compatibleModels: []
+        manufacturer: [],
+        vehicleModel: [],
       });
       setFeaturesInput('');
-      setCompatibleManufacturersInput([]);
-      setCompatibleModelsInput([]);
       setIsEditing(false);
       setCurrentId(null);
       setImagePreview('');
@@ -272,17 +264,29 @@ const BatteryManagement = () => {
     try {
       const cleanedFeaturesArray = featuresInput.split(',').map(f => f.trim()).filter(Boolean);
       const formDataObj = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (key === 'features') {
-          formDataObj.append('features', JSON.stringify(cleanedFeaturesArray));
-        } else if (key === 'compatibleManufacturers') {
-          formDataObj.append('compatibleManufacturers', JSON.stringify(compatibleManufacturersInput));
-        } else if (key === 'compatibleModels') {
-          formDataObj.append('compatibleModels', JSON.stringify(compatibleModelsInput));
-        } else {
-          formDataObj.append(key, formData[key]);
-        }
-      });
+
+      // append every field manually so arrays become JSON strings when needed
+      formDataObj.append('productLine', formData.productLine || '');
+      formDataObj.append('brand', formData.brand || '');
+      formDataObj.append('category', formData.category || '');
+      formDataObj.append('name', formData.name || '');
+      formDataObj.append('description', formData.description || '');
+      formDataObj.append('features', JSON.stringify(cleanedFeaturesArray));
+      formDataObj.append('nominalFilledWeight', formData.nominalFilledWeight || '');
+      formDataObj.append('batteryType', formData.batteryType || '');
+      formDataObj.append('AH', formData.AH || '');
+      formDataObj.append('dimension', formData.dimension || '');
+      formDataObj.append('warranty', formData.warranty || '');
+      formDataObj.append('mrp', formData.mrp || '');
+      formDataObj.append('priceWithoutOldBattery', formData.priceWithoutOldBattery || '');
+      formDataObj.append('priceWithOldBattery', formData.priceWithOldBattery || '');
+      formDataObj.append('isFeatured', String(formData.isFeatured));
+
+      // manufacturer and vehicleModel as JSON arrays
+      formDataObj.append('manufacturer', JSON.stringify(formData.manufacturer || []));
+      formDataObj.append('vehicleModel', JSON.stringify(formData.vehicleModel || []));
+
+
       if (imageFile) formDataObj.append('image', imageFile);
 
       let response;
@@ -325,6 +329,22 @@ const BatteryManagement = () => {
     }
   };
 
+  // helper to render placeholder for single selects (MenuItem value "")
+  const ChoiceItem = ({ label = 'Choose...' }) => <em style={{ color: '#666' }}>{label}</em>;
+
+  // helper for multi-select renderValue to show placeholder when none selected
+  const multiSelectRender = (selected, mapSource, placeholder = 'Choose...') => {
+    if (!selected || selected.length === 0) return <em style={{ color: '#666' }}>{placeholder}</em>;
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+        {selected.map((value) => {
+          const item = mapSource.find(m => m._id === value);
+          return <Chip key={value} label={item?.name || value} size="small" />;
+        })}
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -360,7 +380,7 @@ const BatteryManagement = () => {
                     onChange={handleFilterChange}
                     label="Battery Type"
                   >
-                    <MenuItem value="">All Types</MenuItem>
+                    <MenuItem value=""><ChoiceItem label="All Types" /></MenuItem>
                     <MenuItem value="li ion">Li-ion</MenuItem>
                     <MenuItem value="lead acid">Lead Acid</MenuItem>
                     <MenuItem value="smf">SMF</MenuItem>
@@ -376,10 +396,10 @@ const BatteryManagement = () => {
                     onChange={handleFilterChange}
                     label="Product Line"
                   >
-                    <MenuItem value="">All Product Lines</MenuItem>
-                    {productLines?.map((productLine) => (
-                      <MenuItem key={productLine._id} value={productLine._id}>
-                        {productLine.name}
+                    <MenuItem value=""><ChoiceItem label="All Product Lines" /></MenuItem>
+                    {productLines?.map((pl) => (
+                      <MenuItem key={pl._id} value={pl._id}>
+                        {pl.name}
                       </MenuItem>
                     ))}
                   </Select>
@@ -394,15 +414,14 @@ const BatteryManagement = () => {
                     onChange={handleFilterChange}
                     label="Manufacturer"
                   >
-                    <MenuItem value="">All Manufacturers</MenuItem>
-                    {manufacturers?.map((manufacturer) => (
-                      <MenuItem key={manufacturer._id} value={manufacturer._id}>
-                        {manufacturer.name}
-                      </MenuItem>
+                    <MenuItem value=""><ChoiceItem label="All Manufacturers" /></MenuItem>
+                    {manufacturers?.map((m) => (
+                      <MenuItem key={m._id} value={m._id}>{m.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={6} sm={2}>
                 <TextField fullWidth label="Min AH" name="minAH" type="number" value={filters.minAH} onChange={handleFilterChange} variant="outlined" size="small" />
               </Grid>
@@ -478,8 +497,79 @@ const BatteryManagement = () => {
                   <TableCell>{battery?.productLine?.name || 'N/A'}</TableCell>
                   <TableCell>{battery?.category?.name || 'N/A'}</TableCell>
                   <TableCell>{battery?.brand?.name || 'N/A'}</TableCell>
-                  <TableCell>{battery?.manufacturer?.name || 'N/A'}</TableCell>
-                  <TableCell>{battery?.vehicleModel?.name || 'N/A'}</TableCell>
+                 <TableCell>
+  {Array.isArray(battery?.manufacturer) && battery.manufacturer.length > 0 ? (
+    <>
+      {battery.manufacturer.slice(0, 2).map((m, index) => (
+        <span key={m._id || index}>
+          {m.name || m}
+          {index < Math.min(1, battery.manufacturer.length - 1) && ', '}
+        </span>
+      ))}
+
+      {battery.manufacturer.length > 2 && (
+        <Tooltip
+          title={battery.manufacturer
+            .slice(2)
+            .map(m => m.name || m)
+            .join(', ')}
+          arrow
+        >
+          <span
+            style={{
+              color: '#6F13D3',
+              fontWeight: '500',
+              marginLeft: 4,
+              cursor: 'pointer'
+            }}
+          >
+            +{battery.manufacturer.length - 2}
+          </span>
+        </Tooltip>
+      )}
+    </>
+  ) : (
+    'N/A'
+  )}
+</TableCell>
+
+<TableCell>
+  {Array.isArray(battery?.vehicleModel) && battery.vehicleModel.length > 0 ? (
+    <>
+      {battery.vehicleModel.slice(0, 2).map((v, index) => (
+        <span key={v._id || index}>
+          {v.name || v}
+          {index < Math.min(1, battery.vehicleModel.length - 1) && ', '}
+        </span>
+      ))}
+
+      {battery.vehicleModel.length > 2 && (
+        <Tooltip
+          title={battery.vehicleModel
+            .slice(2)
+            .map(v => v.name || v)
+            .join(', ')}
+          arrow
+        >
+          <span
+            style={{
+              color: '#6F13D3',
+              fontWeight: '500',
+              marginLeft: 4,
+              cursor: 'pointer'
+            }}
+          >
+            +{battery.vehicleModel.length - 2}
+          </span>
+        </Tooltip>
+      )}
+    </>
+  ) : (
+    'N/A'
+  )}
+</TableCell>
+
+
                   <TableCell>{battery?.batteryType || 'N/A'}</TableCell>
                   <TableCell>{battery?.AH || 'N/A'}</TableCell>
                   <TableCell>₹{battery?.mrp || 'N/A'}</TableCell>
@@ -522,13 +612,14 @@ const BatteryManagement = () => {
                     onChange={handleInputChange}
                     label="Product Line"
                   >
-                    <MenuItem value="">Select Product Line</MenuItem>
-                    {productLines?.map((productLine) => (
-                      <MenuItem key={productLine._id} value={productLine._id}>{productLine.name}</MenuItem>
+                    <MenuItem value=""><ChoiceItem label="Choose..." /></MenuItem>
+                    {productLines?.map((pl) => (
+                      <MenuItem key={pl._id} value={pl._id}>{pl.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Category</InputLabel>
@@ -538,12 +629,14 @@ const BatteryManagement = () => {
                     onChange={handleInputChange}
                     label="Category"
                   >
+                    <MenuItem value=""><ChoiceItem label="Choose..." /></MenuItem>
                     {categories.map((category) => (
                       <MenuItem key={category._id} value={category._id}>{category.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Brand</InputLabel>
@@ -553,38 +646,47 @@ const BatteryManagement = () => {
                     onChange={handleInputChange}
                     label="Brand"
                   >
+                    <MenuItem value=""><ChoiceItem label="Choose..." /></MenuItem>
                     {brands.map((brand) => (
                       <MenuItem key={brand._id} value={brand._id}>{brand.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Manufacturer MULTISELECT */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Manufacturer</InputLabel>
                   <Select
+                    multiple
                     name="manufacturer"
                     value={formData.manufacturer}
-                    onChange={handleInputChange}
+                    onChange={handleManufacturerChange}
                     label="Manufacturer"
+                    renderValue={(selected) => multiSelectRender(selected, manufacturers, 'Choose...')}
                   >
-                    <MenuItem value="">Select Manufacturer</MenuItem>
                     {manufacturers?.map((manufacturer) => (
-                      <MenuItem key={manufacturer._id} value={manufacturer._id}>{manufacturer.name}</MenuItem>
+                      <MenuItem key={manufacturer._id} value={manufacturer._id}>
+                        {manufacturer.name}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Vehicle Model MULTISELECT */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Vehicle Model</InputLabel>
                   <Select
+                    multiple
                     name="vehicleModel"
                     value={formData.vehicleModel}
-                    onChange={handleInputChange}
+                    onChange={handleVehicleModelChange}
                     label="Vehicle Model"
+                    renderValue={(selected) => multiSelectRender(selected, vehicleModels, 'Choose...')}
                   >
-                    <MenuItem value="">Select Vehicle Model</MenuItem>
                     {vehicleModels?.map((model) => (
                       <MenuItem key={model._id} value={model._id}>
                         {model.name} ({model.manufacturer?.name})
@@ -593,12 +695,15 @@ const BatteryManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField required fullWidth label="Name" name="name" value={formData.name} onChange={handleInputChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Nominal Filled Weight" name="nominalFilledWeight" value={formData.nominalFilledWeight} onChange={handleInputChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Battery Type</InputLabel>
@@ -614,24 +719,31 @@ const BatteryManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="AH (Ampere Hour)" name="AH" type="number" value={formData.AH} onChange={handleInputChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Dimension" name="dimension" value={formData.dimension} onChange={handleInputChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Warranty" name="warranty" value={formData.warranty} onChange={handleInputChange} helperText="e.g., 24 months-6 months" />
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="MRP" name="mrp" type="number" value={formData.mrp} onChange={handleInputChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Price Without Old Battery" name="priceWithoutOldBattery" type="number" value={formData.priceWithoutOldBattery} onChange={handleInputChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Price With Old Battery" name="priceWithOldBattery" type="number" value={formData.priceWithOldBattery} onChange={handleInputChange} />
               </Grid>
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -643,6 +755,7 @@ const BatteryManagement = () => {
                   rows={3}
                 />
               </Grid>
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -653,58 +766,7 @@ const BatteryManagement = () => {
                   helperText="Enter features separated by commas"
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Compatible Manufacturers</InputLabel>
-                  <Select
-                    multiple
-                    name="compatibleManufacturers"
-                    value={compatibleManufacturersInput}
-                    onChange={handleCompatibleManufacturersChange}
-                    label="Compatible Manufacturers"
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => {
-                          const manufacturer = manufacturers.find(m => m._id === value);
-                          return <Chip key={value} label={manufacturer?.name || value} size="small" />;
-                        })}
-                      </Box>
-                    )}
-                  >
-                    {manufacturers?.map((manufacturer) => (
-                      <MenuItem key={manufacturer._id} value={manufacturer._id}>
-                        {manufacturer.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Compatible Models</InputLabel>
-                  <Select
-                    multiple
-                    name="compatibleModels"
-                    value={compatibleModelsInput}
-                    onChange={handleCompatibleModelsChange}
-                    label="Compatible Models"
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => {
-                          const model = vehicleModels.find(m => m._id === value);
-                          return <Chip key={value} label={model?.name || value} size="small" />;
-                        })}
-                      </Box>
-                    )}
-                  >
-                    {vehicleModels?.map((model) => (
-                      <MenuItem key={model._id} value={model._id}>
-                        {model.name} ({model.manufacturer?.name})
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+
               <Grid item xs={12}>
                 <Button variant="contained" component="label">
                   Upload Image
@@ -716,6 +778,7 @@ const BatteryManagement = () => {
                   </Box>
                 )}
               </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <Box display="flex" alignItems="center" mt={2}>
@@ -731,6 +794,7 @@ const BatteryManagement = () => {
                   </Box>
                 </FormControl>
               </Grid>
+
             </Grid>
           </Box>
         </DialogContent>
