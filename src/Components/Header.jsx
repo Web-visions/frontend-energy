@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Search,
   Menu,
   X,
   Phone,
   Mail,
-  MapPin,
-  ShoppingCart,
   User,
-  Sun,
-  Battery,
-  Zap,
   ChevronDown,
-  LogOut,
   LayoutDashboard,
 } from "lucide-react";
 import logo from "../assets/logo.png";
@@ -21,7 +14,6 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from '../context/CartContext';
 import { FiShoppingCart, FiUser, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-import MenuDropdown from './MenuDropdown';
 import LogoutModal from './LogoutModal';
 import LeadFormModal from './LeadFormModal';
 

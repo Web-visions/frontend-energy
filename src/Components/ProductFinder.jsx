@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { gsap } from "gsap";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { getData } from "../utils/http";
+import LeadFormModal from "./LeadFormModal"; // make sure path is correct
 
 /* -------------------- constants & helpers -------------------- */
 
@@ -37,19 +38,20 @@ const PRODUCT_LINE_TO_BRANDS = {
   "2 Wheeler Batteries": ["Amaron", "Exide", "SF Batteries"],
   "Four Wheeler Batteries": ["Amaron", "Exide", "SF Batteries"],
   "Truck Batteries": ["Amaron", "SF Batteries", "Exide", "Bi Cell"],
-  "Genset Batteries": ["Exide", "Bi Cell","Amron"],
+  "Genset Batteries": ["Exide", "Bi Cell", "Amron"],
   "Inverter & Battery Combo": ["Amaron", "Exide", "Luminous", "Microtek", "Bi Cell"],
   "Inverter & UPS System": ["Exide", "Luminous", "Microtek"],
-  "Inverter Batteries": ["Amaron","Exide","Livfast","Luminous","Microtek","SF Batteries","Bi Cell","Okaya","Amaze"],
-  "SMF/VRLA Batteries": ["Amaron","Exide"],
-  "Solar Batteries": ["Exide","Luminous","Bi Cell"],
-  "Solar Energy Solutions": ["Luminous","Microtek"],
-  "Solar Inverters": ["Luminous","Microtek","Su-vastika"],
-  "Online UPS": ["Microtek","APC","Su-vastika","Luminous"],
+  "Inverter Batteries": ["Amaron", "Exide", "Livfast", "Luminous", "Microtek", "SF Batteries", "Bi Cell", "Okaya", "Amaze"],
+  "SMF/VRLA Batteries": ["Amaron", "Exide"],
+  "Solar Batteries": ["Exide", "Luminous", "Bi Cell"],
+  "Solar Energy Solutions": ["Luminous", "Microtek"],
+  "Solar Inverters": ["Luminous", "Microtek", "Su-vastika"],
+  "Online UPS": ["Microtek", "APC", "Su-vastika", "Luminous"],
   Inverter: ["Su-vastika", "Livguard", "Luminous", "Microtek"],
 };
 
-const CAPACITY_OPTIONS_AH = [
+// generic AH buckets (kept for other product lines)
+const GENERIC_CAPACITY_OPTIONS_AH = [
   { value: "0-50", label: "0 - 50 AH" },
   { value: "51-100", label: "51 - 100 AH" },
   { value: "101-150", label: "101 - 150 AH" },
@@ -57,7 +59,18 @@ const CAPACITY_OPTIONS_AH = [
   { value: "200+", label: "200+ AH" },
 ];
 
-const CAPACITY_OPTIONS_VA = [
+// precise SMF/VRLA buckets covering 4.5 AH -> 200 AH
+const SMF_VRLA_CAPACITY_OPTIONS_AH = [
+  { value: "4.5-10", label: "4.5 - 10 AH" },
+  { value: "11-50", label: "11 - 50 AH" },
+  { value: "51-100", label: "51 - 100 AH" },
+  { value: "101-150", label: "101 - 150 AH" },
+  { value: "151-200", label: "151 - 200 AH" },
+  { value: "200+", label: "200+ AH" },
+];
+
+// VA options default (used for most VA product lines)
+const DEFAULT_CAPACITY_OPTIONS_VA = [
   { value: "0-1000", label: "≤ 1 kVA (≤ 1000 VA)" },
   { value: "1001-2000", label: "1–2 kVA" },
   { value: "2001-3000", label: "2–3 kVA" },
@@ -65,6 +78,7 @@ const CAPACITY_OPTIONS_VA = [
   { value: "5000+", label: "> 5 kVA" },
 ];
 
+// CITY and cache
 const CITY_OPTIONS_BY_STATE = {
   Haryana: ["Gurugram"],
 };
@@ -96,7 +110,7 @@ async function getCachedData(url) {
   return requestPromise;
 }
 
-const normalize = (v) => (v || "").toString().trim().toLowerCase();
+const normalize = (value) => (value || "").toString().trim().toLowerCase();
 const getCanonicalBrandName = (brandName) => {
   const key = normalize(brandName);
   return BRAND_ALIAS_MAP[key] || brandName;
@@ -104,6 +118,60 @@ const getCanonicalBrandName = (brandName) => {
 const getAllowedBrandNamesForProductLine = (productLineName) => {
   const allowed = PRODUCT_LINE_TO_BRANDS[productLineName] || [];
   return allowed.map(getCanonicalBrandName);
+};
+
+/* helper to produce inverter AH options: 100,110,...,260 */
+const generateInverterAhOptions = () => {
+  const options = [];
+  for (let ah = 100; ah <= 260; ah += 10) {
+    options.push({ value: `${ah}`, label: `${ah} AH` });
+  }
+  return options;
+};
+
+/* return AH options depending on product line */
+const getAhCapacityOptionsForProductLine = (productLineName) => {
+  if (!productLineName) return GENERIC_CAPACITY_OPTIONS_AH;
+
+  if (productLineName === "SMF/VRLA Batteries") {
+    return SMF_VRLA_CAPACITY_OPTIONS_AH;
+  }
+
+  if (productLineName === "Solar Batteries") {
+    // only 100 AH and 150 AH
+    return [
+      { value: "100", label: "100 AH" },
+      { value: "150", label: "150 AH" },
+    ];
+  }
+
+  if (productLineName === "Genset Batteries") {
+    // only 90 AH and 105 AH (order: 90 then 105)
+    return [
+      { value: "90", label: "90 AH" },
+      { value: "105", label: "105 AH" },
+    ];
+  }
+
+  if (productLineName === "Inverter Batteries") {
+    return generateInverterAhOptions(); // 100,110,...,260
+  }
+
+  // fallback to generic buckets
+  return GENERIC_CAPACITY_OPTIONS_AH;
+};
+
+/* return VA options depending on product line */
+const getVaCapacityOptionsForProductLine = (productLineName) => {
+  if (!productLineName) return DEFAULT_CAPACITY_OPTIONS_VA;
+
+  if (productLineName === "Online UPS") {
+    // special: only 705 VA
+    return [{ value: "705", label: "705 VA" }];
+  }
+
+  // default VA buckets
+  return DEFAULT_CAPACITY_OPTIONS_VA;
 };
 
 /* -------------------- component -------------------- */
@@ -125,12 +193,16 @@ const ProductFinder = ({ compact = false }) => {
   const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
 
+  // lead form modal state (for Solar Inverters project leads)
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [selectedProjectType, setSelectedProjectType] = useState(""); // 'on-grid-lead' | 'off-grid-lead' | 'hybrid-lead'
+
   const formRef = useRef(null);
   const navigate = useNavigate();
 
   /* derived flags */
   const selectedProductLineName = useMemo(
-    () => productLines.find((p) => p._id === selectedProductLineId)?.name || "",
+    () => productLines.find((pl) => pl._id === selectedProductLineId)?.name || "",
     [selectedProductLineId, productLines]
   );
 
@@ -142,10 +214,13 @@ const ProductFinder = ({ compact = false }) => {
     );
   }, [selectedProductLineName]);
 
-  // show capacity only when a product line is chosen AND it is NOT a vehicle product line
+  // special case: Solar Inverters selected
+  const isSolarInverterSelected = selectedProductLineName === "Solar Inverters";
+
+  // show capacity only when a product line is chosen AND it is NOT a vehicle product line and not Solar Inverters
   const showCapacity = useMemo(() => {
-    return Boolean(selectedProductLineName) && !isVehicleProductLine;
-  }, [selectedProductLineName, isVehicleProductLine]);
+    return Boolean(selectedProductLineName) && !isVehicleProductLine && !isSolarInverterSelected;
+  }, [selectedProductLineName, isVehicleProductLine, isSolarInverterSelected]);
 
   const getCategoryFromProductLine = (name) => {
     if (!name) return null;
@@ -184,6 +259,10 @@ const ProductFinder = ({ compact = false }) => {
     setSelectedVehicleModelId("");
     setVehicleModels([]);
     setManufacturers([]);
+
+    // reset solar-lead UI when changing away
+    setSelectedProjectType("");
+    setIsLeadModalOpen(false);
 
     if (!selectedProductLineId) return;
 
@@ -235,7 +314,7 @@ const ProductFinder = ({ compact = false }) => {
       return;
     }
     const allowed = new Set(getAllowedBrandNamesForProductLine(selectedProductLineName).map(normalize));
-    const matching = (brands || []).filter((b) => allowed.has(normalize(getCanonicalBrandName(b.name))));
+    const matching = (brands || []).filter((brand) => allowed.has(normalize(getCanonicalBrandName(brand.name))));
     setFilteredBrands(matching);
   }, [selectedProductLineName, brands]);
 
@@ -259,7 +338,7 @@ const ProductFinder = ({ compact = false }) => {
         "Solar Inverters",
         "Computer UPS",
         "Solar Energy Solutions",
-        "Online UPS", 
+        "Online UPS",
       ]),
     []
   );
@@ -285,7 +364,6 @@ const ProductFinder = ({ compact = false }) => {
     query.page = "1";
     navigate({ pathname: "/products", search: "?" + createSearchParams(query).toString() });
   };
-  
 
   const resetAll = () => {
     setSelectedProductLineId("");
@@ -295,9 +373,11 @@ const ProductFinder = ({ compact = false }) => {
     setSelectedCapacity("");
     setSelectedState("");
     setSelectedCity("");
+    setSelectedProjectType("");
+    setIsLeadModalOpen(false);
   };
 
-    // enable search only when a product line is selected AND at least 2 other filters are selected
+  // enable search only when a product line is selected AND at least 2 other filters are selected
   const isSearchEnabled = useMemo(() => {
     if (!selectedProductLineId) return false;
     // list the other fields that count toward the "at least 3" goal
@@ -325,6 +405,7 @@ const ProductFinder = ({ compact = false }) => {
 
   /* ---------- RENDER ---------- */
 
+  // compact UI
   if (compact) {
     return (
       <div className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2">
@@ -345,145 +426,191 @@ const ProductFinder = ({ compact = false }) => {
             </select>
           </div>
 
-          {/* Manufacturer & Vehicle Model - ONLY for vehicle product lines */}
-          {isVehicleProductLine && (
+          {/* If Solar Inverters selected show project options instead of other filters */}
+          {isSolarInverterSelected ? (
             <>
-              <div className="min-w-[150px]">
+              <div className="min-w-[200px]">
                 <select
-                  value={selectedManufacturerId}
-                  onChange={(e) => setSelectedManufacturerId(e.target.value)}
-                  disabled={!selectedProductLineId || manufacturers.length === 0}
-                  className="text-sm p-2 border border-gray-300 rounded min-w-[150px] disabled:opacity-50"
+                  value={selectedProjectType}
+                  onChange={(e) => setSelectedProjectType(e.target.value)}
+                  className="text-sm p-2 border border-gray-300 rounded min-w-[200px]"
                 >
-                  <option value="">
-                    {!selectedProductLineId
-                      ? "Select product line"
-                      : manufacturers.length
-                      ? "Manufacturer"
-                      : "No manufacturers"}
-                  </option>
-                  {manufacturers.map((m) => (
-                    <option key={m._id} value={m._id}>
-                      {m.name}
+                  <option value="">Select Project Type</option>
+                  <option value="on-grid-lead">On Grid Project</option>
+                  <option value="off-grid-lead">Off Grid Project</option>
+                  <option value="hybrid-lead">Hybrid Project</option>
+                </select>
+              </div>
+
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (!selectedProjectType) return;
+                    setIsLeadModalOpen(true);
+                  }}
+                  disabled={!selectedProjectType}
+                  className="text-sm px-3 py-2 border border-gray-300 rounded bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Open Form
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Manufacturer & Vehicle Model - ONLY for vehicle product lines */}
+              {isVehicleProductLine && (
+                <>
+                  <div className="min-w-[150px]">
+                    <select
+                      value={selectedManufacturerId}
+                      onChange={(e) => setSelectedManufacturerId(e.target.value)}
+                      disabled={!selectedProductLineId || manufacturers.length === 0}
+                      className="text-sm p-2 border border-gray-300 rounded min-w-[150px] disabled:opacity-50"
+                    >
+                      <option value="">
+                        {!selectedProductLineId
+                          ? "Select product line"
+                          : manufacturers.length
+                          ? "Manufacturer"
+                          : "No manufacturers"}
+                      </option>
+                      {manufacturers.map((manufacturer) => (
+                        <option key={manufacturer._id} value={manufacturer._id}>
+                          {manufacturer.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="min-w-[150px]">
+                    <select
+                      value={selectedVehicleModelId}
+                      onChange={(e) => setSelectedVehicleModelId(e.target.value)}
+                      disabled={!selectedManufacturerId || vehicleModels.length === 0}
+                      className="text-sm p-2 border border-gray-300 rounded min-w-[150px] disabled:opacity-50"
+                    >
+                      <option value="">
+                        {!selectedProductLineId
+                          ? "Select product line"
+                          : !selectedManufacturerId
+                          ? "Select manufacturer first"
+                          : vehicleModels.length
+                          ? "Vehicle model"
+                          : "No models"}
+                      </option>
+                      {vehicleModels.map((vm) => (
+                        <option key={vm._id} value={vm._id}>
+                          {vm.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Capacity - only when selected product line is non-vehicle */}
+              {showCapacity && (
+                <div className="min-w-[140px]">
+                  <select
+                    value={selectedCapacity}
+                    onChange={(e) => setSelectedCapacity(e.target.value)}
+                    className="text-sm p-2 border border-gray-300 rounded min-w-[140px]"
+                  >
+                    <option value="">{capacityUnit === "VA" ? "VA/kVA" : "AH"}</option>
+
+                    {capacityUnit === "VA"
+                      ? // VA case: special per product line (Online UPS -> 705 VA only)
+                        getVaCapacityOptionsForProductLine(selectedProductLineName).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))
+                      : // AH case: product-line-specific AH options
+                        getAhCapacityOptionsForProductLine(selectedProductLineName).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Brand */}
+              <div className="min-w-[140px]">
+                <select
+                  value={selectedBrandId}
+                  onChange={(e) => setSelectedBrandId(e.target.value)}
+                  disabled={filteredBrands.length === 0}
+                  className="text-sm p-2 border border-gray-300 rounded min-w-[140px] disabled:opacity-50"
+                >
+                  <option value="">{filteredBrands.length ? "Brand" : "Brand"}</option>
+                  {filteredBrands.map((brand) => (
+                    <option key={brand._id} value={brand._id}>
+                      {brand.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="min-w-[150px]">
+              {/* State */}
+              <div className="min-w-[130px]">
                 <select
-                  value={selectedVehicleModelId}
-                  onChange={(e) => setSelectedVehicleModelId(e.target.value)}
-                  disabled={!selectedManufacturerId || vehicleModels.length === 0}
-                  className="text-sm p-2 border border-gray-300 rounded min-w-[150px] disabled:opacity-50"
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="text-sm p-2 border border-gray-300 rounded min-w-[130px]"
                 >
-                  <option value="">
-                    {!selectedProductLineId
-                      ? "Select product line"
-                      : !selectedManufacturerId
-                      ? "Select manufacturer first"
-                      : vehicleModels.length
-                      ? "Vehicle model"
-                      : "No models"}
-                  </option>
-                  {vehicleModels.map((vm) => (
-                    <option key={vm._id} value={vm._id}>
-                      {vm.name}
-                    </option>
-                  ))}
+                  <option value="">State</option>
+                  <option value="Haryana">Haryana</option>
                 </select>
+              </div>
+
+              {/* City */}
+              <div className="min-w-[130px]">
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  disabled={!selectedState || !CITY_OPTIONS_BY_STATE[selectedState]}
+                  className="text-sm p-2 border border-gray-300 rounded min-w-[130px] disabled:opacity-50"
+                >
+                  <option value="">{selectedState ? "City" : "Select state"}</option>
+                  {selectedState &&
+                    (CITY_OPTIONS_BY_STATE[selectedState] || []).map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Actions */}
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={resetAll}
+                  className="text-sm px-3 py-2 border border-gray-300 rounded bg-white hover:bg-gray-50"
+                  aria-label="Reset filters"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={handleSearch}
+                  disabled={!isSearchEnabled}
+                  className="flex items-center gap-2 text-sm px-3 py-2 rounded bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Find products"
+                >
+                  <Search size={15} />
+                  Find
+                </button>
               </div>
             </>
           )}
-
-         
-
-          {/* Capacity - only when selected product line is non-vehicle */}
-          {showCapacity && (
-            <div className="min-w-[140px]">
-              <select
-                value={selectedCapacity}
-                onChange={(e) => setSelectedCapacity(e.target.value)}
-                className="text-sm p-2 border border-gray-300 rounded min-w-[140px]"
-              >
-                <option value="">{capacityUnit === "VA" ? "VA/kVA" : "AH"}</option>
-                {(capacityUnit === "VA" ? CAPACITY_OPTIONS_VA : CAPACITY_OPTIONS_AH).map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-           {/* Brand */}
-          <div className="min-w-[140px]">
-            <select
-              value={selectedBrandId}
-              onChange={(e) => setSelectedBrandId(e.target.value)}
-              disabled={filteredBrands.length === 0}
-              className="text-sm p-2 border border-gray-300 rounded min-w-[140px] disabled:opacity-50"
-            >
-              <option value="">{filteredBrands.length ? "Brand" : "Brand"}</option>
-              {filteredBrands.map((b) => (
-                <option key={b._id} value={b._id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* State */}
-          <div className="min-w-[130px]">
-            <select
-              value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
-              className="text-sm p-2 border border-gray-300 rounded min-w-[130px]"
-            >
-              <option value="">State</option>
-              <option value="Haryana">Haryana</option>
-            </select>
-          </div>
-
-          {/* City */}
-          <div className="min-w-[130px]">
-            <select
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              disabled={!selectedState || !CITY_OPTIONS_BY_STATE[selectedState]}
-              className="text-sm p-2 border border-gray-300 rounded min-w-[130px] disabled:opacity-50"
-            >
-              <option value="">{selectedState ? "City" : "Select state"}</option>
-              {selectedState &&
-                (CITY_OPTIONS_BY_STATE[selectedState] || []).map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          {/* Actions */}
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={resetAll}
-              className="text-sm px-3 py-2 border border-gray-300 rounded bg-white hover:bg-gray-50"
-              aria-label="Reset filters"
-            >
-              Reset
-            </button>
-            <button
-              onClick={handleSearch}
-              // disabled={!selectedProductLineId}
-              disabled={!isSearchEnabled}
-              className="flex items-center gap-2 text-sm px-3 py-2 rounded bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Find products"
-            >
-              <Search size={15} />
-              Find
-            </button>
-          </div>
         </div>
+
+        {/* Lead modal for solar projects */}
+        <LeadFormModal
+          isOpen={isLeadModalOpen}
+          onClose={() => setIsLeadModalOpen(false)}
+          projectType={selectedProjectType}
+        />
       </div>
     );
   }
@@ -519,122 +646,153 @@ const ProductFinder = ({ compact = false }) => {
                 </select>
               </div>
 
-              {/* Manufacturer & Vehicle Model: only render when product line is a vehicle type */}
-              {isVehicleProductLine && (
-                <>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Select Manufacturer</label>
+              {/* Solar Inverters special UI */}
+              {isSolarInverterSelected ? (
+                <div className="space-y-4 w-full">
+                  <label className="block w-full text-sm font-semibold text-gray-700 mb-3">Choose Project Type</label>
+                  <div className="flex gap-3 w-full items-center">
                     <select
-                      value={selectedManufacturerId}
-                      onChange={(e) => setSelectedManufacturerId(e.target.value)}
-                      disabled={!selectedProductLineId || manufacturers.length === 0}
+                      value={selectedProjectType}
+                      onChange={(e) => setSelectedProjectType(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                    >
+                      <option value="">Select Project Type</option>
+                      <option value="on-grid-lead">On Grid Project</option>
+                      <option value="off-grid-lead">Off Grid Project</option>
+                      <option value="hybrid-lead">Hybrid Project</option>
+                    </select>
+                  </div>
+
+                  <p className="text-sm text-gray-500">
+                    Select one of the project types and click "Open Project Form" to submit a lead. The form will use the project fields you already have defined.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {isVehicleProductLine && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">Select Manufacturer</label>
+                        <select
+                          value={selectedManufacturerId}
+                          onChange={(e) => setSelectedManufacturerId(e.target.value)}
+                          disabled={!selectedProductLineId || manufacturers.length === 0}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none disabled:opacity-50"
+                        >
+                          <option value="">
+                            {!selectedProductLineId ? "Select product line first" : manufacturers.length ? "Choose a Manufacturer" : "No Manufacturer Available"}
+                          </option>
+                          {manufacturers.map((manufacturer) => (
+                            <option key={manufacturer._id} value={manufacturer._id}>
+                              {manufacturer.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">Select Vehicle Model</label>
+                        <select
+                          value={selectedVehicleModelId}
+                          onChange={(e) => setSelectedVehicleModelId(e.target.value)}
+                          disabled={!selectedManufacturerId || vehicleModels.length === 0}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none disabled:opacity-50"
+                        >
+                          <option value="">
+                            {!selectedProductLineId
+                              ? "Select product line first"
+                              : !selectedManufacturerId
+                              ? "Select manufacturer first"
+                              : vehicleModels.length
+                              ? "Choose a Vehicle Model"
+                              : "No Model Available"}
+                          </option>
+                          {vehicleModels.map((vehicleModel) => (
+                            <option key={vehicleModel._id} value={vehicleModel._id}>
+                              {vehicleModel.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Capacity - only shown when product line selected and it is NOT a vehicle product line */}
+                  {showCapacity && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">Select Capacity ({capacityUnit === "VA" ? "VA/kVA" : "AH"})</label>
+                      <select
+                        value={selectedCapacity}
+                        onChange={(e) => setSelectedCapacity(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                      >
+                        <option value="">{`Choose ${capacityUnit === "VA" ? "VA/kVA" : "AH"}`}</option>
+
+                        {capacityUnit === "VA"
+                          ? getVaCapacityOptionsForProductLine(selectedProductLineName).map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))
+                          : getAhCapacityOptionsForProductLine(selectedProductLineName).map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Brand */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Select Brand</label>
+                    <select
+                      value={selectedBrandId}
+                      onChange={(e) => setSelectedBrandId(e.target.value)}
+                      disabled={filteredBrands.length === 0}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none disabled:opacity-50"
                     >
-                      <option value="">
-                        {!selectedProductLineId ? "Select product line first" : manufacturers.length ? "Choose a Manufacturer" : "No Manufacturer Available"}
-                      </option>
-                      {manufacturers.map((manufacturer) => (
-                        <option key={manufacturer._id} value={manufacturer._id}>
-                          {manufacturer.name}
+                      <option value="">{selectedProductLineId ? (filteredBrands.length ? "Choose a Brand" : "No Brand Available for this Product Line") : "Select a Product Line first"}</option>
+                      {filteredBrands.map((brand) => (
+                        <option key={brand._id} value={brand._id}>
+                          {brand.name}
                         </option>
                       ))}
                     </select>
                   </div>
 
+                  {/* State */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Select Vehicle Model</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Select State</label>
                     <select
-                      value={selectedVehicleModelId}
-                      onChange={(e) => setSelectedVehicleModelId(e.target.value)}
-                      disabled={!selectedManufacturerId || vehicleModels.length === 0}
+                      value={selectedState}
+                      onChange={(e) => setSelectedState(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                    >
+                      <option value="">Choose a State</option>
+                      <option value="Haryana">Haryana</option>
+                    </select>
+                  </div>
+
+                  {/* City */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Select City</label>
+                    <select
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      disabled={!selectedState}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none disabled:opacity-50"
                     >
-                      <option value="">
-                        {!selectedProductLineId
-                          ? "Select product line first"
-                          : !selectedManufacturerId
-                          ? "Select manufacturer first"
-                          : vehicleModels.length
-                          ? "Choose a Vehicle Model"
-                          : "No Model Available"}
-                      </option>
-                      {vehicleModels.map((vehicleModel) => (
-                        <option key={vehicleModel._id} value={vehicleModel._id}>
-                          {vehicleModel.name}
+                      <option value="">{selectedState ? "Choose a City" : "Select a State first"}</option>
+                      {selectedState && (CITY_OPTIONS_BY_STATE[selectedState] || []).map((city) => (
+                        <option key={city} value={city}>
+                          {city}
                         </option>
                       ))}
                     </select>
                   </div>
                 </>
               )}
-
-              {/* Capacity - only shown when product line selected and it is NOT a vehicle product line */}
-              {showCapacity && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Select Capacity ({capacityUnit === "VA" ? "VA/kVA" : "AH"})</label>
-                  <select
-                    value={selectedCapacity}
-                    onChange={(e) => setSelectedCapacity(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
-                  >
-                    <option value="">{`Choose ${capacityUnit === "VA" ? "VA/kVA" : "AH"}`}</option>
-                    {(capacityUnit === "VA" ? CAPACITY_OPTIONS_VA : CAPACITY_OPTIONS_AH).map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Brand */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Select Brand</label>
-                <select
-                  value={selectedBrandId}
-                  onChange={(e) => setSelectedBrandId(e.target.value)}
-                  disabled={filteredBrands.length === 0}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none disabled:opacity-50"
-                >
-                  <option value="">{selectedProductLineId ? (filteredBrands.length ? "Choose a Brand" : "No Brand Available for this Product Line") : "Select a Product Line first"}</option>
-                  {filteredBrands.map((brand) => (
-                    <option key={brand._id} value={brand._id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* State */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Select State</label>
-                <select
-                  value={selectedState}
-                  onChange={(e) => setSelectedState(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
-                >
-                  <option value="">Choose a State</option>
-                  <option value="Haryana">Haryana</option>
-                </select>
-              </div>
-
-              {/* City */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Select City</label>
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  disabled={!selectedState}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none disabled:opacity-50"
-                >
-                  <option value="">{selectedState ? "Choose a City" : "Select a State first"}</option>
-                  {selectedState && (CITY_OPTIONS_BY_STATE[selectedState] || []).map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             <div className="p-6 bg-gray-50 rounded-b-lg">
@@ -645,21 +803,38 @@ const ProductFinder = ({ compact = false }) => {
                 >
                   Reset
                 </button>
-                <button
-                  onClick={handleSearch}
-                  // disabled={!selectedProductLineId}
-                  disabled={!isSearchEnabled}
-                  className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Search size={18} />
-                  Find Products
-                </button>
+
+                {/* If Solar Inverter selected, show Open Form button else show Find Products */}
+                {isSolarInverterSelected ? (
+                  <button
+                    onClick={() => setIsLeadModalOpen(true)}
+                    disabled={!selectedProjectType}
+                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Open Project Form
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSearch}
+                    disabled={!isSearchEnabled}
+                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Search size={18} />
+                    Find Products
+                  </button>
+                )}
               </div>
             </div>
-
           </div>
         </div>
       </div>
+
+      {/* Lead modal for solar projects */}
+      <LeadFormModal
+        isOpen={isLeadModalOpen}
+        onClose={() => setIsLeadModalOpen(false)}
+        projectType={selectedProjectType}
+      />
     </div>
   );
 };
