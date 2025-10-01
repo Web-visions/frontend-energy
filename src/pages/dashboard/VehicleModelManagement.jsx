@@ -94,14 +94,13 @@ const VehicleModelManagement = () => {
     const fetchManufacturers = async () => {
         try {
             const response = await getData('/manufacturers');
-            console.log(response, "MAN")
+
             setManufacturers(response.manufacturers || []);
         } catch (err) {
             toast.error('Failed to fetch manufacturers');
         }
     };
 
-    console.log(manufacturers, "MAN F")
 
     useEffect(() => {
         fetchVehicleModels();

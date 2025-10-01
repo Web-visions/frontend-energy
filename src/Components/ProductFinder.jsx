@@ -374,10 +374,7 @@ const ProductFinder = ({ compact = false }) => {
 
   params.append("page", "1");
 
-  // debug: confirm query string contains productLineName
-  console.log("URL will be:", params.toString());
 
-  // Use a string path — this reliably sets the search/query part in react-router
   navigate(`/products?${params.toString()}`);
 };
 

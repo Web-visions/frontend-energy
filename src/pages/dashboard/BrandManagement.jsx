@@ -347,7 +347,6 @@ const BrandManagement = () => {
               </TableRow>
             ) : (
               brands.map((brand) => {
-console.log(img_url+brand.logo,"BRAND")
                 return <TableRow key={brand._id}>
                   <TableCell>{brand.name}</TableCell>
                   <TableCell>

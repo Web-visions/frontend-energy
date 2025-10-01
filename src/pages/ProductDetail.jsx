@@ -13,9 +13,7 @@ const ProductDetails = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        console.log('Fetching product with type:', type, 'and id:', id);
         const data = await productService.getProduct(type, id);
-        console.log('Received product data:', data);
         setProduct(data);
       } catch (err) {
         console.error('Error fetching product:', err);

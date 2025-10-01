@@ -37,10 +37,7 @@ const Settings = () => {
   };
   
   const saveNotificationSettings = () => {
-    // Here you would typically make an API call to save the settings
-    console.log('Saving notification settings:', notificationSettings);
-    setMessage('Notification preferences saved successfully!');
-    
+   
     // Clear message after 3 seconds
     setTimeout(() => {
       setMessage('');
@@ -48,8 +45,7 @@ const Settings = () => {
   };
   
   const saveDisplaySettings = () => {
-    // Here you would typically make an API call to save the settings
-    console.log('Saving display settings:', displaySettings);
+   
     setMessage('Display preferences saved successfully!');
     
     // Clear message after 3 seconds

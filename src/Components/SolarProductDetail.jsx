@@ -89,12 +89,8 @@ const SolarProductDetail = () => {
             productType?.includes('solar');
     };
 
-    if (!isSolarProduct()) {
-        console.log('Not a solar product, returning null');
-        return null;
-    }
+ 
 
-    // Get all available images
     const allImages = product.images || [product.image];
 
     return (
