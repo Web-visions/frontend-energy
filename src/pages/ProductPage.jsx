@@ -188,6 +188,7 @@ export default function ProductListing() {
     batteryType: undefined,
     capacityRange: "",
     productLine: "",
+    productLineName : "",
     manufacturer: "",
     vehicleModel: "",
     state: "",
@@ -217,6 +218,7 @@ export default function ProductListing() {
       batteryType: paramsObj.batteryType || undefined,
       capacityRange: paramsObj.capacityRange || "",
       productLine: paramsObj.productLine || "",
+          productLineName: paramsObj.productLineName || "", 
       manufacturer: paramsObj.manufacturer || "",
       vehicleModel: paramsObj.vehicleModel || "",
       state: paramsObj.state || "",
@@ -288,6 +290,10 @@ export default function ProductListing() {
     if (selectedFilters.brand) params.set("brand", selectedFilters.brand);
     if (selectedFilters.category)
       params.set("category", selectedFilters.category);
+    if (selectedFilters.productLineName) {
+  params.set("productLineName", selectedFilters.productLineName);
+}
+
     if (selectedSubcategory) params.append("subcategory", selectedSubcategory);
     if (selectedFilters.type) params.set("type", selectedFilters.type);
     if (selectedFilters.rating) params.set("rating", selectedFilters.rating);
@@ -354,6 +360,7 @@ export default function ProductListing() {
 
           // NEW: from Product Finder
           productLine: paramsObj.productLine || "",
+              productLineName: paramsObj.productLineName || "",
           manufacturer: paramsObj.manufacturer || "",
           vehicleModel: paramsObj.vehicleModel || "",
         };

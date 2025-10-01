@@ -168,6 +168,11 @@ const getVaCapacityOptionsForProductLine = (productLineName) => {
   if (productLineName === "Online UPS") {
     // special: only 705 VA
     return [{ value: "705", label: "705 VA" }];
+  //   return [{ value: "0-1000", label: "≤ 1 kVA (≤ 1000 VA)" },
+  // { value: "1001-2000", label: "1–2 kVA" },
+  // { value: "2001-3000", label: "2–3 kVA" },
+  // { value: "3001-5000", label: "3–5 kVA" },
+  // { value: "5000+", label: "> 5 kVA" },]
   }
 
   // default VA buckets
@@ -353,17 +358,30 @@ const ProductFinder = ({ compact = false }) => {
 
   /* handlers */
   const handleSearch = () => {
-    const query = {};
-    if (selectedProductLineId) query.productLine = selectedProductLineId;
-    if (selectedManufacturerId) query.manufacturer = selectedManufacturerId;
-    if (selectedVehicleModelId) query.vehicleModel = selectedVehicleModelId;
-    if (selectedBrandId) query.brand = selectedBrandId;
-    if (showCapacity && selectedCapacity) query.capacityRange = selectedCapacity;
-    if (selectedState) query.state = selectedState;
-    if (selectedCity) query.city = selectedCity;
-    query.page = "1";
-    navigate({ pathname: "/products", search: "?" + createSearchParams(query).toString() });
-  };
+  const params = new URLSearchParams();
+
+  if (selectedProductLineId) {
+    params.append("productLine", selectedProductLineId);
+    params.append("productLineName", selectedProductLineName);
+  }
+
+  if (selectedManufacturerId) params.append("manufacturer", selectedManufacturerId);
+  if (selectedVehicleModelId) params.append("vehicleModel", selectedVehicleModelId);
+  if (selectedBrandId && selectedBrandId !== "all") params.append("brand", selectedBrandId);
+  if (showCapacity && selectedCapacity) params.append("capacityRange", selectedCapacity);
+  if (selectedState) params.append("state", selectedState);
+  if (selectedCity) params.append("city", selectedCity);
+
+  params.append("page", "1");
+
+  // debug: confirm query string contains productLineName
+  console.log("URL will be:", params.toString());
+
+  // Use a string path — this reliably sets the search/query part in react-router
+  navigate(`/products?${params.toString()}`);
+};
+
+
 
   const resetAll = () => {
     setSelectedProductLineId("");
@@ -391,8 +409,7 @@ const ProductFinder = ({ compact = false }) => {
     ];
     // count non-empty others
     const selectedOthers = otherFields.filter((v) => v && v !== "").length;
-    // require at least 2 other selections (so productLine + 2 others = 3)
-    return selectedOthers >= 2;
+    return selectedOthers >= 1;
   }, [
     selectedProductLineId,
     selectedManufacturerId,
@@ -537,20 +554,20 @@ const ProductFinder = ({ compact = false }) => {
 
               {/* Brand */}
               <div className="min-w-[140px]">
-                <select
-                  value={selectedBrandId}
-                  onChange={(e) => setSelectedBrandId(e.target.value)}
-                  disabled={filteredBrands.length === 0}
-                  className="text-sm p-2 border border-gray-300 rounded min-w-[140px] disabled:opacity-50"
-                >
-                  <option value="">{filteredBrands.length ? "Brand" : "Brand"}</option>
-                  {filteredBrands.map((brand) => (
-                    <option key={brand._id} value={brand._id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+  <select
+    value={selectedBrandId}
+    onChange={(e) => setSelectedBrandId(e.target.value)}
+    className="text-sm p-2 border border-gray-300 rounded min-w-[140px]"
+  >
+    <option value="all">All Brands</option>
+    {filteredBrands.map((brand) => (
+      <option key={brand._id} value={brand._id}>
+        {brand.name}
+      </option>
+    ))}
+  </select>
+</div>
+
 
               {/* State */}
               <div className="min-w-[130px]">
@@ -744,22 +761,22 @@ const ProductFinder = ({ compact = false }) => {
                   )}
 
                   {/* Brand */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Select Brand</label>
-                    <select
-                      value={selectedBrandId}
-                      onChange={(e) => setSelectedBrandId(e.target.value)}
-                      disabled={filteredBrands.length === 0}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none disabled:opacity-50"
-                    >
-                      <option value="">{selectedProductLineId ? (filteredBrands.length ? "Choose a Brand" : "No Brand Available for this Product Line") : "Select a Product Line first"}</option>
-                      {filteredBrands.map((brand) => (
-                        <option key={brand._id} value={brand._id}>
-                          {brand.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                 <div>
+  <label className="block text-sm font-semibold text-gray-700 mb-3">Select Brand</label>
+  <select
+    value={selectedBrandId}
+    onChange={(e) => setSelectedBrandId(e.target.value)}
+    className="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+  >
+    <option value="all">All Brands</option>
+    {filteredBrands.map((brand) => (
+      <option key={brand._id} value={brand._id}>
+        {brand.name}
+      </option>
+    ))}
+  </select>
+</div>
+
 
                   {/* State */}
                   <div>

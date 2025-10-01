@@ -1,10 +1,140 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { RotateCcw, Filter, Star } from "lucide-react";
+import { RotateCcw, Filter } from "lucide-react";
 import debounce from "lodash/debounce";
-import {
-  BATTERY_CAPACITY_OPTIONS,
-  VA_CAPACITY_OPTIONS,
-} from "../constants/capacity";
+
+/* -------------------- BRAND MAPPING CONSTANTS -------------------- */
+
+const BRAND_ALIAS_MAP = {
+  amron: "Amaron",
+  amaron: "Amaron",
+  excide: "Exide",
+  exide: "Exide",
+  "sf sonic": "SF Batteries",
+  "sf batteries": "SF Batteries",
+  dynax: "Dynex",
+  dynex: "Dynex",
+  livguard: "Livfast",
+  livgurard: "Livfast",
+  livegurard: "Livfast",
+  livfast: "Livfast",
+  microtk: "Microtek",
+  microke: "Microtek",
+  microtek: "Microtek",
+  luminous: "Luminous",
+  apc: "APC",
+  vikram: "Vikram",
+  warree: "Warree",
+  "usha shriram": "Usha Shriram",
+  "bi cell": "Bi Cell",
+  "su-vastika": "Su-vastika",
+  adani: "Adani",
+};
+
+const PRODUCT_LINE_TO_BRANDS = {
+  "2 Wheeler Batteries": ["Amaron", "Exide", "SF Batteries"],
+  "Four Wheeler Batteries": ["Amaron", "Exide", "SF Batteries"],
+  "Truck Batteries": ["Amaron", "SF Batteries", "Exide", "Bi Cell"],
+  "Genset Batteries": ["Exide", "Bi Cell", "Amron"],
+  "Inverter & Battery Combo": ["Amaron", "Exide", "Luminous", "Microtek", "Bi Cell"],
+  "Inverter & UPS System": ["Exide", "Luminous", "Microtek"],
+  "Inverter Batteries": ["Amaron", "Exide", "Livfast", "Luminous", "Microtek", "SF Batteries", "Bi Cell", "Okaya", "Amaze"],
+  "SMF/VRLA Batteries": ["Amaron", "Exide"],
+  "Solar Batteries": ["Exide", "Luminous", "Bi Cell"],
+  "Solar Energy Solutions": ["Luminous", "Microtek"],
+  "Solar Inverters": ["Luminous", "Microtek", "Su-vastika"],
+  "Online UPS": ["Microtek", "APC", "Su-vastika", "Luminous"],
+  Inverter: ["Su-vastika", "Livguard", "Luminous", "Microtek"],
+};
+
+const normalize = (value) => (value || "").toString().trim().toLowerCase();
+
+const getCanonicalBrandName = (brandName) => {
+  const key = normalize(brandName);
+  return BRAND_ALIAS_MAP[key] || brandName;
+};
+
+const getAllowedBrandNamesForProductLine = (productLineName) => {
+  const allowed = PRODUCT_LINE_TO_BRANDS[productLineName] || [];
+  return allowed.map(getCanonicalBrandName);
+};
+
+/* -------------------- CAPACITY OPTIONS HELPERS -------------------- */
+
+const generateInverterAhOptions = () => {
+  const options = [];
+  for (let ah = 100; ah <= 260; ah += 10) {
+    options.push({ value: `${ah}`, label: `${ah} AH` });
+  }
+  return options;
+};
+
+const GENERIC_CAPACITY_OPTIONS_AH = [
+  { value: "0-50", label: "0 - 50 AH" },
+  { value: "51-100", label: "51 - 100 AH" },
+  { value: "101-150", label: "101 - 150 AH" },
+  { value: "151-200", label: "151 - 200 AH" },
+  { value: "200+", label: "200+ AH" },
+];
+
+const DEFAULT_CAPACITY_OPTIONS_VA = [
+  { value: "0-1000", label: "≤ 1 kVA (≤ 1000 VA)" },
+  { value: "1001-2000", label: "1–2 kVA" },
+  { value: "2001-3000", label: "2–3 kVA" },
+  { value: "3001-5000", label: "3–5 kVA" },
+  { value: "5000+", label: "> 5 kVA" },
+];
+
+const getAhCapacityOptionsForProductLine = (productLineName) => {
+  if (!productLineName) return GENERIC_CAPACITY_OPTIONS_AH;
+
+  if (productLineName === "SMF/VRLA Batteries") {
+    return [
+      { value: "4.5-10", label: "4.5 - 10 AH" },
+      { value: "11-50", label: "11 - 50 AH" },
+      { value: "51-100", label: "51 - 100 AH" },
+      { value: "101-150", label: "101 - 150 AH" },
+      { value: "151-200", label: "151 - 200 AH" },
+      { value: "200+", label: "200+ AH" },
+    ];
+  }
+
+  if (productLineName === "Solar Batteries") {
+    return [
+      { value: "100", label: "100 AH" },
+      { value: "150", label: "150 AH" },
+    ];
+  }
+
+  if (productLineName === "Genset Batteries") {
+    return [
+      { value: "90", label: "90 AH" },
+      { value: "105", label: "105 AH" },
+    ];
+  }
+
+  if (productLineName === "Inverter Batteries") {
+    return generateInverterAhOptions();
+  }
+
+  return GENERIC_CAPACITY_OPTIONS_AH;
+};
+
+const getVaCapacityOptionsForProductLine = (productLineName) => {
+  if (!productLineName) return DEFAULT_CAPACITY_OPTIONS_VA;
+
+  if (productLineName === "Online UPS") {
+    return [{ value: "705", label: "705 VA" }];
+  //   return [{ value: "0-1000", label: "≤ 1 kVA (≤ 1000 VA)" },
+  // { value: "1001-2000", label: "1–2 kVA" },
+  // { value: "2001-3000", label: "2–3 kVA" },
+  // { value: "3001-5000", label: "3–5 kVA" },
+  // { value: "5000+", label: "> 5 kVA" },]
+  }
+
+  return DEFAULT_CAPACITY_OPTIONS_VA;
+};
+
+/* -------------------- MAIN COMPONENT -------------------- */
 
 const FilterSidebar = ({
   priceRange,
@@ -48,6 +178,102 @@ const FilterSidebar = ({
     }));
   };
 
+  // URL params for product line detection
+  const urlParams = useMemo(() => new URLSearchParams(window.location.search), []);
+  const productLineId = urlParams.get("productLine");
+  const productLineNameFromUrl = urlParams.get("productLineName");
+  const typeFromUrl = urlParams.get("type"); // type=inverter, battery, ups
+  const capacityRangeFromUrl = urlParams.get("capacityRange");
+  
+  const hasManufacturer = urlParams.has("manufacturer") && urlParams.get("manufacturer");
+  const hasVehicleModel = urlParams.has("vehicleModel") && urlParams.get("vehicleModel");
+  const hasProductLine = urlParams.has("productLine") && urlParams.get("productLine");
+  const shouldShowCapacity = hasManufacturer || hasVehicleModel || hasProductLine || typeFromUrl;
+
+  // Get product line name from URL (preferred) or fallback to filterOptions
+  const productLineName = useMemo(() => {
+    // Pehle URL se try karo
+    if (productLineNameFromUrl) return productLineNameFromUrl;
+    
+    // Fallback: filterOptions se dhundo
+    if (!productLineId || !filterOptions.productLines) return "";
+    const found = filterOptions.productLines.find((pl) => pl._id === productLineId);
+    return found ? found.name : "";
+  }, [productLineNameFromUrl, filterOptions.productLines, productLineId]);
+
+  // Filter brands based on product line
+  const filteredBrands = useMemo(() => {
+    if (!productLineName) {
+      return filterOptions.brands || [];
+    }
+
+    const allowed = new Set(
+      getAllowedBrandNamesForProductLine(productLineName).map(normalize)
+    );
+
+    return (filterOptions.brands || []).filter((brand) =>
+      allowed.has(normalize(getCanonicalBrandName(brand.name)))
+    );
+  }, [filterOptions.brands, productLineName]);
+
+  // Determine capacity unit (AH or VA) based on product line name OR type
+  const EXPLICIT_VA_PRODUCT_LINES = useMemo(
+    () =>
+      new Set([
+        "Inverter",
+        "Inverter & UPS System",
+        "Inverter & Battery Combo",
+        "Solar Inverters",
+        "Computer UPS",
+        "Solar Energy Solutions",
+        "Online UPS",
+      ]),
+    []
+  );
+
+  const capacityUnit = useMemo(() => {
+    // Check type from URL first
+    if (typeFromUrl) {
+      if (typeFromUrl === "inverter" || typeFromUrl === "ups" || typeFromUrl === "online-ups" || typeFromUrl === "solar-pcu") {
+        return "VA";
+      }
+      if (typeFromUrl === "battery") {
+        return "AH";
+      }
+    }
+
+    // Check product line name
+    if (!productLineName) return "AH";
+    const lowerName = productLineName.toLowerCase();
+    
+    // Check if it's a VA product line
+    if (EXPLICIT_VA_PRODUCT_LINES.has(productLineName)) return "VA";
+    if (lowerName.includes("ups")) return "VA";
+    if (lowerName.includes("inverter") && !lowerName.includes("battery")) return "VA";
+    
+    // Everything else is AH (all battery types)
+    return "AH";
+  }, [productLineName, typeFromUrl, EXPLICIT_VA_PRODUCT_LINES]);
+
+  // Get capacity options based on product line and unit
+  const capacityOptions = useMemo(() => {
+    if (capacityUnit === "VA") {
+      return getVaCapacityOptionsForProductLine(productLineName);
+    }
+    return getAhCapacityOptionsForProductLine(productLineName);
+  }, [productLineName, capacityUnit]);
+
+  // Sync capacity from URL to selectedFilters when component mounts or URL changes
+  useEffect(() => {
+  if (capacityRangeFromUrl) {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      capacity: capacityRangeFromUrl,
+      capacityRange: capacityRangeFromUrl,
+    }));
+  }
+}, [capacityRangeFromUrl, setSelectedFilters]); 
+
   const batteryTypeOptions = filterOptions.batteryTypes || [
     { value: "lead acid", label: "Lead Acid" },
     { value: "li ion", label: "Li-ion" },
@@ -57,16 +283,6 @@ const FilterSidebar = ({
   const activeFiltersCount =
     Object.values(selectedFilters).filter((value) => value && value !== "")
       .length + (displayedPrice !== 100000 ? 1 : 0);
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const hasManufacturer =
-    urlParams.has("manufacturer") && urlParams.get("manufacturer");
-  const hasVehicleModel =
-    urlParams.has("vehicleModel") && urlParams.get("vehicleModel");
-  const hasProductLine =
-    urlParams.has("productLine") && urlParams.get("productLine");
-  const shouldShowCapacity =
-    hasManufacturer || hasVehicleModel || hasProductLine;
 
   return (
     <aside className="w-full lg:w-80 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
@@ -95,6 +311,7 @@ const FilterSidebar = ({
       </div>
 
       <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 lg:space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto">
+        {/* Price Range */}
         <div className="space-y-2 sm:space-y-3 lg:space-y-4">
           <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
             <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
@@ -125,6 +342,7 @@ const FilterSidebar = ({
           </div>
         </div>
 
+        {/* Brand */}
         <div className="space-y-2 sm:space-y-3 lg:space-y-4">
           <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
             <span className="w-2 h-2 bg-green-600 rounded-full"></span>
@@ -137,7 +355,7 @@ const FilterSidebar = ({
               className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
             >
               <option value="">All Brands</option>
-              {filterOptions.brands?.map((brand) => (
+              {filteredBrands.map((brand) => (
                 <option key={brand._id} value={brand._id}>
                   {brand.name}
                 </option>
@@ -161,7 +379,8 @@ const FilterSidebar = ({
           </div>
         </div>
 
-        {currentType === "battery" && (
+        {/* Battery Type - only for AH (battery) types */}
+        {capacityUnit === "AH" && (
           <div className="space-y-2 sm:space-y-3 lg:space-y-4">
             <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
               <span className="w-2 h-2 bg-orange-600 rounded-full"></span>
@@ -173,7 +392,7 @@ const FilterSidebar = ({
                 onChange={(e) =>
                   handleFilterChange("batteryType", e.target.value)
                 }
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
               >
                 <option value="">All Types</option>
                 {batteryTypeOptions.map((opt) => (
@@ -201,77 +420,32 @@ const FilterSidebar = ({
           </div>
         )}
 
-        {(currentType === "battery" || shouldShowCapacity) && (
+        {/* Capacity - with dynamic options based on product line */}
+        {shouldShowCapacity && (
           <div className="space-y-2 sm:space-y-3 lg:space-y-4">
             <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
-              <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-              Battery Capacity
+              <span className="w-2 h-2 bg-purple-600 rounded-full"></span>
+              Capacity ({capacityUnit === "VA" ? "VA/kVA" : "AH"})
             </h3>
             <div className="relative">
               <select
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
-                value={selectedFilters.capacityRange || ""}
-                onChange={(e) =>
+                value={selectedFilters.capacity || selectedFilters.capacityRange || capacityOptions[0]?.value || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Update both capacity and capacityRange for compatibility
                   setSelectedFilters((prev) => ({
                     ...prev,
-                    capacityRange: e.target.value,
-                  }))
-                }
+                    capacity: value,
+                    capacityRange: value,
+                  }));
+                }}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
               >
-                {
-                (currentType === "inverter" ||
-                currentType === "solar-pcu" ||
-                currentType === "online-ups"
-                  ? VA_CAPACITY_OPTIONS
-                  : BATTERY_CAPACITY_OPTIONS
-                ).map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {capacityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
-              </select>
-              <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentType === "inverter" && (
-          <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-            <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg flex items-center gap-2">
-              <span className="w-2 h-2 bg-indigo-600 rounded-full"></span>
-              Inverter Capacity
-            </h3>
-            <div className="relative">
-              <select
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 appearance-none font-medium text-gray-900 text-sm sm:text-base"
-                value={selectedFilters.capacityRange || ""}
-                onChange={(e) =>
-                  setSelectedFilters((prev) => ({
-                    ...prev,
-                    capacityRange: e.target.value,
-                  }))
-                }
-              >
-                <option value="">All Capacities</option>
-                <option value="0-799">&lt; 800VA</option>
-                <option value="800-1499">800VA–1.5KVA</option>
-                <option value="1500-2499">1.5KVA–2.5KVA</option>
-                <option value="2500-4999">2.5KVA–5KVA</option>
-                <option value="5000-999999">&gt; 5KVA</option>
               </select>
               <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
                 <svg
