@@ -85,6 +85,7 @@ const DEFAULT_CAPACITY_OPTIONS_VA = [
 ];
 
 const getAhCapacityOptionsForProductLine = (productLineName) => {
+
   if (!productLineName) return GENERIC_CAPACITY_OPTIONS_AH;
 
   if (productLineName === "SMF/VRLA Batteries") {
@@ -112,9 +113,8 @@ const getAhCapacityOptionsForProductLine = (productLineName) => {
     ];
   }
 
-  if (productLineName === "Inverter Batteries") {
-    return generateInverterAhOptions();
-  }
+
+ 
 
   return GENERIC_CAPACITY_OPTIONS_AH;
 };
@@ -122,6 +122,9 @@ const getAhCapacityOptionsForProductLine = (productLineName) => {
 const getVaCapacityOptionsForProductLine = (productLineName) => {
   if (!productLineName) return DEFAULT_CAPACITY_OPTIONS_VA;
 
+   if (productLineName === "Inverter Batteries") {
+    return generateInverterAhOptions();
+  }
   if (productLineName === "Online UPS") {
     return [{ value: "705", label: "705 VA" }];
   //   return [{ value: "0-1000", label: "≤ 1 kVA (≤ 1000 VA)" },

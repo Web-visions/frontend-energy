@@ -120,7 +120,7 @@ const getAllowedBrandNamesForProductLine = (productLineName) => {
   return allowed.map(getCanonicalBrandName);
 };
 
-/* helper to produce inverter AH options: 100,110,...,260 */
+
 const generateInverterAhOptions = () => {
   const options = [];
   for (let ah = 100; ah <= 260; ah += 10) {
